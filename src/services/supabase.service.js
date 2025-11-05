@@ -34,13 +34,20 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 /**
  * Регистрация через Email/Password
  */
-export async function signUpWithEmail(email, password) {
+export async function signUpWithEmail(email, password, captchaToken = null) {
+    const options = {
+        emailRedirectTo: `${window.location.origin}/auth/callback`
+    }
+    
+    // Передаём hCaptcha токен, если он есть
+    if (captchaToken) {
+        options.captchaToken = captchaToken
+    }
+    
     const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
+        options
     })
     
     if (error) {
@@ -54,10 +61,18 @@ export async function signUpWithEmail(email, password) {
 /**
  * Вход через Email/Password
  */
-export async function signInWithEmail(email, password) {
+export async function signInWithEmail(email, password, captchaToken = null) {
+    const options = {}
+    
+    // Передаём hCaptcha токен, если он есть
+    if (captchaToken) {
+        options.captchaToken = captchaToken
+    }
+    
     const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        options
     })
     
     if (error) {

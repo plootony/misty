@@ -1,14 +1,13 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useReCaptcha } from 'vue-recaptcha-v3';
+import VueHcaptcha from '@hcaptcha/vue3-hcaptcha';
 import { signInWithGoogle, signInWithEmail, signUpWithEmail } from '@/services/supabase.service';
 import { useUserStore } from '@/stores/user.store';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
-const { executeRecaptcha, recaptchaLoaded } = useReCaptcha();
 
 const isLogin = ref(true); // true = вход, false = регистрация
 const email = ref('');
@@ -18,6 +17,8 @@ const isLoadingEmail = ref(false);
 const isLoadingGoogle = ref(false);
 const error = ref('');
 const success = ref('');
+const hcaptchaRef = ref(null);
+const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || '';
 
 const toggleMode = () => {
     isLogin.value = !isLogin.value;
@@ -25,6 +26,10 @@ const toggleMode = () => {
     success.value = '';
     password.value = '';
     confirmPassword.value = '';
+    // Сбрасываем hCaptcha при переключении режима
+    if (hcaptchaRef.value) {
+        hcaptchaRef.value.reset();
+    }
 };
 
 const handleEmailAuth = async () => {
@@ -48,34 +53,42 @@ const handleEmailAuth = async () => {
             return;
         }
         
-        isLoadingEmail.value = true;
-        
-        // Получаем reCAPTCHA токен
-        await recaptchaLoaded();
-        const recaptchaToken = await executeRecaptcha(isLogin.value ? 'login' : 'signup');
-        
-        if (!recaptchaToken) {
-            error.value = 'Ошибка проверки reCAPTCHA. Попробуйте еще раз.';
-            isLoadingEmail.value = false;
-            return;
+        // Получаем hCaptcha токен перед отправкой
+        let captchaToken = null;
+        if (hcaptchaRef.value && hcaptchaSiteKey) {
+            try {
+                // Для invisible размера вызываем execute() программно
+                captchaToken = await hcaptchaRef.value.execute();
+            } catch (err) {
+                console.error('Ошибка hCaptcha:', err);
+                error.value = 'Ошибка проверки безопасности. Попробуйте еще раз.';
+                return;
+            }
         }
+        
+        isLoadingEmail.value = true;
         
         if (isLogin.value) {
             // Вход
-            const { session, user } = await signInWithEmail(email.value, password.value);
+            const { session, user } = await signInWithEmail(email.value, password.value, captchaToken);
             if (user) {
                 await userStore.loadUserFromSupabase(user);
                 router.push('/');
             }
         } else {
             // Регистрация
-            const { user } = await signUpWithEmail(email.value, password.value);
+            const { user } = await signUpWithEmail(email.value, password.value, captchaToken);
             if (user) {
                 success.value = 'Проверьте вашу почту для подтверждения регистрации!';
                 email.value = '';
                 password.value = '';
                 confirmPassword.value = '';
             }
+        }
+        
+        // Сбрасываем hCaptcha после успешной отправки
+        if (hcaptchaRef.value) {
+            hcaptchaRef.value.reset();
         }
     } catch (err) {
         console.error('Ошибка авторизации:', err);
@@ -165,6 +178,15 @@ const handleGoogleLogin = async () => {
                         :disabled="isLoadingEmail || isLoadingGoogle"
                         required
                     >
+                </div>
+
+                <!-- hCaptcha виджет -->
+                <div v-if="hcaptchaSiteKey" class="auth__captcha">
+                    <VueHcaptcha
+                        ref="hcaptchaRef"
+                        :sitekey="hcaptchaSiteKey"
+                        size="invisible"
+                    />
                 </div>
 
                 <button 
@@ -288,6 +310,12 @@ const handleGoogleLogin = async () => {
         flex-direction: column;
         gap: $spacing-middle;
         margin-bottom: $spacing-middle;
+    }
+
+    &__captcha {
+        display: flex;
+        justify-content: center;
+        margin-bottom: $spacing-small;
     }
 
     &__field {
