@@ -1,22 +1,24 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useReCaptcha } from 'vue-recaptcha-v3';
+import VueHcaptcha from '@hcaptcha/vue3-hcaptcha';
 import { signInWithGoogle, signInWithEmail, signUpWithEmail } from '@/services/supabase.service';
 import { useUserStore } from '@/stores/user.store';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
-const { executeRecaptcha, recaptchaLoaded } = useReCaptcha();
 
 const isLogin = ref(true); // true = вход, false = регистрация
 const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
-const isLoading = ref(false);
+const isLoadingEmail = ref(false);
+const isLoadingGoogle = ref(false);
 const error = ref('');
 const success = ref('');
+const hcaptchaRef = ref(null);
+const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || '';
 
 const toggleMode = () => {
     isLogin.value = !isLogin.value;
@@ -24,6 +26,10 @@ const toggleMode = () => {
     success.value = '';
     password.value = '';
     confirmPassword.value = '';
+    // Сбрасываем hCaptcha при переключении режима
+    if (hcaptchaRef.value) {
+        hcaptchaRef.value.reset();
+    }
 };
 
 const handleEmailAuth = async () => {
@@ -47,34 +53,42 @@ const handleEmailAuth = async () => {
             return;
         }
         
-        isLoading.value = true;
-        
-        // Получаем reCAPTCHA токен
-        await recaptchaLoaded();
-        const recaptchaToken = await executeRecaptcha(isLogin.value ? 'login' : 'signup');
-        
-        if (!recaptchaToken) {
-            error.value = 'Ошибка проверки reCAPTCHA. Попробуйте еще раз.';
-            isLoading.value = false;
-            return;
+        // Получаем hCaptcha токен перед отправкой
+        let captchaToken = null;
+        if (hcaptchaRef.value && hcaptchaSiteKey) {
+            try {
+                // Для invisible размера вызываем execute() программно
+                captchaToken = await hcaptchaRef.value.execute();
+            } catch (err) {
+                console.error('Ошибка hCaptcha:', err);
+                error.value = 'Ошибка проверки безопасности. Попробуйте еще раз.';
+                return;
+            }
         }
+        
+        isLoadingEmail.value = true;
         
         if (isLogin.value) {
             // Вход
-            const { session, user } = await signInWithEmail(email.value, password.value);
+            const { session, user } = await signInWithEmail(email.value, password.value, captchaToken);
             if (user) {
                 await userStore.loadUserFromSupabase(user);
                 router.push('/');
             }
         } else {
             // Регистрация
-            const { user } = await signUpWithEmail(email.value, password.value);
+            const { user } = await signUpWithEmail(email.value, password.value, captchaToken);
             if (user) {
                 success.value = 'Проверьте вашу почту для подтверждения регистрации!';
                 email.value = '';
                 password.value = '';
                 confirmPassword.value = '';
             }
+        }
+        
+        // Сбрасываем hCaptcha после успешной отправки
+        if (hcaptchaRef.value) {
+            hcaptchaRef.value.reset();
         }
     } catch (err) {
         console.error('Ошибка авторизации:', err);
@@ -88,20 +102,20 @@ const handleEmailAuth = async () => {
             error.value = err.message || 'Произошла ошибка. Попробуйте еще раз.';
         }
     } finally {
-        isLoading.value = false;
+        isLoadingEmail.value = false;
     }
 };
 
 const handleGoogleLogin = async () => {
     try {
-        isLoading.value = true;
+        isLoadingGoogle.value = true;
         error.value = '';
         await signInWithGoogle();
         // Редирект произойдет автоматически через OAuth
     } catch (err) {
         console.error('Ошибка входа через Google:', err);
         error.value = 'Не удалось войти через Google. Попробуйте еще раз.';
-        isLoading.value = false;
+        isLoadingGoogle.value = false;
     }
 };
 </script>
@@ -135,7 +149,7 @@ const handleGoogleLogin = async () => {
                         id="email" 
                         class="auth__input" 
                         placeholder="your@email.com"
-                        :disabled="isLoading"
+                        :disabled="isLoadingEmail || isLoadingGoogle"
                         required
                     >
                 </div>
@@ -148,7 +162,7 @@ const handleGoogleLogin = async () => {
                         id="password" 
                         class="auth__input" 
                         placeholder="••••••••"
-                        :disabled="isLoading"
+                        :disabled="isLoadingEmail || isLoadingGoogle"
                         required
                     >
                 </div>
@@ -161,17 +175,26 @@ const handleGoogleLogin = async () => {
                         id="confirmPassword" 
                         class="auth__input" 
                         placeholder="••••••••"
-                        :disabled="isLoading"
+                        :disabled="isLoadingEmail || isLoadingGoogle"
                         required
                     >
+                </div>
+
+                <!-- hCaptcha виджет -->
+                <div v-if="hcaptchaSiteKey" class="auth__captcha">
+                    <VueHcaptcha
+                        ref="hcaptchaRef"
+                        :sitekey="hcaptchaSiteKey"
+                        size="invisible"
+                    />
                 </div>
 
                 <button 
                     type="submit"
                     class="btn btn--primary auth__submit"
-                    :disabled="isLoading"
+                    :disabled="isLoadingEmail || isLoadingGoogle"
                 >
-                    <ButtonSpinner v-if="isLoading" />
+                    <ButtonSpinner v-if="isLoadingEmail" />
                     <span>{{ isLogin ? 'Войти' : 'Зарегистрироваться' }}</span>
                 </button>
             </form>
@@ -185,9 +208,10 @@ const handleGoogleLogin = async () => {
             <button 
                 @click="handleGoogleLogin" 
                 class="btn btn--google auth__google-btn"
-                :disabled="isLoading"
+                :disabled="isLoadingEmail || isLoadingGoogle"
             >
-                <svg class="auth__google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <ButtonSpinner v-if="isLoadingGoogle" />
+                <svg v-else class="auth__google-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
                     <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
                     <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
@@ -226,7 +250,7 @@ const handleGoogleLogin = async () => {
     padding: $spacing-large $spacing-middle;
 
     &__container {
-        max-width: 480px;
+        max-width: 540px;
         width: 100%;
         background-color: $color-bg-light;
         padding: $spacing-large;
@@ -286,6 +310,12 @@ const handleGoogleLogin = async () => {
         flex-direction: column;
         gap: $spacing-middle;
         margin-bottom: $spacing-middle;
+    }
+
+    &__captcha {
+        display: flex;
+        justify-content: center;
+        margin-bottom: $spacing-small;
     }
 
     &__field {

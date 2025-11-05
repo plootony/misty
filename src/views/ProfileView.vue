@@ -236,6 +236,15 @@ const handleSignOut = async () => {
 
                         <div class="profile__actions">
                             <button 
+                                v-if="userStore.isAdmin"
+                                type="button" 
+                                class="btn btn--admin profile__admin-btn"
+                                @click="router.push('/admin')"
+                            >
+                                👑 Админ панель
+                            </button>
+                            
+                            <button 
                                 type="button" 
                                 class="btn btn--primary profile__edit-btn"
                                 @click="enableEditMode"
@@ -936,6 +945,16 @@ const handleSignOut = async () => {
     &--small {
         font-size: 13px;
         padding: $spacing-x-smal $spacing-small;
+    }
+
+    &--admin {
+        background-color: $color-pastel-orange;
+        color: $color-bg-dark;
+        font-weight: 700;
+
+        &:hover:not(:disabled) {
+            opacity: 0.9;
+        }
     }
 }
 </style>

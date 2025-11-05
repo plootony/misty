@@ -1,5 +1,16 @@
 import { createClient } from '@supabase/supabase-js'
 
+/**
+ * SUPABASE SERVICE
+ * 
+ * ВАЖНО: Все административные функции защищены через:
+ * 1. Row Level Security (RLS) политики на уровне БД
+ * 2. Серверные функции (PostgreSQL functions) с проверкой прав
+ * 
+ * Перед использованием необходимо применить миграцию:
+ * supabase/migrations/20250105_security_policies.sql
+ */
+
 // Инициализация Supabase клиента
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -23,13 +34,20 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
 /**
  * Регистрация через Email/Password
  */
-export async function signUpWithEmail(email, password) {
+export async function signUpWithEmail(email, password, captchaToken = null) {
+    const options = {
+        emailRedirectTo: `${window.location.origin}/auth/callback`
+    }
+    
+    // Передаём hCaptcha токен, если он есть
+    if (captchaToken) {
+        options.captchaToken = captchaToken
+    }
+    
     const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`
-        }
+        options
     })
     
     if (error) {
@@ -43,10 +61,18 @@ export async function signUpWithEmail(email, password) {
 /**
  * Вход через Email/Password
  */
-export async function signInWithEmail(email, password) {
+export async function signInWithEmail(email, password, captchaToken = null) {
+    const options = {}
+    
+    // Передаём hCaptcha токен, если он есть
+    if (captchaToken) {
+        options.captchaToken = captchaToken
+    }
+    
     const { data, error } = await supabase.auth.signInWithPassword({
         email,
-        password
+        password,
+        options
     })
     
     if (error) {
@@ -169,6 +195,14 @@ export async function generateUserNumber() {
  * Создание или обновление профиля
  */
 export async function upsertProfile(userId, profileData) {
+    // Получаем email пользователя, если он не передан
+    if (!profileData.email) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user?.email) {
+            profileData.email = user.email
+        }
+    }
+    
     // Если это новый профиль и нет user_number, генерируем его
     if (!profileData.user_number) {
         try {
@@ -319,17 +353,25 @@ export async function searchUsers(query, limit = 20) {
 
 /**
  * Обновление тарифа пользователя (только для админа)
+ * Использует серверную функцию для безопасности
  */
 export async function updateUserTariff(userId, tariff) {
-    const { data, error } = await supabase
-        .from('profiles')
-        .update({ tariff, updated_at: new Date().toISOString() })
-        .eq('id', userId)
-        .select()
-        .single()
+    const { data, error } = await supabase.rpc('admin_update_user_tariff', {
+        target_user_id: userId,
+        new_tariff: tariff
+    })
     
     if (error) {
         console.error('Ошибка обновления тарифа:', error)
+        
+        // Обработка специфичных ошибок
+        if (error.message?.includes('Access denied')) {
+            throw new Error('У вас нет прав для выполнения этого действия')
+        }
+        if (error.message?.includes('Invalid tariff')) {
+            throw new Error('Некорректное значение тарифа')
+        }
+        
         throw error
     }
     
@@ -338,17 +380,25 @@ export async function updateUserTariff(userId, tariff) {
 
 /**
  * Блокировка/разблокировка пользователя (только для админа)
+ * Использует серверную функцию для безопасности
  */
 export async function toggleUserActive(userId, isActive) {
-    const { data, error } = await supabase
-        .from('profiles')
-        .update({ is_active: isActive, updated_at: new Date().toISOString() })
-        .eq('id', userId)
-        .select()
-        .single()
+    const { data, error } = await supabase.rpc('admin_toggle_user_active', {
+        target_user_id: userId,
+        new_is_active: isActive
+    })
     
     if (error) {
         console.error('Ошибка изменения статуса пользователя:', error)
+        
+        // Обработка специфичных ошибок
+        if (error.message?.includes('Access denied')) {
+            throw new Error('У вас нет прав для выполнения этого действия')
+        }
+        if (error.message?.includes('Cannot change own')) {
+            throw new Error('Нельзя изменить статус своего аккаунта')
+        }
+        
         throw error
     }
     
@@ -357,18 +407,30 @@ export async function toggleUserActive(userId, isActive) {
 
 /**
  * Удаление пользователя (только для админа)
+ * Использует серверную функцию для безопасности
  */
 export async function deleteUser(userId) {
-    const { error } = await supabase
-        .from('profiles')
-        .delete()
-        .eq('id', userId)
+    const { data, error } = await supabase.rpc('admin_delete_user', {
+        target_user_id: userId
+    })
     
     if (error) {
         console.error('Ошибка удаления пользователя:', error)
+        
+        // Обработка специфичных ошибок
+        if (error.message?.includes('Access denied')) {
+            throw new Error('У вас нет прав для выполнения этого действия')
+        }
+        if (error.message?.includes('Cannot delete own')) {
+            throw new Error('Нельзя удалить свой аккаунт')
+        }
+        if (error.message?.includes('Cannot delete admin')) {
+            throw new Error('Нельзя удалить аккаунт администратора')
+        }
+        
         throw error
     }
     
-    return true
+    return data
 }
 
