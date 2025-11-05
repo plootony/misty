@@ -57,8 +57,14 @@ const handleEmailAuth = async () => {
         let captchaToken = null;
         if (hcaptchaRef.value && hcaptchaSiteKey) {
             try {
+                console.log('hCaptcha: Начинаем верификацию...');
                 // Для invisible размера вызываем execute() программно
                 captchaToken = await hcaptchaRef.value.execute();
+                console.log('hCaptcha: Токен получен:', captchaToken ? 'да' : 'нет');
+                if (!captchaToken) {
+                    error.value = 'Не удалось получить токен безопасности. Попробуйте еще раз.';
+                    return;
+                }
             } catch (err) {
                 console.error('Ошибка hCaptcha:', err);
                 error.value = 'Ошибка проверки безопасности. Попробуйте еще раз.';
