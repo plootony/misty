@@ -18,7 +18,26 @@ const isLoadingGoogle = ref(false);
 const error = ref('');
 const success = ref('');
 const hcaptchaRef = ref(null);
-const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || '';
+const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || 'c6224f9c-dd12-45a2-bd82-be6c247e7d74';
+
+console.log('hCaptcha siteKey:', hcaptchaSiteKey ? 'установлен' : 'не установлен');
+
+// Обработчики событий hCaptcha
+const onHcaptchaError = (event) => {
+    console.error('hCaptcha error:', event);
+    error.value = 'Ошибка проверки безопасности. Попробуйте еще раз.';
+};
+
+const onHcaptchaExpired = () => {
+    console.log('hCaptcha expired');
+    if (hcaptchaRef.value) {
+        hcaptchaRef.value.reset();
+    }
+};
+
+const onHcaptchaVerified = (token) => {
+    console.log('hCaptcha verified, token:', token ? 'получен' : 'пустой');
+};
 
 const toggleMode = () => {
     isLogin.value = !isLogin.value;
@@ -55,21 +74,44 @@ const handleEmailAuth = async () => {
         
         // Получаем hCaptcha токен перед отправкой
         let captchaToken = null;
-        if (hcaptchaRef.value && hcaptchaSiteKey) {
-            try {
-                console.log('hCaptcha: Начинаем верификацию...');
-                // Для invisible размера вызываем execute() программно
-                captchaToken = await hcaptchaRef.value.execute();
-                console.log('hCaptcha: Токен получен:', captchaToken ? 'да' : 'нет');
-                if (!captchaToken) {
-                    error.value = 'Не удалось получить токен безопасности. Попробуйте еще раз.';
-                    return;
-                }
-            } catch (err) {
-                console.error('Ошибка hCaptcha:', err);
-                error.value = 'Ошибка проверки безопасности. Попробуйте еще раз.';
+        if (hcaptchaSiteKey) {
+            console.log('hCaptcha: Начинаем верификацию...');
+
+            if (!hcaptchaRef.value) {
+                console.error('hCaptcha: Виджет не инициализирован');
+                error.value = 'Виджет безопасности не загружен. Попробуйте перезагрузить страницу.';
                 return;
             }
+
+            try {
+                // Проверяем готовность виджета
+                console.log('hCaptcha: Вызываем execute()...');
+
+                // Ждём немного, чтобы виджет успел загрузиться
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                captchaToken = await hcaptchaRef.value.execute();
+                console.log('hCaptcha: Токен получен:', captchaToken ? 'да' : 'нет', captchaToken);
+
+                if (!captchaToken) {
+                    console.error('hCaptcha: Токен пустой, пробуем еще раз...');
+                    // Пробуем еще раз с задержкой
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    captchaToken = await hcaptchaRef.value.execute();
+                    console.log('hCaptcha: Повторная попытка, токен:', captchaToken ? 'да' : 'нет', captchaToken);
+        
+                    if (!captchaToken) {
+                        error.value = 'Проверка безопасности не пройдена. Попробуйте еще раз.';
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.error('hCaptcha: Ошибка выполнения:', err);
+                error.value = 'Ошибка проверки безопасности. Попробуйте еще раз.';
+            return;
+            }
+        } else {
+            console.warn('hCaptcha: Ключ не установлен, пропускаем верификацию');
         }
         
         isLoadingEmail.value = true;
@@ -94,7 +136,12 @@ const handleEmailAuth = async () => {
         
         // Сбрасываем hCaptcha после успешной отправки
         if (hcaptchaRef.value) {
-            hcaptchaRef.value.reset();
+            try {
+                hcaptchaRef.value.reset();
+                console.log('hCaptcha: Виджет сброшен');
+            } catch (err) {
+                console.warn('hCaptcha: Ошибка сброса виджета:', err);
+            }
         }
     } catch (err) {
         console.error('Ошибка авторизации:', err);
@@ -192,6 +239,9 @@ const handleGoogleLogin = async () => {
                         ref="hcaptchaRef"
                         :sitekey="hcaptchaSiteKey"
                         size="invisible"
+                        @error="onHcaptchaError"
+                        @expired="onHcaptchaExpired"
+                        @verify="onHcaptchaVerified"
                     />
                 </div>
 
