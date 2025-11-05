@@ -180,6 +180,14 @@ export async function generateUserNumber() {
  * Создание или обновление профиля
  */
 export async function upsertProfile(userId, profileData) {
+    // Получаем email пользователя, если он не передан
+    if (!profileData.email) {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user?.email) {
+            profileData.email = user.email
+        }
+    }
+    
     // Если это новый профиль и нет user_number, генерируем его
     if (!profileData.user_number) {
         try {
