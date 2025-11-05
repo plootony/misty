@@ -337,24 +337,16 @@ export async function deleteAllReadings(userId) {
  * Поиск пользователей (только для админа)
  */
 export async function searchUsers(query, limit = 20) {
-    let request = supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(limit)
-    
-    // Если есть поисковый запрос
-    if (query && query.trim()) {
-        request = request.or(`name.ilike.%${query}%,email.ilike.%${query}%,user_number.ilike.%${query}%`)
-    }
-    
-    const { data, error } = await request
-    
+    const { data, error } = await supabase.rpc('admin_search_users', {
+        search_query: query || '',
+        limit_count: limit
+    })
+
     if (error) {
         console.error('Ошибка поиска пользователей:', error)
         throw error
     }
-    
+
     return data
 }
 
