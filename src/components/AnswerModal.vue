@@ -55,7 +55,6 @@ const loadFullReading = async () => {
                     })),
                     interpretation: reading
                 });
-                console.log('Гадание сохранено в историю');
             } catch (saveError) {
                 console.error('Ошибка сохранения гадания:', saveError);
                 // Не показываем ошибку пользователю, так как толкование уже получено
