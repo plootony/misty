@@ -19,6 +19,7 @@ const error = ref('');
 const success = ref('');
 const hcaptchaRef = ref(null);
 const hcaptchaSiteKey = import.meta.env.VITE_HCAPTCHA_SITE_KEY || 'c6224f9c-dd12-45a2-bd82-be6c247e7d74';
+const hcaptchaToken = ref(null); // Храним токен здесь
 
 console.log('hCaptcha siteKey:', hcaptchaSiteKey ? 'установлен' : 'не установлен');
 
@@ -30,6 +31,7 @@ const onHcaptchaError = (event) => {
 
 const onHcaptchaExpired = () => {
     console.log('hCaptcha expired');
+    hcaptchaToken.value = null; // Сбрасываем токен
     if (hcaptchaRef.value) {
         hcaptchaRef.value.reset();
     }
@@ -37,6 +39,7 @@ const onHcaptchaExpired = () => {
 
 const onHcaptchaVerified = (token) => {
     console.log('hCaptcha verified, token:', token ? 'получен' : 'пустой');
+    hcaptchaToken.value = token; // Сохраняем токен
 };
 
 const toggleMode = () => {
@@ -45,9 +48,14 @@ const toggleMode = () => {
     success.value = '';
     password.value = '';
     confirmPassword.value = '';
+    hcaptchaToken.value = null; // Сбрасываем токен
     // Сбрасываем hCaptcha при переключении режима
     if (hcaptchaRef.value) {
-        hcaptchaRef.value.reset();
+        try {
+            hcaptchaRef.value.reset();
+        } catch (err) {
+            console.warn('hCaptcha: Ошибка сброса при переключении режима:', err);
+        }
     }
 };
 
@@ -84,34 +92,44 @@ const handleEmailAuth = async () => {
             }
 
             try {
-                // Проверяем готовность виджета
+                // Сбрасываем предыдущий токен
+                hcaptchaToken.value = null;
+
+                // Запускаем верификацию (асинхронно)
                 console.log('hCaptcha: Вызываем execute()...');
+                hcaptchaRef.value.execute();
 
-                // Ждём немного, чтобы виджет успел загрузиться
-                await new Promise(resolve => setTimeout(resolve, 100));
-
-                captchaToken = await hcaptchaRef.value.execute();
-                console.log('hCaptcha: Токен получен:', captchaToken ? 'да' : 'нет', captchaToken);
+                // Ждём токен через событие verify с таймаутом
+                console.log('hCaptcha: Ждём токен...');
+                captchaToken = await waitForCaptchaToken(10000); // 10 секунд таймаут
 
                 if (!captchaToken) {
-                    console.error('hCaptcha: Токен пустой, пробуем еще раз...');
-                    // Пробуем еще раз с задержкой
-                    await new Promise(resolve => setTimeout(resolve, 500));
-                    captchaToken = await hcaptchaRef.value.execute();
-                    console.log('hCaptcha: Повторная попытка, токен:', captchaToken ? 'да' : 'нет', captchaToken);
-        
-                    if (!captchaToken) {
-                        error.value = 'Проверка безопасности не пройдена. Попробуйте еще раз.';
-                        return;
-                    }
+                    error.value = 'Время ожидания проверки безопасности истекло. Попробуйте еще раз.';
+                    return;
                 }
+
+                console.log('hCaptcha: Токен успешно получен');
             } catch (err) {
-                console.error('hCaptcha: Ошибка выполнения:', err);
+                console.error('hCaptcha: Ошибка верификации:', err);
                 error.value = 'Ошибка проверки безопасности. Попробуйте еще раз.';
-            return;
+                return;
             }
         } else {
             console.warn('hCaptcha: Ключ не установлен, пропускаем верификацию');
+        }
+
+        // Функция ожидания токена
+        async function waitForCaptchaToken(timeoutMs = 10000) {
+            const startTime = Date.now();
+
+            while (Date.now() - startTime < timeoutMs) {
+                if (hcaptchaToken.value) {
+                    return hcaptchaToken.value;
+                }
+                await new Promise(resolve => setTimeout(resolve, 100)); // Проверяем каждые 100ms
+            }
+
+            return null; // Таймаут
         }
         
         isLoadingEmail.value = true;
@@ -135,6 +153,7 @@ const handleEmailAuth = async () => {
         }
         
         // Сбрасываем hCaptcha после успешной отправки
+        hcaptchaToken.value = null; // Сбрасываем токен
         if (hcaptchaRef.value) {
             try {
                 hcaptchaRef.value.reset();
