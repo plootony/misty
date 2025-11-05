@@ -202,9 +202,16 @@ export async function upsertProfile(userId, profileData) {
             profileData.email = user.email
         }
     }
-    
+
+    // Проверяем, существует ли уже профиль
+    const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('user_number')
+        .eq('id', userId)
+        .maybeSingle()
+
     // Если это новый профиль и нет user_number, генерируем его
-    if (!profileData.user_number) {
+    if (!existingProfile && !profileData.user_number) {
         try {
             profileData.user_number = await generateUserNumber()
         } catch (error) {
