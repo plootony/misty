@@ -203,15 +203,9 @@ export async function upsertProfile(userId, profileData) {
         }
     }
 
-    // Проверяем, существует ли уже профиль
-    const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('user_number')
-        .eq('id', userId)
-        .maybeSingle()
-
-    // Если это новый профиль и нет user_number, генерируем его
-    if (!existingProfile && !profileData.user_number) {
+    // Если user_number не передан, генерируем его
+    // (для новых профилей RLS позволит вставку, для существующих - обновление)
+    if (!profileData.user_number) {
         try {
             profileData.user_number = await generateUserNumber()
         } catch (error) {
@@ -220,7 +214,7 @@ export async function upsertProfile(userId, profileData) {
             profileData.user_number = Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
         }
     }
-    
+
     const { data, error } = await supabase
         .from('profiles')
         .upsert({
@@ -230,12 +224,12 @@ export async function upsertProfile(userId, profileData) {
         })
         .select()
         .single()
-    
+
     if (error) {
         console.error('Ошибка обновления профиля:', error)
         throw error
     }
-    
+
     return data
 }
 

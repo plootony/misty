@@ -14,7 +14,7 @@ const { showProfileSetup, checkProfileSetup, handleProfileSetupComplete } = useP
 // Проверяем профиль при каждой смене роута
 watch(() => route.path, () => {
   // Не проверяем на страницах auth и callback
-  if (!route.path.startsWith('/auth')) {
+  if (!route.path.startsWith('/auth') && userStore.isAuthenticated) {
     checkProfileSetup();
   }
 });

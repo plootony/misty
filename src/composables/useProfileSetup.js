@@ -1,4 +1,4 @@
-import { ref, watch } from 'vue'
+import { ref } from 'vue'
 import { useUserStore } from '@/stores/user.store'
 
 export function useProfileSetup() {
@@ -7,16 +7,12 @@ export function useProfileSetup() {
 
     // Проверяем, нужно ли показывать модалку настройки профиля
     const checkProfileSetup = () => {
-        showProfileSetup.value = userStore.needsProfileSetup
+        // Добавляем небольшую задержку, чтобы избежать дублирования
+        setTimeout(() => {
+            showProfileSetup.value = userStore.needsProfileSetup
+        }, 100)
         return userStore.needsProfileSetup
     }
-
-    // Следим за изменениями авторизации
-    watch(() => userStore.isAuthenticated, (isAuth) => {
-        if (isAuth) {
-            checkProfileSetup()
-        }
-    }, { immediate: true })
 
     const handleProfileSetupComplete = () => {
         showProfileSetup.value = false
