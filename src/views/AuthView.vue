@@ -124,19 +124,36 @@ const handleEmailAuth = async () => {
         
         if (isLogin.value) {
             // Вход
-            const { session, user } = await signInWithEmail(email.value, password.value, captchaToken);
-            if (user) {
-                await userStore.loadUserFromSupabase(user);
-                router.push('/');
+            try {
+                const { session, user } = await signInWithEmail(email.value, password.value, captchaToken);
+                if (user) {
+                    await userStore.loadUserFromSupabase(user);
+                    router.push('/');
+                }
+            } catch (loginError) {
+                // Специальная обработка для неподтвержденного email
+                if (loginError.message?.includes('Email not confirmed') ||
+                    loginError.message?.includes('email_not_confirmed')) {
+                    error.value = 'Email не подтвержден. Проверьте почту и перейдите по ссылке подтверждения.';
+                } else {
+                    throw loginError;
+                }
             }
         } else {
             // Регистрация
-            const { user } = await signUpWithEmail(email.value, password.value, captchaToken);
+            const { user, session } = await signUpWithEmail(email.value, password.value, captchaToken);
             if (user) {
-                success.value = 'Проверьте вашу почту для подтверждения регистрации!';
-                email.value = '';
-                password.value = '';
-                confirmPassword.value = '';
+                if (session) {
+                    // Пользователь сразу подтвержден (например, при отключенном email подтверждении)
+                    await userStore.loadUserFromSupabase(user);
+                    router.push('/');
+                } else {
+                    // Нужно подтверждение по email
+                    success.value = 'Проверьте вашу почту для подтверждения регистрации!';
+                    email.value = '';
+                    password.value = '';
+                    confirmPassword.value = '';
+                }
             }
         }
         

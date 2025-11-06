@@ -4,30 +4,23 @@ import { useRouter } from 'vue-router';
 import { getSession } from '@/services/supabase.service';
 import { useUserStore } from '@/stores/user.store';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
-import ProfileSetupModal from '@/components/ProfileSetupModal.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
 const error = ref('');
-const showProfileSetup = ref(false);
 
 onMounted(async () => {
     try {
         // Получаем сессию после редиректа от Google
         const session = await getSession();
-        
+
         if (session && session.user) {
             // Загружаем данные пользователя в store
             await userStore.loadUserFromSupabase(session.user);
-            
-            // Проверяем, заполнен ли профиль через computed property
-            if (userStore.needsProfileSetup) {
-                // Показываем модалку настройки профиля
-                showProfileSetup.value = true;
-            } else {
-                // Профиль уже заполнен, перенаправляем на главную
-                router.push('/');
-            }
+
+            // Всегда перенаправляем на главную страницу
+            // Глобальная модалка в App.vue сама проверит и покажет форму настройки профиля
+            router.push('/');
         } else {
             error.value = 'Не удалось получить данные пользователя';
             setTimeout(() => {
@@ -42,34 +35,23 @@ onMounted(async () => {
         }, 2000);
     }
 });
-
-const handleProfileSetupComplete = () => {
-    showProfileSetup.value = false;
-    router.push('/');
-};
 </script>
 
 <template>
     <div class="auth-callback">
         <div class="auth-callback__container">
             <img src="@/assets/images/stars-icon.png" alt="star icon" class="auth-callback__icon">
-            
+
             <div v-if="error" class="auth-callback__error">
                 <p>{{ error }}</p>
                 <p class="auth-callback__redirect">Перенаправление на страницу входа...</p>
             </div>
-            
+
             <div v-else class="auth-callback__loading">
                 <ButtonSpinner />
                 <p>Завершаем вход...</p>
             </div>
         </div>
-
-        <!-- Модалка настройки профиля -->
-        <ProfileSetupModal 
-            :show="showProfileSetup" 
-            @complete="handleProfileSetupComplete"
-        />
     </div>
 </template>
 
