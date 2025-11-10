@@ -1,4 +1,5 @@
 <script setup>
+import { onMounted } from 'vue';
 import { useUserStore } from '@/stores/user.store';
 import { useCardSelector } from '@/stores/cardSelector.store';
 import { useModalStore } from '@/stores/modal.store';
@@ -10,6 +11,11 @@ import ButtonSpinner from '@/components/ButtonSpinner.vue';
 const userStore = useUserStore();
 const cardStore = useCardSelector();
 const modalStore = useModalStore();
+
+// Перемешиваем колоду при каждом заходе на страницу
+onMounted(() => {
+    cardStore.shuffleDeck();
+});
 
 const selectCard = async (card) => {
     const maxCards = modalStore.selectedSpread?.cardsCount || 3;
@@ -81,19 +87,19 @@ const selectCard = async (card) => {
                 class="card-selector__selected-card"
                 :class="{ 'card-selector__selected-card--filled': modalStore.selectedCards[index - 1] }"
             >
-                <img 
+                <img
                     v-if="modalStore.selectedCards[index - 1]"
-                    class="card-selector__selected-card-image" 
-                    src="@/assets/images/card-back.png" 
+                    class="card-selector__selected-card-image"
+                    :src="modalStore.selectedCards[index - 1].image"
                     alt="Выбранная карта"
                 >
             </div>
         </div>
 
         <div class="card-selector__deck">
-            <div 
-                v-for="card in cardStore.deck" 
-                :key="card.id" 
+            <div
+                v-for="card in cardStore.shuffledDeck"
+                :key="card.id"
                 class="card-selector__deck-card"
                 @click="selectCard(card)"
             >

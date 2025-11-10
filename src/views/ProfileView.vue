@@ -2,12 +2,14 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user.store';
+import { useCardSelector } from '@/stores/cardSelector.store';
 import { getReadings, deleteReading, deleteReadings, deleteAllReadings } from '@/services/supabase.service';
 import SpreadPreview from '@/components/SpreadPreview.vue';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
+const cardStore = useCardSelector();
 
 const isEditMode = ref(false);
 const name = ref(userStore.userData?.name || '');
@@ -66,11 +68,16 @@ const loadHistory = async (append = false) => {
                 name: reading.spread_name,
                 cardsCount: reading.cards.length
             },
-            cards: reading.cards.map(card => ({
-                name: card.name,
-                position: card.isReversed ? 'Перевернутое' : 'Прямое',
-                description: card.meaning
-            })),
+            cards: reading.cards.map(card => {
+                // Находим карту в колоде по имени для получения изображения
+                const cardData = cardStore.deck.find(deckCard => deckCard.name === card.name);
+                return {
+                    name: card.name,
+                    position: card.isReversed ? 'Перевернутое' : 'Прямое',
+                    description: card.meaning,
+                    image: cardData?.image || '/cards/card-back.png'
+                };
+            }),
             finalReading: reading.interpretation
         }));
 
@@ -401,9 +408,9 @@ const handleSignOut = async () => {
                                     >
                                         <div class="card-detail__header">
                                             <div class="card-detail__card">
-                                                <img 
-                                                    class="card-detail__card-image" 
-                                                    src="@/assets/images/card-back.png" 
+                                                <img
+                                                    class="card-detail__card-image"
+                                                    :src="card.image"
                                                     alt="Карта Таро"
                                                 >
                                             </div>

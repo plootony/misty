@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user.store';
 import { useModalStore } from '@/stores/modal.store';
+import { useCardSelector } from '@/stores/cardSelector.store';
 import { generateFullReading } from '@/services/mistral.service';
 import { saveReading } from '@/services/supabase.service';
 import { getZodiacSign } from '@/utils/zodiac';
@@ -11,6 +12,7 @@ import ButtonSpinner from '@/components/ButtonSpinner.vue';
 const router = useRouter();
 const userStore = useUserStore();
 const modalStore = useModalStore();
+const cardStore = useCardSelector();
 
 const fullReading = ref('');
 const isLoading = ref(false);
@@ -70,6 +72,8 @@ const loadFullReading = async () => {
 
 const startOver = () => {
     modalStore.resetSelection();
+    // Перемешиваем колоду при новом гадании
+    cardStore.shuffleDeck();
     router.push('/');
 };
 
@@ -102,9 +106,9 @@ const closeModal = () => {
                             class="answer__card"
                             :class="{ 'answer__card--reversed': card.isReversed }"
                         >
-                            <img 
-                                class="answer__card-image" 
-                                src="@/assets/images/card-back.png" 
+                            <img
+                                class="answer__card-image"
+                                :src="card.image"
                                 alt="Карта Таро"
                             >
                             <div class="answer__card-info">

@@ -36,7 +36,8 @@ const closeModal = () => {
             <div class="modal__content modal__content--card-result">
                 <div class="card-result">
                     <div class="card-result__card">
-                        <img src="@/assets/images/card.png" alt="Карта Таро" class="card-result__card-image">
+                        <img :src="currentCard?.image" alt="Карта Таро" class="card-result__card-image" v-if="currentCard">
+                        <img src="@/assets/images/card.png" alt="Карта Таро" class="card-result__card-image" v-else>
                     </div>
 
                     <div class="card-result__content" v-if="currentCard">
