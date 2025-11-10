@@ -1,7 +1,7 @@
 <script setup>
 import { onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { getSession } from '@/services/supabase.service';
+import { supabase } from '@/services/supabase.service';
 import { useUserStore } from '@/stores/user.store';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 
@@ -11,28 +11,53 @@ const error = ref('');
 
 onMounted(async () => {
     try {
-        // Получаем сессию после редиректа от Google
-        const session = await getSession();
+        // Проверяем, есть ли токены в URL hash (подтверждение email)
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
 
-        if (session && session.user) {
-            // Загружаем данные пользователя в store
-            await userStore.loadUserFromSupabase(session.user);
+        if (accessToken && refreshToken) {
+            // Это подтверждение email - устанавливаем сессию вручную
+            const { data, error: sessionError } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken
+            });
 
-            // Всегда перенаправляем на главную страницу
-            // Глобальная модалка в App.vue сама проверит и покажет форму настройки профиля
-            router.push('/');
+            if (sessionError) {
+                throw sessionError;
+            }
+
+            if (data.session && data.user) {
+                // Загружаем данные пользователя в store
+                await userStore.loadUserFromSupabase(data.user);
+            } else {
+                throw new Error('Не удалось установить сессию');
+            }
         } else {
-            error.value = 'Не удалось получить данные пользователя';
-            setTimeout(() => {
-                router.push('/auth');
-            }, 2000);
+            // OAuth callback (Google, etc.) - получаем сессию обычным способом
+            const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+            if (sessionError) {
+                throw sessionError;
+            }
+
+            if (session && session.user) {
+                // Загружаем данные пользователя в store
+                await userStore.loadUserFromSupabase(session.user);
+            } else {
+                throw new Error('Не удалось получить сессию');
+            }
         }
+
+        // Всегда перенаправляем на главную страницу
+        // Глобальная модалка в App.vue сама проверит и покажет форму настройки профиля
+        router.push('/');
     } catch (err) {
         console.error('Ошибка обработки callback:', err);
-        error.value = 'Произошла ошибка при входе';
+        error.value = 'Произошла ошибка при входе: ' + err.message;
         setTimeout(() => {
             router.push('/auth');
-        }, 2000);
+        }, 3000);
     }
 });
 </script>
