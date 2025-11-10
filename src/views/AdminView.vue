@@ -276,7 +276,7 @@ const formatDate = (dateString) => {
 @use "../assets/scss/vars.scss" as *;
 
 .admin {
-    min-height: 100vh;
+    min-height: calc(100vh - 70px);
     padding: $spacing-large $spacing-middle;
     background-color: $color-bg-dark;
 

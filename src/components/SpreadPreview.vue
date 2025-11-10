@@ -121,8 +121,8 @@ const spreadClass = computed(() => {
             height: 38px;
 
             // Центральный крест
-            &:nth-child(1) { left: 50%; top: 50%; transform: translate(-50%, -50%); }
-            &:nth-child(2) { left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(90deg); }
+            &:nth-child(1) { left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 1; }
+            &:nth-child(2) { left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(90deg); z-index: 2; }
             &:nth-child(3) { left: calc(50% - 48px); top: 50%; transform: translate(-50%, -50%); }
             &:nth-child(4) { left: calc(50% + 48px); top: 50%; transform: translate(-50%, -50%); }
             &:nth-child(5) { left: 50%; top: calc(50% - 36px); transform: translate(-50%, -50%); }

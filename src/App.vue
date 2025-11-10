@@ -47,7 +47,7 @@ watch(() => route.path, () => {
   top: 0;
   left: 0;
   width: 100%;
-  height: 100vh;
+  height: calc(100vh - 70px);
   background-color: #21212c;
   display: flex;
   align-items: center;

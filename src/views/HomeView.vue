@@ -161,7 +161,7 @@ const selectCard = async (card) => {
 @use "../assets/scss/vars.scss" as *;
 
 .card-selector {
-    min-height: 100vh;
+    min-height: calc(100vh - 70px);
     padding: $spacing-large $spacing-middle;
     display: flex;
     flex-direction: column;
@@ -244,12 +244,12 @@ const selectCard = async (card) => {
                 position: absolute;
 
                 // Центральный крест
-                &:nth-child(1) { left: 50%; top: 50%; transform: translate(-50%, -50%); }
-                &:nth-child(2) { left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(90deg); }
-                &:nth-child(3) { left: calc(50% - 160px); top: 50%; transform: translate(-50%, -50%); }
-                &:nth-child(4) { left: calc(50% + 160px); top: 50%; transform: translate(-50%, -50%); }
-                &:nth-child(5) { left: 50%; top: calc(50% - 120px); transform: translate(-50%, -50%); }
-                &:nth-child(6) { left: 50%; top: calc(50% + 120px); transform: translate(-50%, -50%); }
+                &:nth-child(1) { left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 1; } // Суть вопроса - центр
+                &:nth-child(2) { left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(90deg); z-index: 2; } // Препятствие - крест-накрест поверх первой
+                &:nth-child(3) { left: calc(50% - 160px); top: 50%; transform: translate(-50%, -50%); } // Основа - слева
+                &:nth-child(4) { left: calc(50% + 160px); top: 50%; transform: translate(-50%, -50%); } // Недавнее прошлое - справа
+                &:nth-child(5) { left: 50%; top: calc(50% - 120px); transform: translate(-50%, -50%); } // Возможное будущее - сверху
+                &:nth-child(6) { left: 50%; top: calc(50% + 120px); transform: translate(-50%, -50%); } // Ближайшее будущее - снизу
 
                 // Столбец справа
                 &:nth-child(7) { left: calc(50% + 320px); top: calc(50% - 180px); transform: translate(-50%, -50%); }
@@ -303,13 +303,20 @@ const selectCard = async (card) => {
     &__selected-card {
         width: 100px;
         height: 150px;
-        background-color: $color-bg-light;
+        border: 2px dashed rgba(255, 255, 255, 0.4);
         border-radius: 8px;
-        box-shadow: 0px 15px 35px 0px rgba(10, 10, 12, 0.3215686274509804);
+        background-color: transparent;
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
+        transition: all 0.3s ease;
+
+        &--filled {
+            background-color: $color-bg-light;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0px 15px 35px 0px rgba(10, 10, 12, 0.3215686274509804);
+        }
     }
 
     &__selected-card-image {
