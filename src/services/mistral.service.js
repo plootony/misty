@@ -22,7 +22,7 @@ const initMistralClient = () => {
  * @returns {Promise<{isValid: boolean, reason?: string, suggestion?: string}>}
  */
 export async function validateTarotQuestion(question) {
-    // Используем rate limiter для соблюдения ограничения 1 запрос/секунду
+    // Используем rate limiter для соблюдения ограничения 1 запрос/3 секунды
     return mistralRateLimiter.execute(async () => {
         try {
             const client = initMistralClient();
@@ -56,50 +56,127 @@ export async function validateTarotQuestion(question) {
   "suggestion": "предложение как переформулировать (если не валиден)"
 }`;
 
-            const result = await client.chat.complete({
-                model: 'mistral-small-latest',
-                messages: [
-                    {
-                        role: 'system',
-                        content: systemPrompt
-                    },
-                    {
-                        role: 'user',
-                        content: `Проанализируй вопрос: "${question}"`
-                    }
-                ],
-                temperature: 0.3, // Низкая температура для более предсказуемых результатов
-                response_format: { type: 'json_object' },
-                max_tokens: 300
-            });
+            const apiCall = async () => {
+                const result = await client.chat.complete({
+                    model: 'mistral-small-latest',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: systemPrompt
+                        },
+                        {
+                            role: 'user',
+                            content: `Проанализируй вопрос: "${question}"`
+                        }
+                    ],
+                    temperature: 0.3, // Низкая температура для более предсказуемых результатов
+                    response_format: { type: 'json_object' },
+                    max_tokens: 300
+                });
 
-            const response = result.choices[0].message.content;
-            
-            // Парсинг JSON с использованием утилиты
-            const validation = parseAIResponse(response);
-            
-            // Валидация структуры ответа
-            if (!isValidValidationResponse(validation)) {
-                console.warn('Некорректная структура ответа:', validation);
-                throw new Error('Некорректная структура ответа от AI');
-            }
+                const response = result.choices[0].message.content;
 
-            // Нормализация и возврат результата
-            return normalizeValidationResponse(validation);
+                // Парсинг JSON с использованием утилиты
+                const validation = parseAIResponse(response);
+
+                // Валидация структуры ответа
+                if (!isValidValidationResponse(validation)) {
+                    console.warn('Некорректная структура ответа:', validation);
+                    throw new Error('Некорректная структура ответа от AI');
+                }
+
+                // Нормализация и возврат результата
+                return normalizeValidationResponse(validation);
+            };
+
+            return await executeWithRetry(apiCall, 2, 10000);
 
         } catch (error) {
             console.error('Ошибка валидации вопроса:', error);
-            console.error('Детали ошибки:', error.message);
-            
-            // В случае ошибки API возвращаем fallback валидацию
+
+            // В случае ошибки API возвращаем fallback валидацию с соответствующим сообщением
+            const errorMessage = createErrorMessage(error).replace('Попробуйте', 'Валидация пропущена. Попробуйте');
+
             return {
                 isValid: true, // Разрешаем по умолчанию, чтобы не блокировать пользователя
                 reason: null,
                 suggestion: null,
-                error: 'Не удалось проверить вопрос. Попробуйте еще раз.'
+                error: errorMessage
             };
         }
     });
+}
+
+
+/**
+ * Создает пользовательское сообщение об ошибке на основе типа ошибки
+ * @param {Error} error - Ошибка от API
+ * @returns {string} - Пользовательское сообщение об ошибке
+ */
+function createErrorMessage(error) {
+    const errorMessage = error.message?.toLowerCase() || '';
+    const errorCode = error.code || error.status;
+
+    if (errorMessage.includes('rate limit') || errorMessage.includes('too many requests') || errorCode === 429) {
+        return 'Превышен лимит запросов к сервису предсказаний. Попробуйте через несколько минут.';
+    }
+
+    if (errorMessage.includes('service tier capacity exceeded') || errorMessage.includes('capacity exceeded')) {
+        return 'Сервис временно перегружен или достигнут лимит использования. Попробуйте через несколько минут. Если проблема persists, проверьте баланс Mistral AI.';
+    }
+
+    if (errorMessage.includes('insufficient balance') || errorMessage.includes('billing')) {
+        return 'Недостаточно средств на счете Mistral AI. Проверьте баланс и пополните счет.';
+    }
+
+    if (errorMessage.includes('model not found') || errorMessage.includes('invalid model')) {
+        return 'Ошибка модели ИИ. Попробуйте еще раз или обратитесь в поддержку.';
+    }
+
+    return 'Не удалось выполнить запрос. Проверьте подключение к интернету и попробуйте еще раз.';
+}
+
+/**
+ * Выполняет запрос с retry логикой для rate limit ошибок
+ * @param {Function} apiCall - Функция выполняющая API вызов
+ * @param {number} maxRetries - Максимальное количество попыток
+ * @param {number} baseDelay - Базовая задержка в мс
+ * @returns {Promise}
+ */
+async function executeWithRetry(apiCall, maxRetries = 2, baseDelay = 10000) {
+    let lastError;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            return await apiCall();
+        } catch (error) {
+            lastError = error;
+            const errorMessage = error.message?.toLowerCase() || '';
+            const errorCode = error.code || error.status;
+            const isRetryableError = errorMessage.includes('rate limit') ||
+                                   errorMessage.includes('too many requests') ||
+                                   errorCode === 429 ||
+                                   errorMessage.includes('service tier capacity exceeded') ||
+                                   errorMessage.includes('capacity exceeded');
+
+            // Для rate limit и capacity ошибок делаем retry с более консервативной задержкой
+            if (isRetryableError && attempt < maxRetries) {
+                // Более консервативная задержка: базовая + экспоненциальная компонента + jitter
+                const exponentialDelay = baseDelay * Math.pow(1.5, attempt); // Более плавное увеличение
+                const jitter = Math.random() * 2000; // Уменьшенный jitter
+                const delay = exponentialDelay + jitter;
+
+                console.warn(`API error (${errorCode || 'unknown'}), retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+            }
+
+            // Для других ошибок или если превышено количество попыток - выбрасываем ошибку
+            throw error;
+        }
+    }
+
+    throw lastError;
 }
 
 /**
@@ -121,16 +198,17 @@ export async function interpretSingleCard(question, card, position) {
             const cardPosition = card.isReversed ? 'перевёрнутом' : 'прямом';
             const cardMeaning = card.isReversed ? card.reversed : card.upright;
 
-            const result = await client.chat.complete({
-                model: 'mistral-small-latest',
-                messages: [
-                    {
-                        role: 'system',
-                        content: systemPrompt
-                    },
-                    {
-                        role: 'user',
-                        content: `Вопрос: "${question}"
+            const apiCall = async () => {
+                const result = await client.chat.complete({
+                    model: 'mistral-small-latest',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: systemPrompt
+                        },
+                        {
+                            role: 'user',
+                            content: `Вопрос: "${question}"
 
 Позиция: ${position.name} - ${position.meaning}
 
@@ -138,17 +216,20 @@ export async function interpretSingleCard(question, card, position) {
 Значение: ${cardMeaning}
 
 Дай толкование этой карты в контексте вопроса и позиции.`
-                    }
-                ],
-                temperature: 0.7,
-                max_tokens: 300
-            });
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 300
+                });
 
-            return result.choices[0].message.content;
+                return result.choices[0].message.content;
+            };
+
+            return await executeWithRetry(apiCall, 2, 10000);
 
         } catch (error) {
             console.error('Ошибка толкования карты:', error);
-            throw new Error('Не удалось получить толкование карты');
+            throw new Error(createErrorMessage(error));
         }
     });
 }
@@ -184,16 +265,17 @@ export async function generateFullReading(userData, zodiacSign, question, spread
                 return `${position.name}: ${card.name} (${cardPosition} положение) - ${card.meaning}`;
             }).join('\n');
 
-            const result = await client.chat.complete({
-                model: 'mistral-small-latest',
-                messages: [
-                    {
-                        role: 'system',
-                        content: systemPrompt
-                    },
-                    {
-                        role: 'user',
-                        content: `Имя: ${userData.name}
+            const apiCall = async () => {
+                const result = await client.chat.complete({
+                    model: 'mistral-small-latest',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: systemPrompt
+                        },
+                        {
+                            role: 'user',
+                            content: `Имя: ${userData.name}
 Знак зодиака: ${zodiacSign}
 Вопрос: "${question}"
 
@@ -204,17 +286,20 @@ export async function generateFullReading(userData, zodiacSign, question, spread
 ${cardsDescription}
 
 Дай полное толкование расклада, учитывая личность ${userData.name} как представителя знака ${zodiacSign}.`
-                    }
-                ],
-                temperature: 0.7,
-                max_tokens: 1000
-            });
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 1000
+                });
 
-            return result.choices[0].message.content;
+                return result.choices[0].message.content;
+            };
+
+            return await executeWithRetry(apiCall, 2, 10000);
 
         } catch (error) {
             console.error('Ошибка генерации финального толкования:', error);
-            throw new Error('Не удалось получить толкование расклада');
+            throw new Error(createErrorMessage(error));
         }
     });
 }
