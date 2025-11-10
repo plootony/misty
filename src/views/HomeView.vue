@@ -161,7 +161,10 @@ const loadFullReading = async () => {
                 v-for="slotIndex in selectedCardSlots"
                 :key="'slot-' + slotIndex"
                 class="card-selector__selected-card"
-                :class="{ 'card-selector__selected-card--filled': safeSelectedCards[slotIndex] }"
+                :class="{
+                    'card-selector__selected-card--filled': safeSelectedCards[slotIndex],
+                    'card-selector__selected-card--animating': modalStore.isFullReadingLoading && !!safeSelectedCards[slotIndex]
+                }"
             >
                 <img
                     v-if="safeSelectedCards[slotIndex]"
@@ -170,6 +173,11 @@ const loadFullReading = async () => {
                     alt="Выбранная карта"
                 >
             </div>
+        </div>
+
+        <!-- Подпись во время загрузки итогового предсказания -->
+        <div v-if="modalStore.isFullReadingLoading" class="card-selector__loading-text">
+            Получаем итоговое толкование...
         </div>
 
         <div class="card-selector__deck">
@@ -266,9 +274,9 @@ const loadFullReading = async () => {
         max-width: 1200px;
         width: 100%;
         justify-content: center;
-        min-height: 300px;
         align-items: center;
         position: relative;
+        margin: 0 auto;
 
         // Одна карта - по центру
         &--one-card {
@@ -356,22 +364,8 @@ const loadFullReading = async () => {
         }
     }
 
-    &__selected {
-        &--loading {
-            .card-selector__selected-card--filled {
-                // Только выбранные карты анимируются как в превью раскладов
-                &:nth-child(1) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0s; }
-                &:nth-child(2) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.05s; }
-                &:nth-child(3) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.1s; }
-                &:nth-child(4) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.15s; }
-                &:nth-child(5) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.2s; }
-                &:nth-child(6) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.25s; }
-                &:nth-child(7) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.3s; }
-                &:nth-child(8) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.35s; }
-                &:nth-child(9) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.4s; }
-                &:nth-child(10) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.45s; }
-            }
-        }
+    &__selected-card--animating {
+        animation: shuffleCard 2s ease-in-out infinite;
     }
 
     &__selected-card {
@@ -397,6 +391,17 @@ const loadFullReading = async () => {
         width: 100%;
         height: 100%;
         object-fit: cover;
+    }
+
+    &__loading-text {
+        text-align: center;
+        margin: $spacing-large 0;
+        font-family: "Inter", Sans-serif;
+        font-size: 18px;
+        font-weight: 500;
+        color: $color-pastel-orange;
+        font-style: italic;
+        animation: textPulse 2s ease-in-out infinite;
     }
 
     &__deck {
@@ -540,20 +545,25 @@ const loadFullReading = async () => {
 
 @keyframes shuffleCard {
     0% {
-        opacity: 0;
-        transform: scale(0.3) rotate(0deg);
-    }
-    40% {
-        opacity: 0.7;
-        transform: scale(0.5) rotate(5deg);
-    }
-    70% {
+        transform: scale(1);
         opacity: 1;
-        transform: scale(1.05) rotate(-3deg);
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.7;
     }
     100% {
+        transform: scale(1);
         opacity: 1;
-        transform: scale(1) rotate(0deg);
+    }
+}
+
+@keyframes textPulse {
+    0%, 100% {
+        opacity: 0.7;
+    }
+    50% {
+        opacity: 1;
     }
 }
 </style>
