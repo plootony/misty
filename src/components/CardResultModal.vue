@@ -31,7 +31,7 @@ const closeModal = () => {
 
 <template>
     <div class="modal">
-        <div class="modal__overlay" @click="closeModal"></div>
+        <div class="modal__overlay"></div>
         <div class="modal__container">
             <div class="modal__content modal__content--card-result">
                 <div class="card-result">

@@ -39,6 +39,13 @@ export const useModalStore = defineStore('modalStore', () => {
         isLoading.value = false
     }
 
+    const updateLastCard = (cardData) => {
+        const lastIndex = selectedCards.value.length - 1;
+        if (lastIndex >= 0) {
+            selectedCards.value[lastIndex] = { ...selectedCards.value[lastIndex], ...cardData };
+        }
+    }
+
     const resetSelection = () => {
         selectedCards.value = []
         selectedSpread.value = null
@@ -60,6 +67,7 @@ export const useModalStore = defineStore('modalStore', () => {
         openAnswerModal,
         closeAnswerModal,
         addSelectedCard,
+        updateLastCard,
         startLoading,
         stopLoading,
         resetSelection

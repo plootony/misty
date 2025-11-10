@@ -1,5 +1,6 @@
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
+import { useModalStore } from './modal.store'
 
 export const useCardSelector = defineStore('cardSelectorStore', () => {
     const deck = ref([
@@ -639,6 +640,14 @@ export const useCardSelector = defineStore('cardSelectorStore', () => {
         return array;
     })
 
+    // Доступные карты (исключая выбранные)
+    const availableCards = computed(() => {
+        // Импортируем modalStore для доступа к выбранным картам
+        const modalStore = useModalStore();
+        const selectedCardIds = modalStore.selectedCards.map(card => card.id);
+        return shuffledDeck.value.filter(card => !selectedCardIds.includes(card.id));
+    })
+
     /**
      * Перемешивает колоду карт (пустая функция для совместимости)
      */
@@ -661,5 +670,5 @@ export const useCardSelector = defineStore('cardSelectorStore', () => {
         };
     }
 
-    return { deck, shuffledDeck, shuffleDeck, createCardWithPosition }
+    return { deck, shuffledDeck, availableCards, shuffleDeck, createCardWithPosition }
 })

@@ -10,7 +10,7 @@ import ButtonSpinner from '@/components/ButtonSpinner.vue';
 const router = useRouter();
 const userStore = useUserStore();
 const modalStore = useModalStore();
-const question = ref('');
+const question = ref('Что делать, если не к чему стремиться?');
 const isLoading = ref(false);
 const isValidating = ref(false);
 

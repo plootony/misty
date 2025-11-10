@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from 'vue';
+import { onMounted, computed, nextTick } from 'vue';
 import { useUserStore } from '@/stores/user.store';
 import { useCardSelector } from '@/stores/cardSelector.store';
 import { useModalStore } from '@/stores/modal.store';
@@ -12,6 +12,15 @@ const userStore = useUserStore();
 const cardStore = useCardSelector();
 const modalStore = useModalStore();
 
+// Computed для создания массива индексов
+const selectedCardSlots = computed(() => {
+    const count = modalStore.selectedSpread?.cardsCount || 3;
+    return Array.from({ length: count }, (_, i) => i);
+});
+
+// Computed для безопасного доступа к выбранным картам
+const safeSelectedCards = computed(() => modalStore.selectedCards || []);
+
 // Перемешиваем колоду при каждом заходе на страницу
 onMounted(() => {
     cardStore.shuffleDeck();
@@ -19,16 +28,26 @@ onMounted(() => {
 
 const selectCard = async (card) => {
     const maxCards = modalStore.selectedSpread?.cardsCount || 3;
-    if (modalStore.selectedCards.length < maxCards && !modalStore.isLoading) {
+    const currentCardsCount = modalStore.selectedCards?.length || 0;
+    if (currentCardsCount < maxCards && !modalStore.isLoading) {
         modalStore.startLoading();
 
         try {
             // Создаём карту с случайным положением (прямое/перевёрнутое)
             const cardWithPosition = cardStore.createCardWithPosition(card);
-            
-            // Получаем позицию карты в раскладе
-            const cardIndex = modalStore.selectedCards.length;
+
+            // Добавляем карту сразу для показа в прелоадере
+            const cardIndex = currentCardsCount;
             const position = modalStore.selectedSpread.positions[cardIndex];
+            modalStore.addSelectedCard({
+                ...cardWithPosition,
+                interpretation: 'Загружается толкование...',
+                positionInfo: position,
+                loading: true
+            });
+
+            // Ждем обновления DOM
+            await nextTick();
 
             // Получаем толкование карты от AI
             const interpretation = await interpretSingleCard(
@@ -37,13 +56,14 @@ const selectCard = async (card) => {
                 position
             );
 
-            // Сохраняем карту с толкованием
-            modalStore.addSelectedCard({
+            // Обновляем последнюю карту через функцию store
+            modalStore.updateLastCard({
                 ...cardWithPosition,
                 interpretation,
-                positionInfo: position
+                positionInfo: position,
+                loading: false
             });
-            
+
             modalStore.stopLoading();
             modalStore.openCardResultModal();
 
@@ -53,9 +73,9 @@ const selectCard = async (card) => {
             
             // Fallback: добавляем карту без толкования
             const cardWithPosition = cardStore.createCardWithPosition(card);
-            const cardIndex = modalStore.selectedCards.length;
+            const cardIndex = currentCardsCount; // Используем тот же индекс, что и для основной логики
             const position = modalStore.selectedSpread.positions[cardIndex];
-            
+
             modalStore.addSelectedCard({
                 ...cardWithPosition,
                 interpretation: 'Не удалось получить толкование. Попробуйте ещё раз.',
@@ -77,20 +97,20 @@ const selectCard = async (card) => {
             <p class="card-selector__subtitle">Не думай. Доверься судьбе. Просто выбери карту</p>
         </div>
 
-        <div 
+        <div
             class="card-selector__selected"
             :class="'card-selector__selected--' + (modalStore.selectedSpread?.id || 'three-cards')"
         >
-            <div 
-                v-for="index in (modalStore.selectedSpread?.cardsCount || 3)" 
-                :key="index"
+            <div
+                v-for="slotIndex in selectedCardSlots"
+                :key="'slot-' + slotIndex"
                 class="card-selector__selected-card"
-                :class="{ 'card-selector__selected-card--filled': modalStore.selectedCards[index - 1] }"
+                :class="{ 'card-selector__selected-card--filled': safeSelectedCards[slotIndex] }"
             >
                 <img
-                    v-if="modalStore.selectedCards[index - 1]"
+                    v-if="safeSelectedCards[slotIndex]"
                     class="card-selector__selected-card-image"
-                    :src="modalStore.selectedCards[index - 1].image"
+                    :src="safeSelectedCards[slotIndex].image"
                     alt="Выбранная карта"
                 >
             </div>
@@ -98,7 +118,7 @@ const selectCard = async (card) => {
 
         <div class="card-selector__deck">
             <div
-                v-for="card in cardStore.shuffledDeck"
+                v-for="card in cardStore.availableCards"
                 :key="card.id"
                 class="card-selector__deck-card"
                 @click="selectCard(card)"
@@ -111,12 +131,23 @@ const selectCard = async (card) => {
             </div>
         </div>
 
+        <!-- Прелоадер с выбранной картой -->
         <div v-if="modalStore.isLoading" class="card-selector__loader">
             <div class="card-selector__loader-overlay"></div>
             <div class="card-selector__loader-content">
-                <div class="card-selector__loader-simple">
-                    <ButtonSpinner />
-                    <p class="card-selector__loader-text">Получаю предсказание</p>
+                <div class="card-selector__selected-card-loader">
+                    <div class="card-selector__selected-card-container">
+                        <img
+                            :src="safeSelectedCards[safeSelectedCards.length - 1]?.image"
+                            alt="Выбранная карта"
+                            class="card-selector__selected-card-image"
+                            :class="{ 'card-selector__selected-card--reversed': safeSelectedCards[safeSelectedCards.length - 1]?.isReversed }"
+                        >
+                    </div>
+                    <div class="card-selector__loader-info">
+                        <p class="card-selector__loader-text">Получаю предсказание</p>
+                        <ButtonSpinner />
+                    </div>
                 </div>
             </div>
         </div>
@@ -352,15 +383,41 @@ const selectCard = async (card) => {
         z-index: 1001;
     }
 
-    &__loader-simple {
+    &__selected-card-loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: $spacing-large;
+        padding: $spacing-large;
+        background-color: $color-bg-light;
+        border-radius: 12px;
+        box-shadow: 0px 20px 40px 0px rgba(10, 10, 12, 0.4);
+        animation: cardReveal 0.6s ease-out;
+    }
+
+    &__selected-card-container {
+        position: relative;
+        animation: cardPulse 2s ease-in-out infinite;
+    }
+
+    &__selected-card-image {
+        width: 200px;
+        height: 280px;
+        object-fit: cover;
+        border-radius: 12px;
+        box-shadow: 0px 10px 30px 0px rgba(213, 132, 110, 0.3);
+        transition: transform 0.3s ease;
+
+        &--reversed {
+            transform: rotate(180deg);
+        }
+    }
+
+    &__loader-info {
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: $spacing-middle;
-        padding: $spacing-large;
-        background-color: $color-bg-light;
-        border-radius: 8px;
-        box-shadow: 0px 15px 35px 0px rgba(10, 10, 12, 0.3215686274509804);
     }
 
     &__loader-text {
@@ -369,6 +426,34 @@ const selectCard = async (card) => {
         font-size: 16px;
         color: $color-white;
         font-weight: 500;
+        text-align: center;
+    }
+}
+
+// Анимации
+@keyframes cardReveal {
+    0% {
+        opacity: 0;
+        transform: scale(0.8) translateY(20px);
+    }
+    60% {
+        opacity: 0.9;
+        transform: scale(1.05) translateY(-5px);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes cardPulse {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0px 10px 30px 0px rgba(213, 132, 110, 0.3);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0px 15px 40px 0px rgba(213, 132, 110, 0.5);
     }
 }
 </style>
