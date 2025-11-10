@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted } from 'vue';
 import { useModalStore } from '@/stores/modal.store';
 
 const modalStore = useModalStore();
@@ -15,7 +15,23 @@ const cardPosition = computed(() => {
     return currentCard.value?.isReversed ? 'Перевёрнутое положение' : 'Прямое положение';
 });
 
+// Таймер 5 секунд
+const countdown = ref(5);
+const isButtonDisabled = ref(true);
+
+onMounted(() => {
+    const timer = setInterval(() => {
+        countdown.value--;
+        if (countdown.value <= 0) {
+            isButtonDisabled.value = false;
+            clearInterval(timer);
+        }
+    }, 1000);
+});
+
 const goToNext = () => {
+    if (isButtonDisabled.value) return;
+
     modalStore.closeCardResultModal();
 
     const maxCards = modalStore.selectedSpread?.cardsCount || 3;
@@ -57,7 +73,14 @@ const closeModal = () => {
                             </p>
                         </div>
 
-                        <button class="btn btn--primary" @click="goToNext">Далее</button>
+                        <button
+                            class="btn btn--primary"
+                            @click="goToNext"
+                            :disabled="isButtonDisabled"
+                        >
+                            <span v-if="isButtonDisabled">Следующая карта ({{ countdown }}с)</span>
+                            <span v-else>Следующая карта</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -150,6 +173,22 @@ const closeModal = () => {
         font-size: 16px;
         line-height: 1.6;
         color: $color-white;
+    }
+
+    .btn {
+        &--primary {
+            &:disabled {
+                background-color: $color-bg-dark;
+                color: $color-grey;
+                cursor: not-allowed;
+                opacity: 0.6;
+
+                &:hover {
+                    background-color: $color-bg-dark;
+                    transform: none;
+                }
+            }
+        }
     }
 }
 </style>
