@@ -631,14 +631,21 @@ export const useCardSelector = defineStore('cardSelectorStore', () => {
       ])
 
     // Перемешанная колода для отображения (computed для автоматического перемешивания)
-    const shuffledDeck = computed(() => {
+    const shuffledDeck = ref([]);
+
+    /**
+     * Перемешивает колоду и выбирает 20 случайных карт
+     */
+    const shuffleDeck = () => {
         const array = [...deck.value];
+        // Перемешиваем всю колоду
         for (let i = array.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [array[i], array[j]] = [array[j], array[i]];
         }
-        return array;
-    })
+        // Выбираем только первые 20 карт из перемешанной колоды
+        shuffledDeck.value = array.slice(0, 20);
+    }
 
     // Доступные карты (исключая выбранные)
     const availableCards = computed(() => {
@@ -647,13 +654,6 @@ export const useCardSelector = defineStore('cardSelectorStore', () => {
         const selectedCardIds = modalStore.selectedCards.map(card => card.id);
         return shuffledDeck.value.filter(card => !selectedCardIds.includes(card.id));
     })
-
-    /**
-     * Перемешивает колоду карт (пустая функция для совместимости)
-     */
-    const shuffleDeck = () => {
-        // Функция оставлена для совместимости, но перемешивание происходит автоматически через computed
-    }
 
     /**
      * Создаёт карту с случайным положением (прямое/перевёрнутое)
