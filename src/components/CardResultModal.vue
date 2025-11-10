@@ -190,6 +190,58 @@ const closeModal = () => {
             }
         }
     }
+
+    // Адаптив для мобильных устройств
+    @media (max-width: 768px) {
+        flex-direction: column;
+        text-align: center;
+        gap: $spacing-middle;
+        padding: $spacing-middle;
+
+        &__card {
+            order: -1; // Карта сверху
+        }
+
+        &__card-image {
+            max-width: 250px;
+            margin: 0 auto;
+        }
+
+        &__content {
+            gap: $spacing-small;
+        }
+
+        &__title {
+            font-size: 36px;
+        }
+
+        &__text {
+            font-size: 15px;
+            line-height: 1.5;
+        }
+    }
+
+    @media (max-width: 480px) {
+        padding: $spacing-small;
+        gap: $spacing-small;
+
+        &__card-image {
+            max-width: 200px;
+        }
+
+        &__title {
+            font-size: 32px;
+        }
+
+        &__position,
+        &__position-name {
+            font-size: 13px;
+        }
+
+        &__text {
+            font-size: 14px;
+        }
+    }
 }
 </style>
 

@@ -476,6 +476,12 @@ const handleSignOut = async () => {
     &__content {
         display: flex;
         gap: $spacing-middle;
+
+        // Адаптив для мобильных устройств
+        @media (max-width: 768px) {
+            flex-direction: column;
+            gap: $spacing-large;
+        }
     }
 
     &__section {
