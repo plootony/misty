@@ -5,7 +5,7 @@ import { useModalStore } from '@/stores/modal.store';
 import { interpretSingleCard } from '@/services/mistral.service';
 import CardResultModal from '@/components/CardResultModal.vue';
 import AnswerModal from '@/components/AnswerModal.vue';
-import CardLoader from '@/components/CardLoader.vue';
+import ButtonSpinner from '@/components/ButtonSpinner.vue';
 
 const userStore = useUserStore();
 const cardStore = useCardSelector();
@@ -108,7 +108,10 @@ const selectCard = async (card) => {
         <div v-if="modalStore.isLoading" class="card-selector__loader">
             <div class="card-selector__loader-overlay"></div>
             <div class="card-selector__loader-content">
-                <CardLoader />
+                <div class="card-selector__loader-simple">
+                    <ButtonSpinner />
+                    <p class="card-selector__loader-text">Получаю предсказание</p>
+                </div>
             </div>
         </div>
 
@@ -341,6 +344,25 @@ const selectCard = async (card) => {
     &__loader-content {
         position: relative;
         z-index: 1001;
+    }
+
+    &__loader-simple {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: $spacing-middle;
+        padding: $spacing-large;
+        background-color: $color-bg-light;
+        border-radius: 8px;
+        box-shadow: 0px 15px 35px 0px rgba(10, 10, 12, 0.3215686274509804);
+    }
+
+    &__loader-text {
+        margin: 0;
+        font-family: "Inter", Sans-serif;
+        font-size: 16px;
+        color: $color-white;
+        font-weight: 500;
     }
 }
 </style>
