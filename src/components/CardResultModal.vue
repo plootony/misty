@@ -4,6 +4,8 @@ import { useModalStore } from '@/stores/modal.store';
 
 const modalStore = useModalStore();
 
+const emit = defineEmits(['loadFullReading']);
+
 const currentCard = computed(() => {
     const cards = modalStore.selectedCards;
     return cards.length > 0 ? cards[cards.length - 1] : null;
@@ -15,12 +17,12 @@ const cardPosition = computed(() => {
 
 const goToNext = () => {
     modalStore.closeCardResultModal();
-    
+
     const maxCards = modalStore.selectedSpread?.cardsCount || 3;
     const isAllCardsSelected = modalStore.selectedCards.length === maxCards;
-    
+
     if (isAllCardsSelected) {
-        modalStore.openAnswerModal();
+        emit('loadFullReading');
     }
 };
 

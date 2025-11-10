@@ -5,9 +5,11 @@ export const useModalStore = defineStore('modalStore', () => {
     const isCardResultModalOpen = ref(false)
     const isAnswerModalOpen = ref(false)
     const isLoading = ref(false)
+    const isFullReadingLoading = ref(false)
     const selectedCards = ref([])
     const selectedSpread = ref(null)
     const userQuestion = ref('')
+    const fullReadingText = ref('')
 
     const openCardResultModal = () => {
         isCardResultModalOpen.value = true
@@ -39,6 +41,18 @@ export const useModalStore = defineStore('modalStore', () => {
         isLoading.value = false
     }
 
+    const startFullReadingLoading = () => {
+        isFullReadingLoading.value = true
+    }
+
+    const stopFullReadingLoading = () => {
+        isFullReadingLoading.value = false
+    }
+
+    const setFullReadingText = (text) => {
+        fullReadingText.value = text
+    }
+
     const updateLastCard = (cardData) => {
         const lastIndex = selectedCards.value.length - 1;
         if (lastIndex >= 0) {
@@ -50,18 +64,22 @@ export const useModalStore = defineStore('modalStore', () => {
         selectedCards.value = []
         selectedSpread.value = null
         userQuestion.value = ''
+        fullReadingText.value = ''
         isCardResultModalOpen.value = false
         isAnswerModalOpen.value = false
         isLoading.value = false
+        isFullReadingLoading.value = false
     }
 
     return {
         isCardResultModalOpen,
         isAnswerModalOpen,
         isLoading,
+        isFullReadingLoading,
         selectedCards,
         selectedSpread,
         userQuestion,
+        fullReadingText,
         openCardResultModal,
         closeCardResultModal,
         openAnswerModal,
@@ -70,6 +88,9 @@ export const useModalStore = defineStore('modalStore', () => {
         updateLastCard,
         startLoading,
         stopLoading,
+        startFullReadingLoading,
+        stopFullReadingLoading,
+        setFullReadingText,
         resetSelection
     }
 })

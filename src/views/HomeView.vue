@@ -1,16 +1,22 @@
 <script setup>
 import { onMounted, computed, nextTick } from 'vue';
+import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user.store';
 import { useCardSelector } from '@/stores/cardSelector.store';
 import { useModalStore } from '@/stores/modal.store';
-import { interpretSingleCard } from '@/services/mistral.service';
+import { interpretSingleCard, generateFullReading } from '@/services/mistral.service';
+import { saveReading } from '@/services/supabase.service';
+import { getZodiacSign } from '@/utils/zodiac';
 import CardResultModal from '@/components/CardResultModal.vue';
 import AnswerModal from '@/components/AnswerModal.vue';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 
+const router = useRouter();
 const userStore = useUserStore();
 const cardStore = useCardSelector();
 const modalStore = useModalStore();
+
+const zodiacSign = getZodiacSign(userStore.userData?.birth || '01.01.2000');
 
 // Computed для создания массива индексов
 const selectedCardSlots = computed(() => {
@@ -86,6 +92,53 @@ const selectCard = async (card) => {
         }
     }
 };
+
+const loadFullReading = async () => {
+    try {
+        modalStore.startFullReadingLoading();
+
+        const reading = await generateFullReading(
+            userStore.userData || { name: 'Гость', birth: '01.01.2000' },
+            zodiacSign,
+            modalStore.userQuestion,
+            modalStore.selectedSpread,
+            modalStore.selectedCards
+        );
+
+        // Сохраняем гадание в историю
+        if (userStore.isAuthenticated && userStore.userData?.id) {
+            try {
+                await saveReading(userStore.userData.id, {
+                    question: modalStore.userQuestion,
+                    spreadType: modalStore.selectedSpread.id,
+                    spreadName: modalStore.selectedSpread.name,
+                    cards: modalStore.selectedCards.map(card => ({
+                        name: card.name,
+                        arcana: card.arcana,
+                        isReversed: card.isReversed,
+                        position: card.position,
+                        positionInfo: card.positionInfo,
+                        interpretation: card.interpretation,
+                        meaning: card.meaning
+                    })),
+                    interpretation: reading
+                });
+            } catch (saveError) {
+                console.error('Ошибка сохранения гадания:', saveError);
+                // Не показываем ошибку пользователю, так как толкование уже получено
+            }
+        }
+
+        modalStore.setFullReadingText(reading);
+        modalStore.stopFullReadingLoading();
+        modalStore.openAnswerModal();
+
+    } catch (error) {
+        console.error('Ошибка получения финального толкования:', error);
+        modalStore.stopFullReadingLoading();
+        // TODO: показать ошибку пользователю
+    }
+};
 </script>
 
 <template>
@@ -99,7 +152,10 @@ const selectCard = async (card) => {
 
         <div
             class="card-selector__selected"
-            :class="'card-selector__selected--' + (modalStore.selectedSpread?.id || 'three-cards')"
+            :class="[
+                'card-selector__selected--' + (modalStore.selectedSpread?.id || 'three-cards'),
+                { 'card-selector__selected--loading': modalStore.isFullReadingLoading }
+            ]"
         >
             <div
                 v-for="slotIndex in selectedCardSlots"
@@ -152,7 +208,7 @@ const selectCard = async (card) => {
             </div>
         </div>
 
-        <CardResultModal v-if="modalStore.isCardResultModalOpen" />
+        <CardResultModal v-if="modalStore.isCardResultModalOpen" @loadFullReading="loadFullReading" />
         <AnswerModal v-if="modalStore.isAnswerModalOpen" />
     </div>
 </template>
@@ -296,6 +352,24 @@ const selectCard = async (card) => {
                 &:nth-child(10) { left: calc(50% - 210px); top: 50%; transform: translate(-50%, -50%) rotate(270deg); }
                 &:nth-child(11) { left: calc(50% - 182px); top: calc(50% - 105px); transform: translate(-50%, -50%) rotate(300deg); }
                 &:nth-child(12) { left: calc(50% - 105px); top: calc(50% - 182px); transform: translate(-50%, -50%) rotate(330deg); }
+            }
+        }
+    }
+
+    &__selected {
+        &--loading {
+            .card-selector__selected-card--filled {
+                // Только выбранные карты анимируются как в превью раскладов
+                &:nth-child(1) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0s; }
+                &:nth-child(2) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.05s; }
+                &:nth-child(3) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.1s; }
+                &:nth-child(4) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.15s; }
+                &:nth-child(5) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.2s; }
+                &:nth-child(6) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.25s; }
+                &:nth-child(7) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.3s; }
+                &:nth-child(8) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.35s; }
+                &:nth-child(9) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.4s; }
+                &:nth-child(10) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) infinite; animation-delay: 0.45s; }
             }
         }
     }
@@ -461,6 +535,25 @@ const selectCard = async (card) => {
     50% {
         transform: scale(1.02);
         box-shadow: 0px 15px 40px 0px rgba(213, 132, 110, 0.5);
+    }
+}
+
+@keyframes shuffleCard {
+    0% {
+        opacity: 0;
+        transform: scale(0.3) rotate(0deg);
+    }
+    40% {
+        opacity: 0.7;
+        transform: scale(0.5) rotate(5deg);
+    }
+    70% {
+        opacity: 1;
+        transform: scale(1.05) rotate(-3deg);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1) rotate(0deg);
     }
 }
 </style>
