@@ -366,8 +366,8 @@ const handleGoogleLogin = async () => {
     &__error {
         padding: $spacing-middle;
         background-color: rgba(255, 84, 84, 0.1);
-        border-left: 3px solid $color-orange;
-        color: $color-orange;
+        border-left: 3px solid $color-gold;
+        color: $color-gold;
         font-family: "Inter", Sans-serif;
         font-size: 14px;
         margin-bottom: $spacing-middle;
@@ -425,7 +425,7 @@ const handleGoogleLogin = async () => {
 
         &:focus {
             outline: none;
-            border-color: $color-pastel-orange;
+            border-color: $color-pastel-gold;
         }
 
         &:disabled {
@@ -471,7 +471,7 @@ const handleGoogleLogin = async () => {
     &__toggle-btn {
         background: none;
         border: none;
-        color: $color-pastel-orange;
+        color: $color-pastel-gold;
         font-weight: 600;
         cursor: pointer;
         transition: opacity 0.3s;

@@ -86,7 +86,7 @@
         width: 350px;
         height: 500px;
         border-radius: 24px;
-        border: 2px solid $color-pastel-orange;
+        border: 2px solid $color-pastel-gold;
         margin-top: -4px;
         margin-left: -4px;
         filter: url(#turbulent-displace);
@@ -109,7 +109,7 @@
         }
 
         &--2 {
-            border: 2px solid $color-pastel-orange;
+            border: 2px solid $color-pastel-gold;
             filter: blur(4px);
         }
     }
@@ -158,9 +158,9 @@
         z-index: -1;
         background: linear-gradient(
             -30deg,
-            $color-pastel-orange,
+            $color-pastel-gold,
             transparent,
-            $color-pastel-orange
+            $color-pastel-gold
         );
     }
 }

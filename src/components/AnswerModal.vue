@@ -71,7 +71,7 @@ const closeModal = () => {
 
     &__label {
         font-family: "Inter", Sans-serif;
-        color: $color-pastel-orange;
+        color: $color-pastel-gold;
         font-size: 14px;
         font-weight: 800;
         text-transform: uppercase;
@@ -107,7 +107,7 @@ const closeModal = () => {
         :deep(h1) {
             font-size: 28px;
             font-weight: 600;
-            border-bottom: 2px solid $color-pastel-orange;
+            border-bottom: 2px solid $color-pastel-gold;
             padding-bottom: $spacing-small;
         }
 
@@ -121,7 +121,7 @@ const closeModal = () => {
         :deep(h3) {
             font-size: 20px;
             font-weight: 500;
-            color: $color-pastel-orange;
+            color: $color-pastel-gold;
         }
 
         :deep(p) {
@@ -141,7 +141,7 @@ const closeModal = () => {
 
         :deep(strong), :deep(b) {
             font-weight: 600;
-            color: $color-pastel-orange;
+            color: $color-pastel-gold;
         }
 
         :deep(em), :deep(i) {
@@ -150,7 +150,7 @@ const closeModal = () => {
         }
 
         :deep(blockquote) {
-            border-left: 4px solid $color-pastel-orange;
+            border-left: 4px solid $color-pastel-gold;
             padding-left: $spacing-middle;
             margin: $spacing-middle 0;
             font-style: italic;

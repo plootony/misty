@@ -249,7 +249,7 @@ const closeTermsOfService = () => {
         transition: color 0.3s;
 
         &:hover {
-            color: $color-pastel-orange;
+            color: $color-pastel-gold;
         }
     }
 
@@ -336,7 +336,7 @@ const closeTermsOfService = () => {
         h4 {
             font-size: 16px;
             font-weight: 600;
-            color: $color-pastel-orange;
+            color: $color-pastel-gold;
             margin-top: $spacing-middle;
             margin-bottom: $spacing-small;
         }

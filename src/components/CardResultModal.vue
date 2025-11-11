@@ -108,6 +108,8 @@ const closeModal = () => {
 
     &__card {
         flex-shrink: 0;
+        max-width: 350px;
+        min-height: 100%;
     }
 
     &__card-image {
@@ -143,7 +145,7 @@ const closeModal = () => {
 
     &__label {
         font-family: "Inter", Sans-serif;
-        color: $color-pastel-orange;
+        color: $color-pastel-gold;
         font-size: 14px;
         font-weight: 800;
         text-transform: uppercase;
@@ -168,7 +170,7 @@ const closeModal = () => {
         font-family: "Inter", Sans-serif;
         font-size: 14px;
         font-weight: 600;
-        color: $color-pastel-orange;
+        color: $color-pastel-gold;
         text-transform: uppercase;
         letter-spacing: 0.5px;
         margin-top: $spacing-x-smal;

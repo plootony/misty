@@ -267,7 +267,7 @@ const loadFullReading = async () => {
 
     &__greeting {
         font-family: "Inter", Sans-serif;
-        color: $color-pastel-orange;
+        color: $color-pastel-gold;
         font-size: 14px;
         font-weight: 800;
         text-transform: uppercase;
@@ -553,7 +553,7 @@ const loadFullReading = async () => {
         font-family: "Inter", Sans-serif;
         font-size: 18px;
         font-weight: 500;
-        color: $color-pastel-orange;
+        color: $color-pastel-gold;
         font-style: italic;
         animation: textPulse 2s ease-in-out infinite;
     }
@@ -656,7 +656,7 @@ const loadFullReading = async () => {
         height: 280px;
         object-fit: cover;
         border-radius: 12px;
-        box-shadow: 0px 10px 30px 0px rgba(213, 132, 110, 0.3);
+        box-shadow: 0px 10px 30px 0px rgba(176, 132, 80, 0.3);
         transition: transform 0.3s ease;
 
         &--reversed {
@@ -700,11 +700,11 @@ const loadFullReading = async () => {
 @keyframes cardPulse {
     0%, 100% {
         transform: scale(1);
-        box-shadow: 0px 10px 30px 0px rgba(213, 132, 110, 0.3);
+        box-shadow: 0px 10px 30px 0px rgba(176, 132, 80, 0.3);
     }
     50% {
         transform: scale(1.02);
-        box-shadow: 0px 15px 40px 0px rgba(213, 132, 110, 0.5);
+        box-shadow: 0px 15px 40px 0px rgba(176, 132, 80, 0.5);
     }
 }
 

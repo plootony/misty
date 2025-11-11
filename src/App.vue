@@ -32,7 +32,8 @@ watch(() => route.path, () => {
 
   <template v-else>
     <div class="app-layout">
-      <AppHeader />
+      <!-- Header показывается только не на страницах авторизации -->
+      <AppHeader v-if="!route.path.startsWith('/auth')" />
       <main class="app-main">
         <RouterView />
       </main>

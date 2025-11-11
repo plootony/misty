@@ -97,7 +97,7 @@ const userStore = useUserStore();
         }
 
         &.router-link-active {
-            color: $color-pastel-orange;
+            color: $color-pastel-gold;
         }
 
         &--profile {
@@ -110,11 +110,11 @@ const userStore = useUserStore();
             transition: border-color 0.3s;
 
             &:hover {
-                border-color: $color-pastel-orange;
+                border-color: $color-pastel-gold;
             }
 
             &.router-link-active {
-                border-color: $color-orange;
+                border-color: $color-gold;
             }
         }
     }
@@ -135,7 +135,7 @@ const userStore = useUserStore();
         font-size: 10px;
         font-weight: 700;
         text-transform: uppercase;
-        color: $color-pastel-orange;
+        color: $color-pastel-gold;
         letter-spacing: 0.5px;
     }
 }

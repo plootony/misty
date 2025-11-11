@@ -109,7 +109,7 @@ const onMouseLeave = () => {
 
     &__greeting {
         font-family: "Inter", Sans-serif;
-        color: $color-pastel-orange;
+        color: $color-pastel-gold;
         font-size: 14px;
         font-weight: 800;
         text-transform: uppercase;
@@ -155,7 +155,7 @@ const onMouseLeave = () => {
         position: relative;
 
         &:hover:not(&--disabled) {
-            outline-color: $color-orange;
+            outline-color: $color-gold;
         }
 
         &--disabled {
@@ -219,7 +219,7 @@ const onMouseLeave = () => {
         font-weight: bold;
         font-size: 14px;
         text-transform: uppercase;
-        color: $color-pastel-orange;
+        color: $color-pastel-gold;
     }
 
     &__card-lock {

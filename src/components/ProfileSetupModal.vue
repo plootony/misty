@@ -264,8 +264,8 @@ const formatBirthDate = (event) => {
     &__error {
         padding: $spacing-middle;
         background-color: rgba(255, 84, 84, 0.1);
-        border-left: 3px solid $color-orange;
-        color: $color-orange;
+        border-left: 3px solid $color-gold;
+        color: $color-gold;
         font-family: "Inter", Sans-serif;
         font-size: 14px;
         animation: shake 0.3s ease-in-out;
@@ -307,7 +307,7 @@ const formatBirthDate = (event) => {
         }
 
         &:focus {
-            border-color: $color-pastel-orange;
+            border-color: $color-pastel-gold;
         }
 
         &:disabled {

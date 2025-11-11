@@ -192,7 +192,7 @@ const submitQuestion = async () => {
 
     &__greeting {
         font-family: "Inter", Sans-serif;
-        color: $color-pastel-orange;
+        color: $color-pastel-gold;
         font-size: 14px;
         font-weight: 800;
         text-transform: uppercase;
@@ -240,7 +240,7 @@ const submitQuestion = async () => {
         }
 
         &:focus {
-            outline: 2px solid $color-pastel-orange;
+            outline: 2px solid $color-pastel-gold;
         }
 
         &:disabled {
@@ -254,15 +254,15 @@ const submitQuestion = async () => {
         align-items: center;
         gap: $spacing-small;
         padding: $spacing-small;
-        background-color: rgba($color-pastel-orange, 0.1);
-        border-left: 3px solid $color-pastel-orange;
+        background-color: rgba($color-pastel-gold, 0.1);
+        border-left: 3px solid $color-pastel-gold;
         animation: fadeIn 0.3s ease-in;
     }
 
     &__validation-text {
         font-family: "Inter", Sans-serif;
         font-size: 14px;
-        color: $color-pastel-orange;
+        color: $color-pastel-gold;
         font-style: italic;
     }
 

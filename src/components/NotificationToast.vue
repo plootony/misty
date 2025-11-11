@@ -69,7 +69,7 @@ const close = () => {
     }
 
     &--warning {
-        border-left-color: $color-pastel-orange;
+        border-left-color: $color-pastel-gold;
     }
 
     &--success {

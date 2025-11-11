@@ -316,7 +316,7 @@ const formatDate = (dateString) => {
 
         &:focus {
             outline: none;
-            border-color: $color-pastel-orange;
+            border-color: $color-pastel-gold;
         }
     }
 
@@ -362,11 +362,11 @@ const formatDate = (dateString) => {
 
         &--inactive {
             opacity: 0.7;
-            border-color: rgba($color-orange, 0.5);
+            border-color: rgba($color-gold, 0.5);
         }
 
         &:hover {
-            border-color: $color-pastel-orange;
+            border-color: $color-pastel-gold;
         }
     }
 
@@ -422,12 +422,12 @@ const formatDate = (dateString) => {
         border-radius: 4px;
 
         &--admin {
-            background-color: $color-pastel-orange;
+            background-color: $color-pastel-gold;
             color: $color-bg-dark;
         }
 
         &--blocked {
-            background-color: $color-orange;
+            background-color: $color-gold;
             color: $color-white;
         }
     }
@@ -479,7 +479,7 @@ const formatDate = (dateString) => {
 
         &:focus {
             outline: none;
-            border-color: $color-pastel-orange;
+            border-color: $color-pastel-gold;
         }
     }
 
@@ -503,7 +503,7 @@ const formatDate = (dateString) => {
 
 .btn {
     &--warning {
-        background-color: $color-orange;
+        background-color: $color-gold;
         color: $color-white;
 
         &:hover {

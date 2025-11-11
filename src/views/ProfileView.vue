@@ -373,11 +373,9 @@ const handleSignOut = async () => {
                                             <div class="card-detail__summary">
                                                 <span class="card-detail__name">{{ card.name }}</span>
                                                 <span class="card-detail__position">{{ card.position }}</span>
+
+                                                <p class="card-detail__description">{{ card.description }}</p>
                                             </div>
-                                        </div>
-                                        
-                                        <div class="card-detail__description-wrapper">
-                                            <p class="card-detail__description">{{ card.description }}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -416,7 +414,7 @@ const handleSignOut = async () => {
     padding: $spacing-middle;
 
     &__container {
-        max-width: 1200px;
+        max-width: 1440px;
         margin: 0 auto;
     }
 
@@ -488,7 +486,7 @@ const handleSignOut = async () => {
         user-select: none;
 
         &:hover {
-            color: $color-pastel-orange;
+            color: $color-pastel-gold;
         }
     }
 
@@ -496,7 +494,7 @@ const handleSignOut = async () => {
         width: 18px;
         height: 18px;
         cursor: pointer;
-        accent-color: $color-orange;
+        accent-color: $color-gold;
     }
 
     &__view {
@@ -551,7 +549,7 @@ const handleSignOut = async () => {
     &__tariff-badge {
         display: inline-flex;
         padding: 4px $spacing-small;
-        background-color: $color-pastel-orange;
+        background-color: $color-pastel-gold;
         color: $color-bg-dark;
         font-family: "Inter", Sans-serif;
         font-size: 11px;
@@ -636,7 +634,7 @@ const handleSignOut = async () => {
     position: relative;
 
     &--active {
-        border-color: $color-pastel-orange;
+        border-color: $color-pastel-gold;
     }
 
     &__checkbox {
@@ -646,11 +644,14 @@ const handleSignOut = async () => {
         width: 20px;
         height: 20px;
         cursor: pointer;
-        accent-color: $color-orange;
+        accent-color: $color-gold;
         z-index: 10;
         background-color: $color-bg-light;
         border-radius: 4px;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        left: -35px;
+        top: calc(50% - 10px);
+        transform: translateY(-50%);
     }
 
     &__header {
@@ -666,7 +667,7 @@ const handleSignOut = async () => {
     }
 
     &__preview {
-        width: 220px;
+        width: 260px;
         min-height: 100px;
         flex-shrink: 0;
         display: flex;
@@ -690,7 +691,7 @@ const handleSignOut = async () => {
         font-family: "Inter", Sans-serif;
         font-size: 13px;
         font-weight: 600;
-        color: $color-pastel-orange;
+        color: $color-pastel-gold;
         text-transform: uppercase;
     }
 
@@ -730,7 +731,7 @@ const handleSignOut = async () => {
         font-family: "Inter", Sans-serif;
         font-size: 14px;
         font-weight: 700;
-        color: $color-pastel-orange;
+        color: $color-pastel-gold;
         text-transform: uppercase;
         margin-bottom: $spacing-middle;
     }
@@ -842,11 +843,11 @@ const handleSignOut = async () => {
     }
 
     &--primary {
-        background-color: $color-orange;
+        background-color: $color-gold;
         color: $color-white;
 
         &:hover:not(:disabled) {
-            background-color: $color-pastel-orange;
+            background-color: $color-pastel-gold;
         }
     }
 
@@ -875,7 +876,7 @@ const handleSignOut = async () => {
     }
 
     &--admin {
-        background-color: $color-orange;
+        background-color: $color-gold;
         color: $color-white;
         font-weight: 700;
 

@@ -127,7 +127,7 @@ onMounted(async () => {
         p {
             font-family: "Inter", Sans-serif;
             font-size: 16px;
-            color: $color-orange;
+            color: $color-gold;
         }
     }
 
