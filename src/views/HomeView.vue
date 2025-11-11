@@ -420,6 +420,82 @@ const loadFullReading = async () => {
                 &:nth-child(5) { left: 50%; top: 50%; transform: translate(-50%, -50%); } // Центр
             }
         }
+
+        // Расклад на любовь - 7 карт в форме сердца
+        &--love-spread {
+            min-height: 500px;
+
+            .card-selector__selected-card {
+                position: absolute;
+
+                // 7 позиций в форме сердца
+                &:nth-child(1) { left: calc(50% - 80px); top: calc(50% - 120px); transform: translate(-50%, -50%) rotate(-30deg); } // Левый верхний
+                &:nth-child(2) { left: calc(50% + 80px); top: calc(50% - 120px); transform: translate(-50%, -50%) rotate(30deg); } // Правый верхний
+                &:nth-child(3) { left: 50%; top: calc(50% - 80px); transform: translate(-50%, -50%); } // Верх центра
+                &:nth-child(4) { left: calc(50% - 120px); top: calc(50% - 40px); transform: translate(-50%, -50%) rotate(-60deg); } // Левый центр
+                &:nth-child(5) { left: calc(50% + 120px); top: calc(50% - 40px); transform: translate(-50%, -50%) rotate(60deg); } // Правый центр
+                &:nth-child(6) { left: calc(50% - 60px); top: calc(50% + 60px); transform: translate(-50%, -50%) rotate(-15deg); } // Левый нижний
+                &:nth-child(7) { left: calc(50% + 60px); top: calc(50% + 60px); transform: translate(-50%, -50%) rotate(15deg); } // Правый нижний
+            }
+        }
+
+        // Путь карьеры - 8 карт в форме лестницы
+        &--career-path {
+            min-height: 550px;
+
+            .card-selector__selected-card {
+                position: absolute;
+
+                // 8 позиций в форме лестницы
+                &:nth-child(1) { left: calc(50% - 200px); top: calc(50% + 120px); transform: translate(-50%, -50%) rotate(-15deg); } // Нижняя ступень слева
+                &:nth-child(2) { left: calc(50% - 120px); top: calc(50% + 80px); transform: translate(-50%, -50%) rotate(-10deg); } // Вторая ступень слева
+                &:nth-child(3) { left: calc(50% - 40px); top: calc(50% + 40px); transform: translate(-50%, -50%) rotate(-5deg); } // Третья ступень слева
+                &:nth-child(4) { left: calc(50% + 40px); top: calc(50% + 0px); transform: translate(-50%, -50%) rotate(5deg); } // Четвертая ступень справа
+                &:nth-child(5) { left: calc(50% + 120px); top: calc(50% - 40px); transform: translate(-50%, -50%) rotate(10deg); } // Пятая ступень справа
+                &:nth-child(6) { left: calc(50% + 200px); top: calc(50% - 80px); transform: translate(-50%, -50%) rotate(15deg); } // Шестая ступень справа
+                &:nth-child(7) { left: 50%; top: calc(50% - 120px); transform: translate(-50%, -50%); } // Верхняя центральная
+                &:nth-child(8) { left: 50%; top: calc(50% - 200px); transform: translate(-50%, -50%); } // Самая верхняя
+            }
+        }
+
+        // Колесо фортуны - 8 карт по кругу
+        &--wheel-of-fortune {
+            min-height: 550px;
+
+            .card-selector__selected-card {
+                position: absolute;
+
+                // 8 позиций по кругу (каждые 45 градусов)
+                &:nth-child(1) { left: 50%; top: calc(50% - 180px); transform: translate(-50%, -50%); } // Север
+                &:nth-child(2) { left: calc(50% + 127px); top: calc(50% - 127px); transform: translate(-50%, -50%) rotate(45deg); } // Северо-восток
+                &:nth-child(3) { left: calc(50% + 180px); top: 50%; transform: translate(-50%, -50%) rotate(90deg); } // Восток
+                &:nth-child(4) { left: calc(50% + 127px); top: calc(50% + 127px); transform: translate(-50%, -50%) rotate(135deg); } // Юго-восток
+                &:nth-child(5) { left: 50%; top: calc(50% + 180px); transform: translate(-50%, -50%) rotate(180deg); } // Юг
+                &:nth-child(6) { left: calc(50% - 127px); top: calc(50% + 127px); transform: translate(-50%, -50%) rotate(225deg); } // Юго-запад
+                &:nth-child(7) { left: calc(50% - 180px); top: 50%; transform: translate(-50%, -50%) rotate(270deg); } // Запад
+                &:nth-child(8) { left: calc(50% - 127px); top: calc(50% - 127px); transform: translate(-50%, -50%) rotate(315deg); } // Северо-запад
+            }
+        }
+
+        // Духовный путь - 9 карт в форме спирали
+        &--spiritual-journey {
+            min-height: 550px;
+
+            .card-selector__selected-card {
+                position: absolute;
+
+                // 9 позиций в форме спирали
+                &:nth-child(1) { left: 50%; top: calc(50% - 60px); transform: translate(-50%, -50%); } // Центр
+                &:nth-child(2) { left: calc(50% + 80px); top: calc(50% - 40px); transform: translate(-50%, -50%) rotate(30deg); } // Первый виток
+                &:nth-child(3) { left: calc(50% + 120px); top: 50%; transform: translate(-50%, -50%) rotate(60deg); } // Второй виток
+                &:nth-child(4) { left: calc(50% + 80px); top: calc(50% + 80px); transform: translate(-50%, -50%) rotate(120deg); } // Третий виток
+                &:nth-child(5) { left: 50%; top: calc(50% + 120px); transform: translate(-50%, -50%) rotate(180deg); } // Четвертый виток
+                &:nth-child(6) { left: calc(50% - 80px); top: calc(50% + 80px); transform: translate(-50%, -50%) rotate(240deg); } // Пятый виток
+                &:nth-child(7) { left: calc(50% - 120px); top: 50%; transform: translate(-50%, -50%) rotate(300deg); } // Шестой виток
+                &:nth-child(8) { left: calc(50% - 80px); top: calc(50% - 80px); transform: translate(-50%, -50%) rotate(330deg); } // Седьмой виток
+                &:nth-child(9) { left: 50%; top: calc(50% - 160px); transform: translate(-50%, -50%); } // Восьмой виток (внешний)
+            }
+        }
     }
 
     &__selected-card--animating {
