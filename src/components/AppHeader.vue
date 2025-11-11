@@ -9,7 +9,7 @@ const userStore = useUserStore();
         <div class="header__container">
             <RouterLink to="/" class="header__logo">
                 <img src="@/assets/images/stars-icon.png" alt="Misty" class="header__logo-icon">
-                <span class="header__logo-text">Misty</span>
+                <span class="header__logo-text">MiSTY</span>
             </RouterLink>
 
             <nav class="header__nav">

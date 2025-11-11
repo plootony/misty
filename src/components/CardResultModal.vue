@@ -126,7 +126,7 @@ const closeModal = () => {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: $spacing-middle;
+        gap: $spacing-small;
     }
 
     &__header {
