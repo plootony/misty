@@ -12,7 +12,6 @@ const userStore = useUserStore();
 const modalStore = useModalStore();
 const question = ref('Что делать, если не к чему стремиться?');
 const isLoading = ref(false);
-const isValidating = ref(false);
 
 const notification = ref({
     show: false,
@@ -84,22 +83,20 @@ const submitQuestion = async () => {
     }
 
     // Затем AI валидация
-    isValidating.value = true;
     isLoading.value = true;
 
     try {
         const aiValidation = await validateTarotQuestion(question.value);
-        
+
         if (!aiValidation.isValid) {
-            isValidating.value = false;
             isLoading.value = false;
-            
+
             // Формируем сообщение с причиной и предложением
             let errorMessage = aiValidation.reason || 'Вопрос не подходит для гадания на Таро';
             if (aiValidation.suggestion) {
                 errorMessage += `\n\nПопробуйте переформулировать: ${aiValidation.suggestion}`;
             }
-            
+
             showNotification('warning', errorMessage);
             return;
         }
@@ -110,14 +107,12 @@ const submitQuestion = async () => {
         }
 
         // Вопрос валиден, переходим к выбору карт
-        isValidating.value = false;
         isLoading.value = false;
         modalStore.userQuestion = question.value;
         router.push('/card-selection');
 
     } catch (error) {
         console.error('Ошибка при валидации вопроса:', error);
-        isValidating.value = false;
         isLoading.value = false;
         showNotification('error', 'Произошла ошибка. Попробуйте еще раз.');
     }
@@ -134,10 +129,9 @@ const submitQuestion = async () => {
         />
 
         <div class="question__header">
-            <img src="@/assets/images/stars-icon.png" alt="star icon" class="question__icon">
             <p class="question__greeting">ПРИВЕТСТВУЮ ТЕБЯ, {{ userStore.userData?.name?.toUpperCase() || 'ГОСТЬ' }}</p>
             <h1 class="question__title">Задай свой вопрос</h1>
-            <p class="question__subtitle">Хорошо подумай прежде, чем задать вопрос</p>
+            <p class="question__subtitle">Спроси не тогда, когда хочется знать, а когда готова душа</p>
         </div>
 
         <div class="question__content">
@@ -149,10 +143,6 @@ const submitQuestion = async () => {
                 :disabled="isLoading"
             ></textarea>
             
-            <div v-if="isValidating" class="question__validation-status">
-                <ButtonSpinner />
-                <span class="question__validation-text">Проверяю вопрос с помощью мистических сил...</span>
-            </div>
             
             <div class="question__actions">
                 <button 
@@ -163,13 +153,13 @@ const submitQuestion = async () => {
                     ← Назад
                 </button>
                 
-                <button 
-                    class="btn btn--primary" 
+                <button
+                    class="btn btn--primary"
                     @click="submitQuestion"
                     :disabled="isLoading"
                 >
-                    <ButtonSpinner v-if="isLoading && !isValidating" />
-                    <span>{{ isValidating ? 'Проверка вопроса...' : 'Задать вопрос' }}</span>
+                    <ButtonSpinner v-if="isLoading" />
+                    <span>{{ isLoading ? 'Проверка вопроса' : 'Задать вопрос' }}</span>
                 </button>
             </div>
         </div>
@@ -219,8 +209,8 @@ const submitQuestion = async () => {
 
     &__subtitle {
         font-family: "Inter", Sans-serif;
-        font-size: 16px;
-        color: $color-grey;
+         font-size: 16px;
+        color: #b2abb5;
     }
 
     &__content {

@@ -200,7 +200,6 @@ const handleGoogleLogin = async () => {
     <div class="auth">
         <div class="auth__container">
             <div class="auth__header">
-                <img src="@/assets/images/stars-icon.png" alt="star icon" class="auth__icon">
                 <h1 class="auth__title">{{ isLogin ? 'Добро пожаловать' : 'Регистрация' }}</h1>
                 <p class="auth__subtitle">
                     {{ isLogin ? 'Войдите в свой аккаунт' : 'Создайте новый аккаунт' }}

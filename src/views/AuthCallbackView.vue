@@ -65,8 +65,6 @@ onMounted(async () => {
 <template>
     <div class="auth-callback">
         <div class="auth-callback__container">
-            <img src="@/assets/images/stars-icon.png" alt="star icon" class="auth-callback__icon">
-
             <div v-if="error" class="auth-callback__error">
                 <p>{{ error }}</p>
                 <p class="auth-callback__redirect">Перенаправление на страницу входа...</p>

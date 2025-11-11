@@ -269,13 +269,30 @@ export async function getReadings(userId, limit = 10, offset = 0) {
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
-    
+
     if (error) {
         console.error('Ошибка получения истории гаданий:', error)
         return []
     }
-    
+
     return data
+}
+
+/**
+ * Получение общего количества записей гаданий пользователя
+ */
+export async function getReadingsCount(userId) {
+    const { count, error } = await supabase
+        .from('readings')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+
+    if (error) {
+        console.error('Ошибка получения количества записей:', error)
+        return 0
+    }
+
+    return count || 0
 }
 
 /**

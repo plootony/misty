@@ -38,9 +38,9 @@ const onMouseLeave = () => {
 <template>
     <div class="spread-selector">
         <div class="spread-selector__header">
-            <img src="@/assets/images/stars-icon.png" alt="star icon" class="spread-selector__icon">
             <p class="spread-selector__greeting">ПРИВЕТСТВУЮ ТЕБЯ, {{ userStore.userData?.name?.toUpperCase() || 'ГОСТЬ' }}</p>
             <h1 class="spread-selector__title">Сделай свой выбор</h1>
+            <p class="spread-selector__subtitle">Решай с сердцем - оно знает путь</p>
         </div>
 
         <div class="spread-selector__grid">
@@ -119,6 +119,12 @@ const onMouseLeave = () => {
         font-weight: 600;
         line-height: 1.3em;
         color: $color-white;
+    }
+
+    &__subtitle {
+        font-family: "Inter", Sans-serif;
+        font-size: 16px;
+        color: #b2abb5;
     }
 
     &__grid {

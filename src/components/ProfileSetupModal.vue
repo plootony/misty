@@ -110,7 +110,6 @@ const formatBirthDate = (event) => {
                 <div class="modal__content modal__content--profile-setup">
                     <div class="profile-setup">
                         <div class="profile-setup__header">
-                            <img src="@/assets/images/stars-icon.png" alt="star icon" class="profile-setup__icon">
                             <h1 class="profile-setup__title">Завершите настройку профиля</h1>
                             <p class="profile-setup__subtitle">
                                 Для точного гадания нам нужны ваши настоящие данные

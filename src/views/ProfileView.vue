@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user.store';
 import { useCardSelector } from '@/stores/cardSelector.store';
-import { getReadings, deleteReading, deleteReadings } from '@/services/supabase.service';
+import { getReadings, getReadingsCount, deleteReading, deleteReadings } from '@/services/supabase.service';
 import { getZodiacSign } from '@/utils/zodiac';
 import SpreadPreview from '@/components/SpreadPreview.vue';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
@@ -17,6 +17,7 @@ const cardStore = useCardSelector();
 const historyItems = ref([]);
 const isLoadingHistory = ref(false);
 const isLoadingMore = ref(false);
+const totalReadingsCount = ref(0);
 
 // Пагинация
 const itemsPerPage = 5;
@@ -25,17 +26,42 @@ const hasMore = ref(true);
 // Удаление записей
 const selectedReadings = ref([]);
 const isDeleting = ref(false);
+const selectAllMode = ref(false); // Флаг режима "выбрать все"
 
 // Проверка, выбраны ли все записи
 const allSelected = computed({
-    get: () => historyItems.value.length > 0 && selectedReadings.value.length === historyItems.value.length,
-    set: (value) => {
+    get: () => {
+        if (selectAllMode.value) {
+            return true; // В режиме "выбрать все" чекбокс всегда отмечен
+        }
+        // В обычном режиме проверяем, выбраны ли все видимые записи
+        return historyItems.value.length > 0 && selectedReadings.value.length === historyItems.value.length && selectedReadings.value.length === totalReadingsCount.value;
+    },
+    set: async (value) => {
         if (value) {
-            selectedReadings.value = historyItems.value.map(item => item.id);
+            // Если записей мало, выбираем все видимые
+            if (totalReadingsCount.value <= itemsPerPage) {
+                selectedReadings.value = historyItems.value.map(item => item.id);
+                selectAllMode.value = false;
+            } else {
+                // Если записей много, включаем режим "выбрать все"
+                selectAllMode.value = true;
+                selectedReadings.value = []; // Очищаем локальный выбор
+            }
         } else {
+            // Отключаем режим "выбрать все" и очищаем выбор
+            selectAllMode.value = false;
             selectedReadings.value = [];
         }
     }
+});
+
+// Количество выбранных записей (учитывая режим "выбрать все")
+const selectedCount = computed(() => {
+    if (selectAllMode.value) {
+        return totalReadingsCount.value;
+    }
+    return selectedReadings.value.length;
 });
 
 // Знак зодиака пользователя
@@ -60,7 +86,12 @@ const loadHistory = async (append = false) => {
     try {
         const offset = append ? historyItems.value.length : 0;
         const readings = await getReadings(userStore.userData.id, itemsPerPage, offset);
-        
+
+        // Загружаем общее количество записей только при первой загрузке
+        if (!append) {
+            totalReadingsCount.value = await getReadingsCount(userStore.userData.id);
+        }
+
         // Преобразуем данные из БД в формат для отображения
         const formattedReadings = readings.map(reading => ({
             id: reading.id,
@@ -119,33 +150,43 @@ const toggleAccordion = (id) => {
     activeAccordion.value = activeAccordion.value === id ? null : id;
 };
 
+// Обработчик изменения индивидуального выбора
+const onIndividualSelectionChange = () => {
+    // При изменении индивидуального выбора отключаем режим "выбрать все"
+    selectAllMode.value = false;
+};
+
 
 // Удаление выбранных записей
 const deleteSelectedReadings = async () => {
-    if (selectedReadings.value.length === 0) return;
-    
-    const confirmMessage = selectedReadings.value.length === 1
+    if (selectedCount.value === 0) return;
+
+    const confirmMessage = selectedCount.value === 1
         ? 'Вы уверены, что хотите удалить эту запись?'
-        : `Вы уверены, что хотите удалить выбранные записи (${selectedReadings.value.length})?`;
-    
+        : `Вы уверены, что хотите удалить выбранные записи (${selectedCount.value})?`;
+
     if (!confirm(confirmMessage)) return;
-    
+
     isDeleting.value = true;
     try {
-        await deleteReadings(selectedReadings.value);
-        
-        // Удаляем из локального массива
-        historyItems.value = historyItems.value.filter(
-            item => !selectedReadings.value.includes(item.id)
-        );
-        
+        if (selectAllMode.value) {
+            // В режиме "выбрать все" удаляем все записи пользователя
+            // Получаем все ID записей пользователя
+            const allReadings = await getReadings(userStore.userData.id, totalReadingsCount.value, 0);
+            const allIds = allReadings.map(reading => reading.id);
+            await deleteReadings(allIds);
+        } else {
+            // В обычном режиме удаляем только выбранные записи
+            await deleteReadings(selectedReadings.value);
+        }
+
+        // Перезагружаем историю с начала
+        await loadHistory();
+
         // Очищаем выбор
         selectedReadings.value = [];
-        
-        // Если записей стало мало, подгружаем еще
-        if (historyItems.value.length < itemsPerPage && hasMore.value) {
-            await loadHistory(true);
-        }
+        selectAllMode.value = false;
+
     } catch (error) {
         console.error('Ошибка удаления записей:', error);
         alert('Не удалось удалить записи');
@@ -226,7 +267,7 @@ const handleSignOut = async () => {
                 <!-- История запросов -->
                 <section class="profile__section">
                     <div class="profile__history-header">
-                        <h2 class="profile__section-title">История гаданий</h2>
+                        <h2 class="profile__section-title">История раскладов</h2>
                         
                         <!-- Панель управления удалением -->
                         <div v-if="historyItems.length > 0" class="profile__history-controls">
@@ -240,14 +281,14 @@ const handleSignOut = async () => {
                             </label>
                             
                             <button
-                                v-if="selectedReadings.length > 0"
+                                v-if="selectedCount > 0"
                                 type="button"
                                 class="btn btn--danger btn--small"
                                 @click="deleteSelectedReadings"
                                 :disabled="isDeleting"
                             >
                                 <ButtonSpinner v-if="isDeleting" />
-                                <span v-else>Удалить выбранные ({{ selectedReadings.length }})</span>
+                                <span v-else>Удалить выбранные ({{ selectedCount }})</span>
                             </button>
                         </div>
                     </div>
@@ -262,7 +303,7 @@ const handleSignOut = async () => {
                     <div v-else-if="historyItems.length === 0" class="profile__history-empty">
                         <p>У вас пока нет сохраненных гаданий</p>
                         <button class="btn btn--primary" @click="router.push('/')">
-                            Начать гадание
+                            Новый расклад
                         </button>
                     </div>
 
@@ -274,12 +315,13 @@ const handleSignOut = async () => {
                             class="history-item"
                             :class="{ 'history-item--active': activeAccordion === item.id }"
                         >
-                            <input 
-                                type="checkbox" 
+                            <input
+                                type="checkbox"
                                 :value="item.id"
                                 v-model="selectedReadings"
                                 class="history-item__checkbox"
                                 @click.stop
+                                @change="onIndividualSelectionChange"
                             >
                             
                             <button 
@@ -411,7 +453,6 @@ const handleSignOut = async () => {
         font-size: 28px;
         font-weight: 600;
         color: $color-white;
-        margin-bottom: $spacing-large;
     }
 
     &__history-header {
@@ -419,7 +460,7 @@ const handleSignOut = async () => {
         justify-content: space-between;
         align-items: flex-start;
         gap: $spacing-middle;
-        margin-bottom: $spacing-large;
+        margin-bottom: $spacing-middle;
         flex-wrap: wrap;
     }
 

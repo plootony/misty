@@ -26,6 +26,21 @@ const selectedCardSlots = computed(() => {
 // Computed для безопасного доступа к выбранным картам
 const safeSelectedCards = computed(() => modalStore.selectedCards || []);
 
+// Computed для динамического заголовка и подзаголовка
+const pageTitle = computed(() => {
+    if (modalStore.isFullReadingLoading) {
+        return 'Выбор сделан';
+    }
+    return 'Сделай свой выбор';
+});
+
+const pageSubtitle = computed(() => {
+    if (modalStore.isFullReadingLoading) {
+        return 'Вселенная не спешит, она шепчет свои тайны через символы';
+    }
+    return 'Не думай. Доверься судьбе. Просто выбери карту';
+});
+
 // Перемешиваем колоду при каждом заходе на страницу
 onMounted(() => {
     cardStore.shuffleDeck();
@@ -150,10 +165,9 @@ const loadFullReading = async () => {
 <template>
     <div class="card-selector">
         <div class="card-selector__header">
-            <img src="@/assets/images/stars-icon.png" alt="star icon" class="card-selector__icon">
             <p class="card-selector__greeting">ПРИВЕТСТВУЮ ТЕБЯ, {{ userStore.userData?.name?.toUpperCase() || 'ГОСТЬ' }}</p>
-            <h1 class="card-selector__title">Сделай свой выбор</h1>
-            <p class="card-selector__subtitle">Не думай. Доверься судьбе. Просто выбери карту</p>
+            <h1 class="card-selector__title">{{ pageTitle }}</h1>
+            <p class="card-selector__subtitle">{{ pageSubtitle }}</p>
         </div>
 
         <!-- Подпись во время загрузки итогового предсказания -->
@@ -243,6 +257,7 @@ const loadFullReading = async () => {
         align-items: center;
         text-align: center;
         gap: $spacing-small;
+        margin-bottom: $spacing-large;
     }
 
     &__icon {
