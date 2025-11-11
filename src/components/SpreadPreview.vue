@@ -53,6 +53,7 @@ const spreadClass = computed(() => {
     align-items: center;
     position: relative;
     min-height: 120px;
+    overflow: hidden;
 
     &__card {
         width: 30px;
@@ -72,22 +73,21 @@ const spreadClass = computed(() => {
         object-fit: cover;
     }
 
-    // Анимация при наведении
+    // Анимация при наведении - карты вылетают из-за пределов превью
     &--animated {
         .spread-preview__card {
-            // Все карты вылетают из центра на свои места
-            &:nth-child(1) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0s; }
-            &:nth-child(2) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.05s; }
-            &:nth-child(3) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.1s; }
-            &:nth-child(4) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.15s; }
-            &:nth-child(5) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.2s; }
-            &:nth-child(6) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.25s; }
-            &:nth-child(7) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.3s; }
-            &:nth-child(8) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.35s; }
-            &:nth-child(9) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.4s; }
-            &:nth-child(10) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.45s; }
-            &:nth-child(11) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.5s; }
-            &:nth-child(12) { animation: shuffleCard 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; animation-delay: 0.55s; }
+            &:nth-child(1) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0s; }
+            &:nth-child(2) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.08s; }
+            &:nth-child(3) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.16s; }
+            &:nth-child(4) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.24s; }
+            &:nth-child(5) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.32s; }
+            &:nth-child(6) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.4s; }
+            &:nth-child(7) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.48s; }
+            &:nth-child(8) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.56s; }
+            &:nth-child(9) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.64s; }
+            &:nth-child(10) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.72s; }
+            &:nth-child(11) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.8s; }
+            &:nth-child(12) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.88s; }
         }
     }
 
@@ -324,22 +324,22 @@ const spreadClass = computed(() => {
     }
 }
 
-@keyframes shuffleCard {
+@keyframes cardDeal {
     0% {
         opacity: 0;
-        transform: scale(0.3) rotate(0deg);
+        transform: translateY(120px) translateX(-10px) scale(0.8) rotate(-25deg);
     }
-    40% {
-        opacity: 0.7;
-        transform: scale(0.5) rotate(5deg);
+    30% {
+        opacity: 0.8;
+        transform: translateY(-15px) translateX(5px) scale(1.1) rotate(10deg);
     }
-    70% {
+    60% {
         opacity: 1;
-        transform: scale(1.05) rotate(-3deg);
+        transform: translateY(-5px) translateX(-2px) scale(1.05) rotate(-5deg);
     }
     100% {
         opacity: 1;
-        transform: scale(1) rotate(0deg);
+        transform: translateY(0) translateX(0) scale(1) rotate(0deg);
     }
 }
 </style>
