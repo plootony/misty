@@ -170,7 +170,7 @@ const onMouseLeave = () => {
 
     &__card-preview {
         width: 100%;
-        min-height: 140px;
+        min-height: 200px;
         flex-shrink: 0;
         display: flex;
         align-items: center;
