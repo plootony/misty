@@ -9,7 +9,6 @@ import { saveReading } from '@/services/supabase.service';
 import { getZodiacSign } from '@/utils/zodiac';
 import CardResultModal from '@/components/CardResultModal.vue';
 import AnswerModal from '@/components/AnswerModal.vue';
-import ButtonSpinner from '@/components/ButtonSpinner.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -185,7 +184,7 @@ const loadFullReading = async () => {
 
         <!-- Подпись во время загрузки итогового предсказания -->
         <div v-if="modalStore.isFullReadingLoading" class="card-selector__loading-text">
-            Получаем итоговое толкование...
+            Слушаю, что говорит вселенная
         </div>
 
         <div v-if="!modalStore.isFullReadingLoading" class="card-selector__deck">
@@ -217,8 +216,7 @@ const loadFullReading = async () => {
                         >
                     </div>
                     <div class="card-selector__loader-info">
-                        <p class="card-selector__loader-text">Получаю предсказание</p>
-                        <ButtonSpinner />
+                        <p class="card-selector__loader-text">Раскрываю послание карты</p>
                     </div>
                 </div>
             </div>

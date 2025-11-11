@@ -335,7 +335,7 @@ const handleSignOut = async () => {
                                 </div>
 
                                 <div class="history-item__final">
-                                    <h4 class="history-item__subtitle">Итоговое толкование:</h4>
+                                    <h4 class="history-item__subtitle">Твой расклад:</h4>
                                     <p class="history-item__reading">{{ item.finalReading }}</p>
                                 </div>
                             </div>
