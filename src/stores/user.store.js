@@ -15,25 +15,25 @@ export const useUserStore = defineStore('userStore', () => {
             id: 'initiated',
             name: 'Посвящённый',
             level: 2,
-            allowedSpreads: ['one-card', 'three-cards']
+            allowedSpreads: ['one-card', 'three-cards', 'decision-cross']
         },
         'adept': {
             id: 'adept',
             name: 'Адепт',
             level: 3,
-            allowedSpreads: ['one-card', 'three-cards', 'horseshoe']
+            allowedSpreads: ['one-card', 'three-cards', 'horseshoe', 'star-of-david', 'love-spread']
         },
         'oracle': {
             id: 'oracle',
             name: 'Оракул',
             level: 4,
-            allowedSpreads: ['one-card', 'three-cards', 'horseshoe', 'celtic-cross']
+            allowedSpreads: ['one-card', 'three-cards', 'horseshoe', 'celtic-cross', 'career-path', 'wheel-of-fortune', 'fate-cross']
         },
         'supreme-arcana': {
             id: 'supreme-arcana',
             name: 'Верховный Аркан',
             level: 5,
-            allowedSpreads: ['one-card', 'three-cards', 'horseshoe', 'celtic-cross', 'year-circle']
+            allowedSpreads: ['one-card', 'three-cards', 'horseshoe', 'celtic-cross', 'year-circle', 'star-of-david', 'love-spread', 'career-path', 'wheel-of-fortune', 'fate-cross', 'decision-cross', 'spiritual-journey']
         }
     }
 
