@@ -297,7 +297,7 @@ const formatDate = (dateString) => {
     &__search {
         display: flex;
         gap: $spacing-small;
-        margin-bottom: $spacing-large;
+        margin-bottom: $spacing-middle;
     }
 
     &__search-input {

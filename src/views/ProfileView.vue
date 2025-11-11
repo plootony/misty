@@ -875,8 +875,8 @@ const handleSignOut = async () => {
     }
 
     &--admin {
-        background-color: $color-pastel-orange;
-        color: $color-bg-dark;
+        background-color: $color-orange;
+        color: $color-white;
         font-weight: 700;
 
         &:hover:not(:disabled) {
