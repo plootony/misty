@@ -142,10 +142,17 @@ export const useUserStore = defineStore('userStore', () => {
     const signOut = async () => {
         try {
             await supabaseSignOut()
-            userData.value = null
         } catch (error) {
-            console.error('Ошибка выхода:', error)
-            throw error
+            // Игнорируем ошибку отсутствия сессии - это нормально при выходе
+            if (error.message?.includes('Auth session missing') || error.message?.includes('session_not_found')) {
+                console.log('Сессия уже отсутствует, продолжаем выход локально')
+            } else {
+                console.error('Ошибка выхода:', error)
+                throw error
+            }
+        } finally {
+            // Всегда очищаем локальные данные пользователя
+            userData.value = null
         }
     }
 

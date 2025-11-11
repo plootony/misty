@@ -202,7 +202,13 @@ const handleSignOut = async () => {
         router.push('/auth');
     } catch (error) {
         console.error('Ошибка выхода:', error);
-        alert('Не удалось выйти из системы');
+        // Показываем ошибку только если это не ошибка отсутствия сессии
+        if (!error.message?.includes('Auth session missing') && !error.message?.includes('session_not_found')) {
+            alert('Не удалось выйти из системы');
+        } else {
+            // Если сессия отсутствует, просто переходим на страницу авторизации
+            router.push('/auth');
+        }
     }
 };
 </script>
