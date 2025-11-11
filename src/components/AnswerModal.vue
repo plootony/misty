@@ -26,16 +26,13 @@ const closeModal = () => {
             <div class="modal__content modal__content--answer">
                 <div class="answer">
                     <div class="answer__header">
-                        <img src="@/assets/images/stars-icon.png" alt="star icon" class="answer__icon">
                         <p class="answer__label">ОТВЕТ НА ТВОЙ ВОПРОС</p>
                     </div>
 
                     <h1 class="answer__question">{{ modalStore.userQuestion }}</h1>
 
                     <div class="answer__content">
-                        <p class="answer__text">
-                            {{ modalStore.fullReadingText }}
-                        </p>
+                        <div class="answer__text" v-html="modalStore.fullReadingText"></div>
                     </div>
 
                     <button class="btn btn--primary" @click="startOver">
@@ -51,14 +48,14 @@ const closeModal = () => {
 @use "../assets/scss/vars.scss" as *;
 
 .modal__content {
-    max-width: 920px;
+    max-width: 1000px;
 }
 
 .answer {
     padding: $spacing-large;
     display: flex;
     flex-direction: column;
-    gap: $spacing-middle;
+    gap: $spacing-small;
 
     &__header {
         display: flex;
@@ -87,7 +84,7 @@ const closeModal = () => {
         font-weight: 600;
         line-height: 1.3em;
         color: $color-white;
-        margin-bottom: $spacing-large;
+        margin-bottom: $spacing-small;
     }
 
     &__content {
@@ -99,8 +96,72 @@ const closeModal = () => {
         font-family: "Inter", Sans-serif;
         font-size: 16px;
         line-height: 1.8;
-        color: $color-white;
-        white-space: pre-line;
+        // color: $color-white;
+
+        // Стили для HTML элементов (deep для v-html контента)
+        :deep(h1), :deep(h2), :deep(h3), :deep(h4), :deep(h5), :deep(h6) {
+            font-family: "Playfair Display", Sans-serif;
+            text-transform: uppercase;
+        }
+
+        :deep(h1) {
+            font-size: 28px;
+            font-weight: 600;
+            border-bottom: 2px solid $color-pastel-orange;
+            padding-bottom: $spacing-small;
+        }
+
+        :deep(h2) {
+            margin-bottom: $spacing-small;
+            font-size: 18px;
+            font-weight: 600;
+            
+        }
+
+        :deep(h3) {
+            font-size: 20px;
+            font-weight: 500;
+            color: $color-pastel-orange;
+        }
+
+        :deep(p) {
+            margin-bottom: $spacing-middle;
+            text-align: justify;
+            line-height: 1.3;
+        }
+
+        :deep(ul), :deep(ol) {
+            margin-bottom: $spacing-middle;
+            padding-left: $spacing-large;
+        }
+
+        :deep(li) {
+            margin-bottom: $spacing-x-smal;
+        }
+
+        :deep(strong), :deep(b) {
+            font-weight: 600;
+            color: $color-pastel-orange;
+        }
+
+        :deep(em), :deep(i) {
+            font-style: italic;
+            color: $color-grey;
+        }
+
+        :deep(blockquote) {
+            border-left: 4px solid $color-pastel-orange;
+            padding-left: $spacing-middle;
+            margin: $spacing-middle 0;
+            font-style: italic;
+            color: $color-grey;
+        }
+
+        :deep(hr) {
+            border: none;
+            border-top: 1px solid rgba($color-grey, 0.3);
+            margin: $spacing-large 0;
+        }
     }
 }
 </style>

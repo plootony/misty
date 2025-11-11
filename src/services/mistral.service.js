@@ -2,6 +2,43 @@ import { Mistral } from '@mistralai/mistralai';
 import { mistralRateLimiter } from '@/utils/rateLimiter';
 import { parseAIResponse, normalizeValidationResponse, isValidValidationResponse } from '@/utils/jsonParser';
 
+/**
+ * Очищает HTML от markdown оберток и лишнего контента
+ * @param {string} content - Ответ от AI
+ * @returns {string} - Очищенный HTML
+ */
+function cleanMarkdownFromHtml(content) {
+    if (!content) return '';
+
+    // Удаляем markdown блоки кода
+    content = content.replace(/```html\s*/gi, '').replace(/```\s*$/gi, '');
+
+    // Удаляем любые другие markdown блоки
+    content = content.replace(/```\w*\s*/gi, '').replace(/```\s*$/gi, '');
+
+    // Удаляем лишние пробелы и переносы строк в начале и конце
+    content = content.trim();
+
+    // Если контент не содержит HTML тегов, оборачиваем в параграф
+    if (!content.includes('<') || !content.includes('>')) {
+        return `<p>${content}</p>`;
+    }
+
+    // Удаляем любой текст перед первым HTML тегом
+    const firstTagIndex = content.indexOf('<');
+    if (firstTagIndex > 0) {
+        content = content.substring(firstTagIndex);
+    }
+
+    // Удаляем любой текст после последнего закрывающего HTML тега
+    const lastTagEndIndex = content.lastIndexOf('>');
+    if (lastTagEndIndex < content.length - 1) {
+        content = content.substring(0, lastTagEndIndex + 1);
+    }
+
+    return content;
+}
+
 // Инициализация клиента Mistral AI
 let mistralClient = null;
 
@@ -249,15 +286,24 @@ export async function generateFullReading(userData, zodiacSign, question, spread
             const client = initMistralClient();
 
             const systemPrompt = `Ты мудрый таролог с глубокими знаниями эзотерики и астрологии.
-Дай полное, развёрнутое толкование расклада Таро, учитывая:
+Дай полное, развёрнутое толкование расклада Таро в формате HTML, учитывая:
 - Личность человека и его знак зодиака
 - Тип расклада и значение позиций
 - Взаимосвязь между картами
 - Практические советы и рекомендации
 
 Используй мистический, образный язык. Обращайся к человеку по имени.
-Структурируй ответ: вступление, анализ карт, общий вывод и совет.
-Объём: 400-600 слов.`;
+
+СТРУКТУРИРУЙ ОТВЕТ С ПОМОЩЬЮ HTML-ТЕГОВ:
+
+- <h2> для разделов (вступление, анализ карт, общий вывод, совет)
+- <h3> для подразделов
+- <p> для параграфов
+- <strong> или <b> для выделения важных моментов
+- <em> или <i> для курсива
+- <ul>/<ol> с <li> для списков при необходимости
+
+Объём: 400 слов. Возвращай только чистый HTML без markdown обёрток типа \`\`\`html, без дополнительных объяснений и комментариев.`;
 
             const cardsDescription = selectedCards.map((card, index) => {
                 const position = spread.positions[index];
@@ -292,7 +338,12 @@ ${cardsDescription}
                     max_tokens: 1000
                 });
 
-                return result.choices[0].message.content;
+                let content = result.choices[0].message.content;
+
+                // Очищаем от markdown оберток
+                content = cleanMarkdownFromHtml(content);
+
+                return content;
             };
 
             return await executeWithRetry(apiCall, 2, 10000);

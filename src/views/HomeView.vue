@@ -156,6 +156,11 @@ const loadFullReading = async () => {
             <p class="card-selector__subtitle">Не думай. Доверься судьбе. Просто выбери карту</p>
         </div>
 
+        <!-- Подпись во время загрузки итогового предсказания -->
+        <div v-if="modalStore.isFullReadingLoading" class="card-selector__loading-text">
+            Слушаю, что говорит вселенная
+        </div>
+
         <div
             class="card-selector__selected"
             :class="[
@@ -180,11 +185,6 @@ const loadFullReading = async () => {
                     alt="Выбранная карта"
                 >
             </div>
-        </div>
-
-        <!-- Подпись во время загрузки итогового предсказания -->
-        <div v-if="modalStore.isFullReadingLoading" class="card-selector__loading-text">
-            Слушаю, что говорит вселенная
         </div>
 
         <div v-if="!modalStore.isFullReadingLoading" class="card-selector__deck">
@@ -236,7 +236,6 @@ const loadFullReading = async () => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: $spacing-large;
 
     &__header {
         display: flex;
@@ -406,7 +405,7 @@ const loadFullReading = async () => {
 
     &__loading-text {
         text-align: center;
-        margin: $spacing-large 0;
+        margin: $spacing-middle 0;
         font-family: "Inter", Sans-serif;
         font-size: 18px;
         font-weight: 500;
@@ -421,27 +420,38 @@ const loadFullReading = async () => {
         width: 100%;
         justify-content: center;
         position: relative;
-        height: 200px;
+        height: 400px;
         align-items: center;
+        perspective: 1000px; // Добавляем перспективу для 3D эффектов
     }
 
     &__deck-card {
         width: 120px;
         height: 180px;
         cursor: pointer;
-        transition: transform 0.3s;
         position: absolute;
+        opacity: 0;
+        animation: cardFanIn 0.8s ease-out forwards;
         left: 50%;
+        transition: filter 0.3s ease;
 
         &:hover {
-            transform: translateX(-50%) translateY(-24px) scale(1.05);
-            z-index: 100;
+            z-index: 200;
+            filter: brightness(1.2);
         }
 
-        @for $i from 1 through 12 {
+        // Создаем веер из карт с поворотами и смещениями
+        @for $i from 1 through 20 {
+            $angle: ($i - 10.5) * 4deg; // Угол поворота для веера
+            $distance: ($i - 10.5) * 35px; // Горизонтальное расстояние
+            $vertical: abs($i - 10.5) * 8px; // Вертикальное смещение для дуги
+
             &:nth-child(#{$i}) {
-                transform: translateX(-50%) translateX(calc((#{$i} - 6.5) * 32px));
-                z-index: #{$i};
+                left: calc(50% + #{$distance});
+                top: calc(50% + #{$vertical - 40px});
+                transform: rotate($angle) rotateX(5deg); // Добавляем небольшой наклон вперед
+                z-index: $i;
+                animation-delay: #{$i * 0.03}s;
             }
         }
     }
@@ -575,6 +585,21 @@ const loadFullReading = async () => {
     }
     50% {
         opacity: 1;
+    }
+}
+
+@keyframes cardFanIn {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.5) rotateY(180deg) rotateX(45deg);
+    }
+    50% {
+        opacity: 0.7;
+        transform: translate(-50%, -50%) scale(1.2) rotateY(90deg) rotateX(22deg);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1) rotateY(0deg) rotateX(5deg);
     }
 }
 </style>

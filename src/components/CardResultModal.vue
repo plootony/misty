@@ -66,7 +66,6 @@ const closeModal = () => {
 
                     <div class="card-result__content" v-if="currentCard">
                         <div class="card-result__header">
-                            <img src="@/assets/images/stars-icon.png" alt="star icon" class="card-result__icon">
                             <p class="card-result__label">{{ currentCard.arcana?.toUpperCase() }}</p>
                             <h1 class="card-result__title">{{ currentCard.name?.toUpperCase() }}</h1>
                             <p class="card-result__position">{{ cardPosition }}</p>
@@ -98,7 +97,7 @@ const closeModal = () => {
 @use "../assets/scss/vars.scss" as *;
 
 .modal__content {
-    max-width: 920px;
+    max-width: 1000px;
 }
 
 .card-result {
