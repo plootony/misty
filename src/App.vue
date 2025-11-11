@@ -3,6 +3,7 @@ import { watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useUserStore } from '@/stores/user.store';
 import AppHeader from '@/components/AppHeader.vue';
+import AppFooter from '@/components/AppFooter.vue';
 import ProfileSetupModal from '@/components/ProfileSetupModal.vue';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 import { useProfileSetup } from '@/composables/useProfileSetup';
@@ -30,18 +31,33 @@ watch(() => route.path, () => {
   </div>
 
   <template v-else>
-    <AppHeader />
-    <RouterView />
-    
+    <div class="app-layout">
+      <AppHeader />
+      <main class="app-main">
+        <RouterView />
+      </main>
+      <AppFooter />
+    </div>
+
     <!-- Глобальная модалка настройки профиля -->
-    <ProfileSetupModal 
-      :show="showProfileSetup" 
+    <ProfileSetupModal
+      :show="showProfileSetup"
       @complete="handleProfileSetupComplete"
     />
   </template>
 </template>
 
 <style scoped>
+.app-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-main {
+  flex: 1;
+}
+
 .auth-loading {
   position: fixed;
   top: 0;
