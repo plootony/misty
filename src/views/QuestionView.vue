@@ -170,7 +170,7 @@ const submitQuestion = async () => {
 @use "../assets/scss/vars.scss" as *;
 
 .question {
-    min-height: calc(100vh - 70px);
+    
     padding: $spacing-large $spacing-middle;
     display: flex;
     flex-direction: column;

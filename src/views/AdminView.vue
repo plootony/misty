@@ -185,7 +185,7 @@ const formatDate = (dateString) => {
                                         v-if="user.is_admin" 
                                         class="admin__user-badge admin__user-badge--admin"
                                     >
-                                        👑 Админ
+                                        Админ
                                     </span>
                                     <span 
                                         v-if="!user.is_active" 
@@ -276,7 +276,7 @@ const formatDate = (dateString) => {
 @use "../assets/scss/vars.scss" as *;
 
 .admin {
-    min-height: calc(100vh - 70px);
+    
     padding: $spacing-large $spacing-middle;
     background-color: $color-bg-dark;
 
@@ -489,6 +489,7 @@ const formatDate = (dateString) => {
     }
 
     &__user-actions {
+        min-height: 75px;
         display: flex;
         gap: $spacing-small;
         flex-wrap: wrap;

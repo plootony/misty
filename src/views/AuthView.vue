@@ -321,7 +321,7 @@ const handleGoogleLogin = async () => {
 @use "../assets/scss/vars.scss" as *;
 
 .auth {
-    min-height: calc(100vh - 70px);
+    
     display: flex;
     align-items: center;
     justify-content: center;

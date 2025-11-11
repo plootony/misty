@@ -245,7 +245,7 @@ const loadFullReading = async () => {
 @use "../assets/scss/vars.scss" as *;
 
 .card-selector {
-    min-height: calc(100vh - 70px);
+    min-height: 100%;
     padding: $spacing-large $spacing-middle;
     display: flex;
     flex-direction: column;

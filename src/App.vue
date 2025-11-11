@@ -57,6 +57,9 @@ watch(() => route.path, () => {
 
 .app-main {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .auth-loading {

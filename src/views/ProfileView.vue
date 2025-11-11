@@ -412,7 +412,7 @@ const handleSignOut = async () => {
 @use "../assets/scss/vars.scss" as *;
 
 .profile {
-    min-height: calc(100vh - 70px);
+    
     padding: $spacing-middle;
 
     &__container {

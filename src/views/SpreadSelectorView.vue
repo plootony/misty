@@ -84,7 +84,10 @@ const onMouseLeave = () => {
 @use "../assets/scss/vars.scss" as *;
 
 .spread-selector {
-    min-height: calc(100vh - 70px);
+    background-image: url('/src/assets/images/bg-1.png');
+    background-size: contain;
+    background-position: top center;
+    background-attachment: fixed;
     padding: $spacing-middle;
     display: flex;
     flex-direction: column;
@@ -131,7 +134,7 @@ const onMouseLeave = () => {
         display: flex;
         flex-wrap: wrap;
         gap: $spacing-middle;
-        max-width: 1200px;
+        max-width: 1440px;
         width: 100%;
     }
 

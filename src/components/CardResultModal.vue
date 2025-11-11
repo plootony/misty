@@ -176,6 +176,7 @@ const closeModal = () => {
 
     &__description {
         flex: 1;
+        margin-bottom: $spacing-middle;
     }
 
     &__text {
