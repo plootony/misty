@@ -169,6 +169,7 @@ const loadFullReading = async () => {
                 <img
                     v-if="safeSelectedCards[slotIndex]"
                     class="card-selector__selected-card-image"
+                    :class="{ 'card-selector__selected-card-image--reversed': safeSelectedCards[slotIndex].isReversed }"
                     :src="safeSelectedCards[slotIndex].image"
                     alt="Выбранная карта"
                 >
@@ -205,7 +206,7 @@ const loadFullReading = async () => {
                             :src="safeSelectedCards[safeSelectedCards.length - 1]?.image"
                             alt="Выбранная карта"
                             class="card-selector__selected-card-image"
-                            :class="{ 'card-selector__selected-card--reversed': safeSelectedCards[safeSelectedCards.length - 1]?.isReversed }"
+                            :class="{ 'card-selector__selected-card-image--reversed': safeSelectedCards[safeSelectedCards.length - 1]?.isReversed }"
                         >
                     </div>
                     <div class="card-selector__loader-info">
@@ -391,6 +392,11 @@ const loadFullReading = async () => {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        transition: transform 0.3s ease;
+
+        &--reversed {
+            transform: rotate(180deg);
+        }
     }
 
     &__loading-text {

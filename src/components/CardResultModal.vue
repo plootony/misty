@@ -54,7 +54,7 @@ const closeModal = () => {
             <div class="modal__content modal__content--card-result">
                 <div class="card-result">
                     <div class="card-result__card">
-                        <img :src="currentCard?.image" alt="Карта Таро" class="card-result__card-image" v-if="currentCard">
+                        <img :src="currentCard?.image" alt="Карта Таро" class="card-result__card-image" :class="{ 'card-result__card-image--reversed': currentCard?.isReversed }" v-if="currentCard">
                         <img src="@/assets/images/card.png" alt="Карта Таро" class="card-result__card-image" v-else>
                     </div>
 
@@ -110,6 +110,11 @@ const closeModal = () => {
         width: 100%;
         height: auto;
         border-radius: 12px;
+        transition: transform 0.3s ease;
+
+        &--reversed {
+            transform: rotate(180deg);
+        }
     }
 
     &__content {
