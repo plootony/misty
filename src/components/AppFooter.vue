@@ -263,9 +263,8 @@ const closeTermsOfService = () => {
     right: 0;
     bottom: 0;
     background-color: rgba(0, 0, 0, 0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    display: grid;
+    place-items: center;
     z-index: 1000;
     padding: $spacing-middle;
 }
@@ -275,7 +274,7 @@ const closeTermsOfService = () => {
     border-radius: 8px;
     max-width: 600px;
     width: 100%;
-    max-height: 80vh;
+    max-height: 90vh;
     overflow: hidden;
     display: flex;
     flex-direction: column;
