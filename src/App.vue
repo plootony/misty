@@ -60,6 +60,11 @@ watch(() => route.path, () => {
   display: flex;
   flex-direction: column;
   justify-content: center;
+
+  background-image: url('/src/assets/images/bg-1.png');
+    background-size: contain;
+    background-position: top center;
+    background-attachment: fixed;
 }
 
 .auth-loading {
