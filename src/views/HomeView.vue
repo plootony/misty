@@ -367,6 +367,59 @@ const loadFullReading = async () => {
                 &:nth-child(12) { left: calc(50% - 105px); top: calc(50% - 182px); transform: translate(-50%, -50%) rotate(330deg); }
             }
         }
+
+        // Звезда Давида - 6 карт в форме шестиугольника
+        &--star-of-david {
+            min-height: 450px;
+
+            .card-selector__selected-card {
+                position: absolute;
+
+                // 6 позиций в форме шестиугольника
+                &:nth-child(1) { left: 50%; top: calc(50% - 140px); transform: translate(-50%, -50%); } // Верх
+                &:nth-child(2) { left: calc(50% + 121px); top: calc(50% - 70px); transform: translate(-50%, -50%) rotate(60deg); } // Верх-право
+                &:nth-child(3) { left: calc(50% + 121px); top: calc(50% + 70px); transform: translate(-50%, -50%) rotate(120deg); } // Низ-право
+                &:nth-child(4) { left: 50%; top: calc(50% + 140px); transform: translate(-50%, -50%) rotate(180deg); } // Низ
+                &:nth-child(5) { left: calc(50% - 121px); top: calc(50% + 70px); transform: translate(-50%, -50%) rotate(240deg); } // Низ-лево
+                &:nth-child(6) { left: calc(50% - 121px); top: calc(50% - 70px); transform: translate(-50%, -50%) rotate(300deg); } // Верх-лево
+            }
+        }
+
+        // Крест судьбы - 9 карт в форме креста 3x3
+        &--fate-cross {
+            min-height: 500px;
+
+            .card-selector__selected-card {
+                position: absolute;
+
+                // 9 позиций в форме креста 3x3
+                &:nth-child(1) { left: calc(50% - 160px); top: calc(50% - 160px); transform: translate(-50%, -50%); } // Левый верхний
+                &:nth-child(2) { left: 50%; top: calc(50% - 160px); transform: translate(-50%, -50%); } // Верхний центр
+                &:nth-child(3) { left: calc(50% + 160px); top: calc(50% - 160px); transform: translate(-50%, -50%); } // Правый верхний
+                &:nth-child(4) { left: calc(50% - 160px); top: 50%; transform: translate(-50%, -50%); } // Левый центр
+                &:nth-child(5) { left: 50%; top: 50%; transform: translate(-50%, -50%); } // Центр
+                &:nth-child(6) { left: calc(50% + 160px); top: 50%; transform: translate(-50%, -50%); } // Правый центр
+                &:nth-child(7) { left: calc(50% - 160px); top: calc(50% + 160px); transform: translate(-50%, -50%); } // Левый нижний
+                &:nth-child(8) { left: 50%; top: calc(50% + 160px); transform: translate(-50%, -50%); } // Нижний центр
+                &:nth-child(9) { left: calc(50% + 160px); top: calc(50% + 160px); transform: translate(-50%, -50%); } // Правый нижний
+            }
+        }
+
+        // Крест решения - 5 карт в форме креста
+        &--decision-cross {
+            min-height: 450px;
+
+            .card-selector__selected-card {
+                position: absolute;
+
+                // 5 позиций в форме креста
+                &:nth-child(1) { left: 50%; top: calc(50% - 140px); transform: translate(-50%, -50%); } // Верх
+                &:nth-child(2) { left: calc(50% + 140px); top: 50%; transform: translate(-50%, -50%) rotate(90deg); } // Право
+                &:nth-child(3) { left: 50%; top: calc(50% + 140px); transform: translate(-50%, -50%) rotate(180deg); } // Низ
+                &:nth-child(4) { left: calc(50% - 140px); top: 50%; transform: translate(-50%, -50%) rotate(270deg); } // Лево
+                &:nth-child(5) { left: 50%; top: 50%; transform: translate(-50%, -50%); } // Центр
+            }
+        }
     }
 
     &__selected-card--animating {
@@ -440,16 +493,16 @@ const loadFullReading = async () => {
             filter: brightness(1.2);
         }
 
-        // Создаем веер из карт с поворотами и смещениями
+        // Позиционирование карт колоды в веере
         @for $i from 1 through 20 {
-            $angle: ($i - 10.5) * 4deg; // Угол поворота для веера
-            $distance: ($i - 10.5) * 35px; // Горизонтальное расстояние
-            $vertical: abs($i - 10.5) * 8px; // Вертикальное смещение для дуги
+            $angle: ($i - 10.5) * 4deg;
+            $distance: ($i - 10.5) * 35px;
+            $vertical: abs($i - 10.5) * 8px;
 
             &:nth-child(#{$i}) {
                 left: calc(50% + #{$distance});
                 top: calc(50% + #{$vertical - 40px});
-                transform: rotate($angle) rotateX(5deg); // Добавляем небольшой наклон вперед
+                transform: rotate($angle) rotateX(5deg);
                 z-index: $i;
                 animation-delay: #{$i * 0.03}s;
             }

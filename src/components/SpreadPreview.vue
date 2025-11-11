@@ -179,6 +179,65 @@ const spreadClass = computed(() => {
             &:nth-child(12) { left: calc(50% - 32px); top: calc(50% - 55px); transform: translate(-50%, -50%) rotate(330deg); }
         }
     }
+
+    // Звезда Давида - 6 карт в форме шестиугольника
+    &--star-of-david {
+        min-height: 140px;
+
+        .spread-preview__card {
+            position: absolute;
+            width: 25px;
+            height: 38px;
+
+            // 6 позиций в форме шестиугольника
+            &:nth-child(1) { left: 50%; top: calc(50% - 45px); transform: translate(-50%, -50%); }
+            &:nth-child(2) { left: calc(50% + 39px); top: calc(50% - 22px); transform: translate(-50%, -50%) rotate(60deg); }
+            &:nth-child(3) { left: calc(50% + 39px); top: calc(50% + 22px); transform: translate(-50%, -50%) rotate(120deg); }
+            &:nth-child(4) { left: 50%; top: calc(50% + 45px); transform: translate(-50%, -50%) rotate(180deg); }
+            &:nth-child(5) { left: calc(50% - 39px); top: calc(50% + 22px); transform: translate(-50%, -50%) rotate(240deg); }
+            &:nth-child(6) { left: calc(50% - 39px); top: calc(50% - 22px); transform: translate(-50%, -50%) rotate(300deg); }
+        }
+    }
+
+    // Крест судьбы - 9 карт в форме креста 3x3
+    &--fate-cross {
+        min-height: 150px;
+
+        .spread-preview__card {
+            position: absolute;
+            width: 25px;
+            height: 38px;
+
+            // 9 позиций в форме креста 3x3
+            &:nth-child(1) { left: calc(50% - 48px); top: calc(50% - 48px); transform: translate(-50%, -50%); }
+            &:nth-child(2) { left: 50%; top: calc(50% - 48px); transform: translate(-50%, -50%); }
+            &:nth-child(3) { left: calc(50% + 48px); top: calc(50% - 48px); transform: translate(-50%, -50%); }
+            &:nth-child(4) { left: calc(50% - 48px); top: 50%; transform: translate(-50%, -50%); }
+            &:nth-child(5) { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+            &:nth-child(6) { left: calc(50% + 48px); top: 50%; transform: translate(-50%, -50%); }
+            &:nth-child(7) { left: calc(50% - 48px); top: calc(50% + 48px); transform: translate(-50%, -50%); }
+            &:nth-child(8) { left: 50%; top: calc(50% + 48px); transform: translate(-50%, -50%); }
+            &:nth-child(9) { left: calc(50% + 48px); top: calc(50% + 48px); transform: translate(-50%, -50%); }
+        }
+    }
+
+    // Крест решения - 5 карт в форме креста
+    &--decision-cross {
+        min-height: 140px;
+
+        .spread-preview__card {
+            position: absolute;
+            width: 25px;
+            height: 38px;
+
+            // 5 позиций в форме креста
+            &:nth-child(1) { left: 50%; top: calc(50% - 45px); transform: translate(-50%, -50%); }
+            &:nth-child(2) { left: calc(50% + 45px); top: 50%; transform: translate(-50%, -50%) rotate(90deg); }
+            &:nth-child(3) { left: 50%; top: calc(50% + 45px); transform: translate(-50%, -50%) rotate(180deg); }
+            &:nth-child(4) { left: calc(50% - 45px); top: 50%; transform: translate(-50%, -50%) rotate(270deg); }
+            &:nth-child(5) { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+        }
+    }
 }
 
 @keyframes shuffleCard {

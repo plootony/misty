@@ -74,12 +74,6 @@ const onMouseLeave = () => {
                 <div class="spread-selector__card-body">
                     <strong class="spread-selector__card-title">{{ spread.name }}</strong>
                     <p class="spread-selector__card-subtitle">{{ spread.description }}</p>
-                    <span 
-                        v-if="userStore.canAccessSpread(spread.id)"
-                        class="spread-selector__card-link"
-                    >
-                        Выбрать →
-                    </span>
                 </div>
             </div>
         </div>
@@ -95,7 +89,7 @@ const onMouseLeave = () => {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: $spacing-large;
+    gap: $spacing-middle;
 
     &__header {
         display: flex;
