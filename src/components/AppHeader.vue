@@ -13,8 +13,6 @@ const userStore = useUserStore();
             </RouterLink>
 
             <nav class="header__nav">
-                <RouterLink to="/" class="header__link">Главная</RouterLink>
-                
                 <RouterLink 
                     v-if="userStore.isAuthenticated" 
                     to="/profile" 

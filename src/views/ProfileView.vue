@@ -426,7 +426,7 @@ const handleSignOut = async () => {
         font-weight: 600;
         color: $color-white;
         text-align: center;
-        margin-bottom: $spacing-large;
+        margin-bottom: $spacing-middle;
     }
 
     &__content {
