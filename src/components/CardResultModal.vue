@@ -15,6 +15,12 @@ const cardPosition = computed(() => {
     return currentCard.value?.isReversed ? 'Перевёрнутое положение' : 'Прямое положение';
 });
 
+// Проверяем, является ли текущая карта последней в раскладе
+const isLastCard = computed(() => {
+    const maxCards = modalStore.selectedSpread?.cardsCount || 3;
+    return modalStore.selectedCards.length === maxCards;
+});
+
 // Таймер 5 секунд
 const countdown = ref(5);
 const isButtonDisabled = ref(true);
@@ -78,8 +84,8 @@ const closeModal = () => {
                             @click="goToNext"
                             :disabled="isButtonDisabled"
                         >
-                            <span v-if="isButtonDisabled">Следующая карта ({{ countdown }}с)</span>
-                            <span v-else>Следующая карта</span>
+                            <span v-if="isButtonDisabled">{{ isLastCard ? 'Получить предсказание' : 'Следующая карта' }} ({{ countdown }}с)</span>
+                            <span v-else>{{ isLastCard ? 'Получить предсказание' : 'Следующая карта' }}</span>
                         </button>
                     </div>
                 </div>

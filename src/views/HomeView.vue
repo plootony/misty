@@ -33,7 +33,14 @@ onMounted(() => {
 });
 
 const selectCard = async (card) => {
-    const maxCards = modalStore.selectedSpread?.cardsCount || 3;
+    // Проверяем, что расклад выбран
+    if (!modalStore.selectedSpread) {
+        console.warn('Расклад не выбран, редирект на главную');
+        router.push('/');
+        return;
+    }
+
+    const maxCards = modalStore.selectedSpread.cardsCount;
     const currentCardsCount = modalStore.selectedCards?.length || 0;
     if (currentCardsCount < maxCards && !modalStore.isLoading) {
         modalStore.startLoading();
@@ -44,7 +51,7 @@ const selectCard = async (card) => {
 
             // Добавляем карту сразу для показа в прелоадере
             const cardIndex = currentCardsCount;
-            const position = modalStore.selectedSpread.positions[cardIndex];
+            const position = modalStore.selectedSpread.positions?.[cardIndex];
             modalStore.addSelectedCard({
                 ...cardWithPosition,
                 interpretation: 'Загружается толкование...',
@@ -80,7 +87,7 @@ const selectCard = async (card) => {
             // Fallback: добавляем карту без толкования
             const cardWithPosition = cardStore.createCardWithPosition(card);
             const cardIndex = currentCardsCount; // Используем тот же индекс, что и для основной логики
-            const position = modalStore.selectedSpread.positions[cardIndex];
+            const position = modalStore.selectedSpread.positions?.[cardIndex];
 
             modalStore.addSelectedCard({
                 ...cardWithPosition,
@@ -181,7 +188,7 @@ const loadFullReading = async () => {
             Получаем итоговое толкование...
         </div>
 
-        <div class="card-selector__deck">
+        <div v-if="!modalStore.isFullReadingLoading" class="card-selector__deck">
             <div
                 v-for="card in cardStore.availableCards"
                 :key="card.id"

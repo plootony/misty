@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import { useSpreadSelector } from '@/stores/spreadSelector.store';
 import { useUserStore } from '@/stores/user.store';
@@ -10,6 +10,11 @@ const router = useRouter();
 const spreadStore = useSpreadSelector();
 const userStore = useUserStore();
 const modalStore = useModalStore();
+
+// Очищаем состояние расклада при заходе на главную страницу
+onMounted(() => {
+    modalStore.resetSelection();
+});
 
 const hoveredSpreadId = ref(null);
 

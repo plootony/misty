@@ -3,7 +3,8 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user.store';
 import { useCardSelector } from '@/stores/cardSelector.store';
-import { getReadings, deleteReading, deleteReadings, deleteAllReadings } from '@/services/supabase.service';
+import { getReadings, deleteReading, deleteReadings } from '@/services/supabase.service';
+import { getZodiacSign } from '@/utils/zodiac';
 import SpreadPreview from '@/components/SpreadPreview.vue';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 
@@ -11,9 +12,6 @@ const router = useRouter();
 const userStore = useUserStore();
 const cardStore = useCardSelector();
 
-const isEditMode = ref(false);
-const name = ref(userStore.userData?.name || '');
-const birthDate = ref(userStore.userData?.birth || '');
 
 // История гаданий из БД
 const historyItems = ref([]);
@@ -38,6 +36,11 @@ const allSelected = computed({
             selectedReadings.value = [];
         }
     }
+});
+
+// Знак зодиака пользователя
+const zodiacSign = computed(() => {
+    return getZodiacSign(userStore.userData?.birth);
 });
 
 // Загружаем историю при монтировании компонента
@@ -116,31 +119,6 @@ const toggleAccordion = (id) => {
     activeAccordion.value = activeAccordion.value === id ? null : id;
 };
 
-const enableEditMode = () => {
-    isEditMode.value = true;
-};
-
-const saveChanges = async (event) => {
-    event.preventDefault();
-    try {
-        // Сохраняем изменения через Supabase
-        await userStore.updateProfile({
-            name: name.value,
-            birth: birthDate.value
-        });
-        isEditMode.value = false;
-    } catch (error) {
-        console.error('Ошибка сохранения профиля:', error);
-        alert('Не удалось сохранить изменения');
-    }
-};
-
-const cancelEdit = () => {
-    // Отменяем изменения
-    name.value = userStore.userData?.name || '';
-    birthDate.value = userStore.userData?.birth || '';
-    isEditMode.value = false;
-};
 
 // Удаление выбранных записей
 const deleteSelectedReadings = async () => {
@@ -176,27 +154,6 @@ const deleteSelectedReadings = async () => {
     }
 };
 
-// Удаление всех записей
-const deleteAllHistory = async () => {
-    if (historyItems.value.length === 0) return;
-    
-    if (!confirm('Вы уверены, что хотите удалить ВСЮ историю гаданий? Это действие необратимо!')) return;
-    
-    isDeleting.value = true;
-    try {
-        await deleteAllReadings(userStore.userData.id);
-        
-        // Очищаем локальные данные
-        historyItems.value = [];
-        selectedReadings.value = [];
-        hasMore.value = false;
-    } catch (error) {
-        console.error('Ошибка удаления всей истории:', error);
-        alert('Не удалось удалить историю');
-    } finally {
-        isDeleting.value = false;
-    }
-};
 
 const handleSignOut = async () => {
     try {
@@ -219,8 +176,7 @@ const handleSignOut = async () => {
                 <section class="profile__section">
                     <h2 class="profile__section-title">Мой профиль</h2>
                     
-                    <!-- Режим просмотра -->
-                    <div v-if="!isEditMode" class="profile__view">
+                    <div class="profile__view">
                         <div class="profile__info">
                             <div class="profile__info-item">
                                 <span class="profile__info-label">Имя</span>
@@ -236,31 +192,28 @@ const handleSignOut = async () => {
                             </div>
 
                             <div class="profile__info-item">
+                                <span class="profile__info-label">Знак зодиака</span>
+                                <span class="profile__info-value">{{ zodiacSign }}</span>
+                            </div>
+
+                            <div class="profile__info-item">
                                 <span class="profile__info-label">Ваш уникальный номер</span>
                                 <span class="profile__info-value">{{ userStore.userData?.user_number || '------' }}</span>
                             </div>
                         </div>
 
                         <div class="profile__actions">
-                            <button 
+                            <button
                                 v-if="userStore.isAdmin"
-                                type="button" 
+                                type="button"
                                 class="btn btn--admin profile__admin-btn"
                                 @click="router.push('/admin')"
                             >
                                 👑 Админ панель
                             </button>
-                            
-                            <button 
-                                type="button" 
-                                class="btn btn--primary profile__edit-btn"
-                                @click="enableEditMode"
-                            >
-                                Редактировать
-                            </button>
-                            
-                            <button 
-                                type="button" 
+
+                            <button
+                                type="button"
                                 class="btn btn--secondary profile__signout-btn"
                                 @click="handleSignOut"
                             >
@@ -268,42 +221,6 @@ const handleSignOut = async () => {
                             </button>
                         </div>
                     </div>
-
-                    <!-- Режим редактирования -->
-                    <form v-else class="profile__form" @submit="saveChanges">
-                        <div class="profile__field">
-                            <label class="profile__label" for="name">Имя</label>
-                            <input 
-                                v-model="name"
-                                type="text" 
-                                id="name"
-                                class="profile__input"
-                            >
-                        </div>
-
-                        <div class="profile__field">
-                            <label class="profile__label" for="birth-date">Дата рождения</label>
-                            <input 
-                                v-model="birthDate"
-                                type="date" 
-                                id="birth-date"
-                                class="profile__input"
-                            >
-                        </div>
-
-                        <div class="profile__actions">
-                            <button type="submit" class="btn btn--primary">
-                                Сохранить изменения
-                            </button>
-                            <button 
-                                type="button" 
-                                class="btn btn--secondary"
-                                @click="cancelEdit"
-                            >
-                                Отмена
-                            </button>
-                        </div>
-                    </form>
                 </section>
 
                 <!-- История запросов -->
@@ -322,7 +239,7 @@ const handleSignOut = async () => {
                                 <span>Выбрать все</span>
                             </label>
                             
-                            <button 
+                            <button
                                 v-if="selectedReadings.length > 0"
                                 type="button"
                                 class="btn btn--danger btn--small"
@@ -331,15 +248,6 @@ const handleSignOut = async () => {
                             >
                                 <ButtonSpinner v-if="isDeleting" />
                                 <span v-else>Удалить выбранные ({{ selectedReadings.length }})</span>
-                            </button>
-                            
-                            <button 
-                                type="button"
-                                class="btn btn--danger btn--small"
-                                @click="deleteAllHistory"
-                                :disabled="isDeleting"
-                            >
-                                Удалить всё
                             </button>
                         </div>
                     </div>
@@ -613,51 +521,10 @@ const handleSignOut = async () => {
         width: 100%;
     }
 
-    &__edit-btn,
     &__signout-btn {
         width: 100%;
     }
 
-    &__form {
-        display: flex;
-        flex-direction: column;
-        gap: $spacing-middle;
-        padding: $spacing-middle 0;
-    }
-
-    &__field {
-        display: flex;
-        flex-direction: column;
-        gap: $spacing-x-smal;
-    }
-
-    &__label {
-        font-family: "Inter", Sans-serif;
-        font-size: 13px;
-        font-weight: 600;
-        color: $color-white;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    &__input {
-        font-family: "Playfair Display", Sans-serif;
-        font-size: 16px;
-        padding: $spacing-small $spacing-middle;
-        background-color: $color-bg-dark;
-        color: $color-white;
-        border: 2px solid transparent;
-        outline: none;
-        transition: border-color 0.3s;
-
-        &:focus {
-            border-color: $color-pastel-orange;
-        }
-
-        &[type="date"] {
-            color-scheme: dark;
-        }
-    }
 
     &__actions {
         display: flex;

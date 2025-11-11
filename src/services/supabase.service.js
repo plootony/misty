@@ -308,20 +308,6 @@ export async function deleteReadings(readingIds) {
     }
 }
 
-/**
- * Удаление всех гаданий пользователя
- */
-export async function deleteAllReadings(userId) {
-    const { error } = await supabase
-        .from('readings')
-        .delete()
-        .eq('user_id', userId)
-    
-    if (error) {
-        console.error('Ошибка удаления всех гаданий:', error)
-        throw error
-    }
-}
 
 // ============================================
 // ADMIN FUNCTIONS
