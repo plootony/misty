@@ -5,6 +5,7 @@ import { useSpreadSelector } from '@/stores/spreadSelector.store';
 import { useUserStore } from '@/stores/user.store';
 import { useModalStore } from '@/stores/modal.store';
 import SpreadPreview from '@/components/SpreadPreview.vue';
+import SpreadDetailsModal from '@/components/SpreadDetailsModal.vue';
 
 const router = useRouter();
 const spreadStore = useSpreadSelector();
@@ -17,6 +18,8 @@ onMounted(() => {
 });
 
 const hoveredSpreadId = ref(null);
+const showDetailsModal = ref(false);
+const selectedSpreadForDetails = ref(null);
 
 const selectSpread = (spread) => {
     if (!userStore.canAccessSpread(spread.id)) {
@@ -32,6 +35,16 @@ const onMouseEnter = (spreadId) => {
 
 const onMouseLeave = () => {
     hoveredSpreadId.value = null;
+};
+
+const openSpreadDetails = (spread) => {
+    selectedSpreadForDetails.value = spread;
+    showDetailsModal.value = true;
+};
+
+const closeSpreadDetails = () => {
+    showDetailsModal.value = false;
+    selectedSpreadForDetails.value = null;
 };
 </script>
 
@@ -74,10 +87,26 @@ const onMouseLeave = () => {
                 <div class="spread-selector__card-body">
                     <strong class="spread-selector__card-title">{{ spread.name }}</strong>
                     <p class="spread-selector__card-subtitle">{{ spread.description }}</p>
+
+                    <!-- Кнопка "Подробнее" -->
+                    <button
+                        type="button"
+                        class="spread-selector__card-details"
+                        @click.stop="openSpreadDetails(spread)"
+                    >
+                        Подробнее
+                    </button>
                 </div>
             </div>
         </div>
     </div>
+
+    <!-- Модалка с деталями расклада -->
+    <SpreadDetailsModal
+        :spread="selectedSpreadForDetails"
+        :show="showDetailsModal"
+        @close="closeSpreadDetails"
+    />
 </template>
 
 <style scoped lang="scss">
@@ -213,6 +242,25 @@ const onMouseLeave = () => {
         font-size: 14px;
         color: $color-grey;
         line-height: 1.4;
+    }
+
+    &__card-details {
+        font-family: "Inter", Sans-serif;
+        font-size: 12px;
+        font-weight: 600;
+        color: $color-pastel-gold;
+        background: none;
+        border: none;
+        cursor: pointer;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: $spacing-x-smal 0;
+        margin-top: $spacing-small;
+        transition: color 0.3s;
+
+        &:hover {
+            color: lighten($color-gold, 30%);
+        }
     }
 
     &__card-link {
