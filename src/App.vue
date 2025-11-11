@@ -36,7 +36,8 @@ watch(() => route.path, () => {
       <main class="app-main">
         <RouterView />
       </main>
-      <AppFooter />
+      <!-- Футер показывается только не на страницах авторизации -->
+      <AppFooter v-if="!route.path.startsWith('/auth')" />
     </div>
 
     <!-- Глобальная модалка настройки профиля -->
