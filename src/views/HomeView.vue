@@ -511,6 +511,93 @@ const loadFullReading = async () => {
                 &:nth-child(9) { left: 50%; top: calc(50% - 160px); transform: translate(-50%, -50%); } // Восьмой виток (внешний)
             }
         }
+
+        // Пентакль - 5 карт в форме пентакля
+        &--pentacle {
+            min-height: 450px;
+
+            .card-selector__selected-card {
+                position: absolute;
+
+                // 5 позиций в форме пентакля
+                &:nth-child(1) { left: 50%; top: calc(50% - 120px); transform: translate(-50%, -50%); } // Верх (Духовность)
+                &:nth-child(2) { left: calc(50% + 120px); top: calc(50% - 40px); transform: translate(-50%, -50%) rotate(72deg); } // Верх-право (Карьера)
+                &:nth-child(3) { left: calc(50% + 75px); top: calc(50% + 105px); transform: translate(-50%, -50%) rotate(144deg); } // Низ-право (Любовь)
+                &:nth-child(4) { left: calc(50% - 75px); top: calc(50% + 105px); transform: translate(-50%, -50%) rotate(216deg); } // Низ-лево (Здоровье)
+                &:nth-child(5) { left: calc(50% - 120px); top: calc(50% - 40px); transform: translate(-50%, -50%) rotate(288deg); } // Верх-лево (Финансы)
+            }
+        }
+
+        // Чакры - 7 карт в форме вертикальной линии
+        &--chakras {
+            min-height: 550px;
+
+            .card-selector__selected-card {
+                position: absolute;
+
+                // 7 позиций по вертикали (от коронной до корневой чакры)
+                &:nth-child(1) { left: 50%; top: calc(50% - 240px); transform: translate(-50%, -50%); } // Коронная чакра (верхняя)
+                &:nth-child(2) { left: 50%; top: calc(50% - 180px); transform: translate(-50%, -50%); } // Третий глаз
+                &:nth-child(3) { left: 50%; top: calc(50% - 120px); transform: translate(-50%, -50%); } // Горловая
+                &:nth-child(4) { left: 50%; top: calc(50% - 60px); transform: translate(-50%, -50%); } // Сердечная
+                &:nth-child(5) { left: 50%; top: 50%; transform: translate(-50%, -50%); } // Солнечное сплетение (центр)
+                &:nth-child(6) { left: 50%; top: calc(50% + 60px); transform: translate(-50%, -50%); } // Сакральная
+                &:nth-child(7) { left: 50%; top: calc(50% + 120px); transform: translate(-50%, -50%); } // Корневая (нижняя)
+            }
+        }
+
+        // Ромб - 7 карт в форме ромба
+        &--diamond {
+            min-height: 500px;
+
+            .card-selector__selected-card {
+                position: absolute;
+
+                // 7 позиций в форме ромба
+                &:nth-child(1) { left: 50%; top: calc(50% - 150px); transform: translate(-50%, -50%); } // Верхняя вершина
+                &:nth-child(2) { left: calc(50% + 100px); top: calc(50% - 75px); transform: translate(-50%, -50%) rotate(45deg); } // Верх-право
+                &:nth-child(3) { left: calc(50% + 150px); top: 50%; transform: translate(-50%, -50%) rotate(90deg); } // Правая вершина
+                &:nth-child(4) { left: calc(50% + 100px); top: calc(50% + 75px); transform: translate(-50%, -50%) rotate(135deg); } // Низ-право
+                &:nth-child(5) { left: 50%; top: calc(50% + 150px); transform: translate(-50%, -50%) rotate(180deg); } // Нижняя вершина
+                &:nth-child(6) { left: calc(50% - 100px); top: calc(50% + 75px); transform: translate(-50%, -50%) rotate(225deg); } // Низ-лево
+                &:nth-child(7) { left: 50%; top: 50%; transform: translate(-50%, -50%); } // Центр
+            }
+        }
+
+        // Мост - 6 карт в форме моста
+        &--bridge {
+            min-height: 450px;
+
+            .card-selector__selected-card {
+                position: absolute;
+
+                // 6 позиций в форме моста
+                &:nth-child(1) { left: calc(50% - 200px); top: calc(50% + 100px); transform: translate(-50%, -50%) rotate(-15deg); } // Левый берег (исходная точка)
+                &:nth-child(2) { left: calc(50% - 100px); top: calc(50% + 50px); transform: translate(-50%, -50%) rotate(-10deg); } // Левая опора
+                &:nth-child(3) { left: 50%; top: calc(50% - 50px); transform: translate(-50%, -50%); } // Вершина моста (препятствия)
+                &:nth-child(4) { left: calc(50% + 100px); top: calc(50% + 50px); transform: translate(-50%, -50%) rotate(10deg); } // Правая опора
+                &:nth-child(5) { left: calc(50% + 200px); top: calc(50% + 100px); transform: translate(-50%, -50%) rotate(15deg); } // Правый берег (результат)
+                &:nth-child(6) { left: 50%; top: calc(50% + 120px); transform: translate(-50%, -50%); } // Под мостом (помощь и поддержка)
+            }
+        }
+
+        // Ключ - 7 карт в форме ключа
+        &--key {
+            min-height: 500px;
+
+            .card-selector__selected-card {
+                position: absolute;
+
+                // 7 позиций в форме ключа
+                &:nth-child(1) { left: calc(50% - 180px); top: 50%; transform: translate(-50%, -50%) rotate(-90deg); } // Головка ключа (начало)
+                &:nth-child(2) { left: calc(50% - 120px); top: 50%; transform: translate(-50%, -50%) rotate(-90deg); } // Стержень (элементы)
+                &:nth-child(3) { left: calc(50% - 60px); top: 50%; transform: translate(-50%, -50%) rotate(-90deg); } // Бородка (детали)
+                &:nth-child(4) { left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-90deg); } // Основная линия (развитие)
+                &:nth-child(5) { left: calc(50% + 60px); top: 50%; transform: translate(-50%, -50%) rotate(-90deg); } // Поворот (решение)
+                &:nth-child(6) { left: calc(50% + 120px); top: calc(50% - 60px); transform: translate(-50%, -50%) rotate(-45deg); } // Зубцы (замок)
+                &:nth-child(7) { left: calc(50% + 120px); top: calc(50% + 60px); transform: translate(-50%, -50%) rotate(45deg); } // Открытие (результат)
+            }
+        }
     }
 
     &__selected-card--animating {

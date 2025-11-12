@@ -15,25 +15,25 @@ export const useUserStore = defineStore('userStore', () => {
             id: 'initiated',
             name: 'Посвящённый',
             level: 2,
-            allowedSpreads: ['one-card', 'three-cards', 'decision-cross']
+            allowedSpreads: ['one-card', 'three-cards', 'decision-cross', 'bridge']
         },
         'adept': {
             id: 'adept',
             name: 'Адепт',
             level: 3,
-            allowedSpreads: ['one-card', 'three-cards', 'horseshoe', 'star-of-david', 'love-spread']
+            allowedSpreads: ['one-card', 'three-cards', 'horseshoe', 'star-of-david', 'love-spread', 'pentacle', 'diamond']
         },
         'oracle': {
             id: 'oracle',
             name: 'Оракул',
             level: 4,
-            allowedSpreads: ['one-card', 'three-cards', 'horseshoe', 'celtic-cross', 'career-path', 'wheel-of-fortune', 'fate-cross']
+            allowedSpreads: ['one-card', 'three-cards', 'horseshoe', 'celtic-cross', 'career-path', 'wheel-of-fortune', 'fate-cross', 'chakras']
         },
         'supreme-arcana': {
             id: 'supreme-arcana',
             name: 'Верховный Аркан',
             level: 5,
-            allowedSpreads: ['one-card', 'three-cards', 'horseshoe', 'celtic-cross', 'year-circle', 'star-of-david', 'love-spread', 'career-path', 'wheel-of-fortune', 'fate-cross', 'decision-cross', 'spiritual-journey']
+            allowedSpreads: ['one-card', 'three-cards', 'horseshoe', 'celtic-cross', 'year-circle', 'star-of-david', 'love-spread', 'career-path', 'wheel-of-fortune', 'fate-cross', 'decision-cross', 'spiritual-journey', 'pentacle', 'chakras', 'diamond', 'bridge', 'key']
         }
     }
 

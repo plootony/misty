@@ -322,6 +322,103 @@ const spreadClass = computed(() => {
             &:nth-child(9) { left: 50%; top: calc(50% - 40px); transform: translate(-50%, -50%); }
         }
     }
+
+    // Пентакль - 5 карт в форме пентакля
+    &--pentacle {
+        min-height: 120px;
+
+        .spread-preview__card {
+            position: absolute;
+            width: 25px;
+            height: 38px;
+
+            // 5 позиций в форме пентакля
+            &:nth-child(1) { left: 50%; top: calc(50% - 35px); transform: translate(-50%, -50%); }
+            &:nth-child(2) { left: calc(50% + 35px); top: calc(50% - 10px); transform: translate(-50%, -50%) rotate(72deg); }
+            &:nth-child(3) { left: calc(50% + 22px); top: calc(50% + 30px); transform: translate(-50%, -50%) rotate(144deg); }
+            &:nth-child(4) { left: calc(50% - 22px); top: calc(50% + 30px); transform: translate(-50%, -50%) rotate(216deg); }
+            &:nth-child(5) { left: calc(50% - 35px); top: calc(50% - 10px); transform: translate(-50%, -50%) rotate(288deg); }
+        }
+    }
+
+    // Чакры - 7 карт в форме вертикальной линии
+    &--chakras {
+        min-height: 140px;
+
+        .spread-preview__card {
+            position: absolute;
+            width: 25px;
+            height: 38px;
+
+            // 7 позиций по вертикали (от коронной до корневой чакры)
+            &:nth-child(1) { left: 50%; top: calc(50% - 60px); transform: translate(-50%, -50%); }
+            &:nth-child(2) { left: 50%; top: calc(50% - 45px); transform: translate(-50%, -50%); }
+            &:nth-child(3) { left: 50%; top: calc(50% - 30px); transform: translate(-50%, -50%); }
+            &:nth-child(4) { left: 50%; top: calc(50% - 15px); transform: translate(-50%, -50%); }
+            &:nth-child(5) { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+            &:nth-child(6) { left: 50%; top: calc(50% + 15px); transform: translate(-50%, -50%); }
+            &:nth-child(7) { left: 50%; top: calc(50% + 30px); transform: translate(-50%, -50%); }
+        }
+    }
+
+    // Ромб - 7 карт в форме ромба
+    &--diamond {
+        min-height: 130px;
+
+        .spread-preview__card {
+            position: absolute;
+            width: 25px;
+            height: 38px;
+
+            // 7 позиций в форме ромба
+            &:nth-child(1) { left: 50%; top: calc(50% - 40px); transform: translate(-50%, -50%); }
+            &:nth-child(2) { left: calc(50% + 28px); top: calc(50% - 20px); transform: translate(-50%, -50%) rotate(45deg); }
+            &:nth-child(3) { left: calc(50% + 40px); top: 50%; transform: translate(-50%, -50%) rotate(90deg); }
+            &:nth-child(4) { left: calc(50% + 28px); top: calc(50% + 20px); transform: translate(-50%, -50%) rotate(135deg); }
+            &:nth-child(5) { left: 50%; top: calc(50% + 40px); transform: translate(-50%, -50%) rotate(180deg); }
+            &:nth-child(6) { left: calc(50% - 28px); top: calc(50% + 20px); transform: translate(-50%, -50%) rotate(225deg); }
+            &:nth-child(7) { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+        }
+    }
+
+    // Мост - 6 карт в форме моста
+    &--bridge {
+        min-height: 120px;
+
+        .spread-preview__card {
+            position: absolute;
+            width: 25px;
+            height: 38px;
+
+            // 6 позиций в форме моста
+            &:nth-child(1) { left: calc(50% - 50px); top: calc(50% + 20px); transform: translate(-50%, -50%) rotate(-10deg); }
+            &:nth-child(2) { left: calc(50% - 25px); top: calc(50% + 10px); transform: translate(-50%, -50%) rotate(-5deg); }
+            &:nth-child(3) { left: 50%; top: calc(50% - 15px); transform: translate(-50%, -50%); }
+            &:nth-child(4) { left: calc(50% + 25px); top: calc(50% + 10px); transform: translate(-50%, -50%) rotate(5deg); }
+            &:nth-child(5) { left: calc(50% + 50px); top: calc(50% + 20px); transform: translate(-50%, -50%) rotate(10deg); }
+            &:nth-child(6) { left: 50%; top: calc(50% + 30px); transform: translate(-50%, -50%); }
+        }
+    }
+
+    // Ключ - 7 карт в форме ключа
+    &--key {
+        min-height: 120px;
+
+        .spread-preview__card {
+            position: absolute;
+            width: 25px;
+            height: 38px;
+
+            // 7 позиций в форме ключа
+            &:nth-child(1) { left: calc(50% - 45px); top: 50%; transform: translate(-50%, -50%) rotate(-90deg); }
+            &:nth-child(2) { left: calc(50% - 30px); top: 50%; transform: translate(-50%, -50%) rotate(-90deg); }
+            &:nth-child(3) { left: calc(50% - 15px); top: 50%; transform: translate(-50%, -50%) rotate(-90deg); }
+            &:nth-child(4) { left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-90deg); }
+            &:nth-child(5) { left: calc(50% + 15px); top: 50%; transform: translate(-50%, -50%) rotate(-90deg); }
+            &:nth-child(6) { left: calc(50% + 30px); top: calc(50% - 15px); transform: translate(-50%, -50%) rotate(-45deg); }
+            &:nth-child(7) { left: calc(50% + 30px); top: calc(50% + 15px); transform: translate(-50%, -50%) rotate(45deg); }
+        }
+    }
 }
 
 @keyframes cardDeal {
