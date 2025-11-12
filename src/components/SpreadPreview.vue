@@ -419,6 +419,92 @@ const spreadClass = computed(() => {
             &:nth-child(7) { left: calc(50% + 30px); top: calc(50% + 15px); transform: translate(-50%, -50%) rotate(45deg); }
         }
     }
+
+    // Цветок лотоса - 8 карт в форме цветка лотоса
+    &--lotus-flower {
+        min-height: 130px;
+
+        .spread-preview__card {
+            position: absolute;
+            width: 25px;
+            height: 38px;
+
+            // 8 позиций в форме цветка лотоса (упрощенная версия)
+            &:nth-child(1) { left: 50%; top: calc(50% + 40px); transform: translate(-50%, -50%) rotate(180deg); } // Корень
+            &:nth-child(2) { left: 50%; top: calc(50% + 25px); transform: translate(-50%, -50%) rotate(180deg); } // Стебель
+            &:nth-child(3) { left: calc(50% - 15px); top: calc(50% + 15px); transform: translate(-50%, -50%) rotate(-135deg); } // Лист 1
+            &:nth-child(4) { left: calc(50% + 15px); top: calc(50% + 15px); transform: translate(-50%, -50%) rotate(135deg); } // Лист 2
+            &:nth-child(5) { left: 50%; top: calc(50% + 5px); transform: translate(-50%, -50%); } // Бутон
+            &:nth-child(6) { left: calc(50% - 20px); top: calc(50% - 10px); transform: translate(-50%, -50%) rotate(-45deg); } // Лепесток 1
+            &:nth-child(7) { left: calc(50% + 20px); top: calc(50% - 10px); transform: translate(-50%, -50%) rotate(45deg); } // Лепесток 2
+            &:nth-child(8) { left: 50%; top: calc(50% - 30px); transform: translate(-50%, -50%); } // Цветок
+        }
+    }
+
+    // Анкх - 7 карт в форме египетского креста жизни
+    &--ankh {
+        min-height: 140px;
+
+        .spread-preview__card {
+            position: absolute;
+            width: 25px;
+            height: 38px;
+
+            // 7 позиций в форме анкха (упрощенная версия)
+            &:nth-child(1) { left: 50%; top: calc(50% - 40px); transform: translate(-50%, -50%); } // Верхняя петля
+            &:nth-child(2) { left: calc(50% - 25px); top: calc(50% - 15px); transform: translate(-50%, -50%) rotate(90deg); } // Левая часть петли
+            &:nth-child(3) { left: calc(50% + 25px); top: calc(50% - 15px); transform: translate(-50%, -50%) rotate(90deg); } // Правая часть петли
+            &:nth-child(4) { left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(90deg); } // Горизонтальная перекладина
+            &:nth-child(5) { left: 50%; top: calc(50% + 15px); transform: translate(-50%, -50%); } // Вертикальный столб
+            &:nth-child(6) { left: 50%; top: calc(50% + 30px); transform: translate(-50%, -50%); } // Основание
+            &:nth-child(7) { left: 50%; top: calc(50% + 45px); transform: translate(-50%, -50%); } // Крест жизни
+        }
+    }
+
+    // Магический квадрат - 9 карт в форме квадрата 3x3
+    &--magic-square {
+        min-height: 130px;
+
+        .spread-preview__card {
+            position: absolute;
+            width: 25px;
+            height: 38px;
+
+            // 9 позиций в форме квадрата 3x3 (упрощенная версия)
+            &:nth-child(1) { left: calc(50% - 30px); top: calc(50% - 30px); transform: translate(-50%, -50%); } // Северо-запад
+            &:nth-child(2) { left: 50%; top: calc(50% - 30px); transform: translate(-50%, -50%); } // Север
+            &:nth-child(3) { left: calc(50% + 30px); top: calc(50% - 30px); transform: translate(-50%, -50%); } // Северо-восток
+            &:nth-child(4) { left: calc(50% - 30px); top: 50%; transform: translate(-50%, -50%); } // Запад
+            &:nth-child(5) { left: 50%; top: 50%; transform: translate(-50%, -50%); } // Центр
+            &:nth-child(6) { left: calc(50% + 30px); top: 50%; transform: translate(-50%, -50%); } // Восток
+            &:nth-child(7) { left: calc(50% - 30px); top: calc(50% + 30px); transform: translate(-50%, -50%); } // Юго-запад
+            &:nth-child(8) { left: 50%; top: calc(50% + 30px); transform: translate(-50%, -50%); } // Юг
+            &:nth-child(9) { left: calc(50% + 30px); top: calc(50% + 30px); transform: translate(-50%, -50%); } // Юго-восток
+        }
+    }
+
+    // Древо Жизни - 10 карт в форме каббалистического древа
+    &--tree-of-life {
+        min-height: 140px;
+
+        .spread-preview__card {
+            position: absolute;
+            width: 25px;
+            height: 38px;
+
+            // 10 позиций в форме Древа Жизни (упрощенная версия)
+            &:nth-child(1) { left: 50%; top: calc(50% - 50px); transform: translate(-50%, -50%); } // Кетер
+            &:nth-child(2) { left: calc(50% - 25px); top: calc(50% - 35px); transform: translate(-50%, -50%); } // Хокма
+            &:nth-child(3) { left: calc(50% + 25px); top: calc(50% - 35px); transform: translate(-50%, -50%); } // Бина
+            &:nth-child(4) { left: calc(50% - 40px); top: calc(50% - 5px); transform: translate(-50%, -50%); } // Хесед
+            &:nth-child(5) { left: calc(50% + 40px); top: calc(50% - 5px); transform: translate(-50%, -50%); } // Гебура
+            &:nth-child(6) { left: 50%; top: calc(50% + 5px); transform: translate(-50%, -50%); } // Типарет
+            &:nth-child(7) { left: calc(50% - 25px); top: calc(50% + 25px); transform: translate(-50%, -50%); } // Нецах
+            &:nth-child(8) { left: calc(50% + 25px); top: calc(50% + 25px); transform: translate(-50%, -50%); } // Ход
+            &:nth-child(9) { left: 50%; top: calc(50% + 40px); transform: translate(-50%, -50%); } // Йесод
+            &:nth-child(10) { left: 50%; top: calc(50% + 55px); transform: translate(-50%, -50%); } // Малкут
+        }
+    }
 }
 
 @keyframes cardDeal {

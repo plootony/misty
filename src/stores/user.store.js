@@ -33,7 +33,7 @@ export const useUserStore = defineStore('userStore', () => {
             id: 'supreme-arcana',
             name: 'Верховный Аркан',
             level: 5,
-            allowedSpreads: ['one-card', 'three-cards', 'horseshoe', 'celtic-cross', 'year-circle', 'star-of-david', 'love-spread', 'career-path', 'wheel-of-fortune', 'fate-cross', 'decision-cross', 'spiritual-journey', 'pentacle', 'chakras', 'diamond', 'bridge', 'key']
+            allowedSpreads: ['one-card', 'three-cards', 'horseshoe', 'celtic-cross', 'year-circle', 'star-of-david', 'love-spread', 'career-path', 'wheel-of-fortune', 'fate-cross', 'decision-cross', 'spiritual-journey', 'pentacle', 'chakras', 'diamond', 'bridge', 'key', 'lotus-flower', 'ankh', 'magic-square', 'tree-of-life']
         }
     }
 
