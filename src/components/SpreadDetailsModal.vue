@@ -1,10 +1,12 @@
 <script setup>
 import { useSpreadSelector } from '@/stores/spreadSelector.store';
+import SpreadLayout from '@/components/SpreadLayout.vue';
 
 const props = defineProps({
   spread: {
     type: Object,
-    required: true
+    required: false,
+    default: null
   },
   show: {
     type: Boolean,
@@ -256,20 +258,20 @@ const getSpreadDescription = (spreadId) => {
   };
 
   return descriptions[spreadId] || {
-    title: props.spread.name,
-    description: props.spread.description,
+    title: props.spread?.name || 'Неизвестный расклад',
+    description: props.spread?.description || 'Описание недоступно.',
     usage: 'Подробное описание этого расклада скоро будет добавлено.'
   };
 };
 </script>
 
 <template>
-  <div v-if="show" class="modal" @click="closeModal">
+  <div v-if="show && spread" class="modal" @click="closeModal">
     <div class="modal__overlay"></div>
     <div class="modal__container">
       <div class="modal__content">
         <div class="modal__header">
-          <h2 class="modal__title">{{ spread.name }}</h2>
+          <h2 class="modal__title">{{ props.spread.name }}</h2>
           <button type="button" class="modal__close" @click="closeModal">×</button>
         </div>
 
@@ -278,17 +280,17 @@ const getSpreadDescription = (spreadId) => {
           <div class="spread-details">
             <div class="spread-details__visual">
               <h3>Схема расклада</h3>
-              <SpreadLayout :spread-id="spread.id" :cards-count="spread.cardsCount" />
+              <SpreadLayout :spread-id="props.spread.id" :cards-count="props.spread.cardsCount" />
             </div>
 
             <!-- Описание расклада -->
             <div class="spread-details__description">
               <div class="spread-description">
-                <h3>{{ getSpreadDescription(spread.id).title }}</h3>
-                <p class="spread-description__text">{{ getSpreadDescription(spread.id).description }}</p>
+                <h3>{{ getSpreadDescription(props.spread.id).title }}</h3>
+                <p class="spread-description__text">{{ getSpreadDescription(props.spread.id).description }}</p>
 
                 <h4>Когда использовать:</h4>
-                <p class="spread-description__usage">{{ getSpreadDescription(spread.id).usage }}</p>
+                <p class="spread-description__usage">{{ getSpreadDescription(props.spread.id).usage }}</p>
               </div>
             </div>
 
@@ -297,7 +299,7 @@ const getSpreadDescription = (spreadId) => {
               <h3>Позиции карт</h3>
               <div class="positions-list">
                 <div
-                  v-for="position in spread.positions"
+                  v-for="position in props.spread.positions"
                   :key="position.index"
                   class="position-item"
                 >

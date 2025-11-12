@@ -284,6 +284,180 @@ const props = defineProps({
       &:nth-child(9) { left: 50%; top: calc(50% - 52px); transform: translate(-50%, -50%); }
     }
   }
+
+  // Пентакль - 5 карт в форме пентакля
+  &--pentacle {
+    min-height: 160px;
+
+    .spread-layout__card {
+      width: 35px;
+      height: 53px;
+
+      // 5 позиций в форме пентакля
+      &:nth-child(1) { left: 50%; top: calc(50% - 47px); transform: translate(-50%, -50%); }
+      &:nth-child(2) { left: calc(50% + 47px); top: calc(50% - 15px); transform: translate(-50%, -50%) rotate(72deg); }
+      &:nth-child(3) { left: calc(50% + 29px); top: calc(50% + 43px); transform: translate(-50%, -50%) rotate(144deg); }
+      &:nth-child(4) { left: calc(50% - 29px); top: calc(50% + 43px); transform: translate(-50%, -50%) rotate(216deg); }
+      &:nth-child(5) { left: calc(50% - 47px); top: calc(50% - 15px); transform: translate(-50%, -50%) rotate(288deg); }
+    }
+  }
+
+  // Чакры - 7 карт в форме вертикальной линии
+  &--chakras {
+    min-height: 180px;
+
+    .spread-layout__card {
+      width: 35px;
+      height: 53px;
+
+      // 7 позиций по вертикали (от коронной до корневой чакры)
+      &:nth-child(1) { left: 50%; top: calc(50% - 78px); transform: translate(-50%, -50%); }
+      &:nth-child(2) { left: 50%; top: calc(50% - 55px); transform: translate(-50%, -50%); }
+      &:nth-child(3) { left: 50%; top: calc(50% - 32px); transform: translate(-50%, -50%); }
+      &:nth-child(4) { left: 50%; top: calc(50% - 9px); transform: translate(-50%, -50%); }
+      &:nth-child(5) { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+      &:nth-child(6) { left: 50%; top: calc(50% + 23px); transform: translate(-50%, -50%); }
+      &:nth-child(7) { left: 50%; top: calc(50% + 46px); transform: translate(-50%, -50%); }
+    }
+  }
+
+  // Ромб - 7 карт в форме ромба
+  &--diamond {
+    min-height: 170px;
+
+    .spread-layout__card {
+      width: 35px;
+      height: 53px;
+
+      // 7 позиций в форме ромба
+      &:nth-child(1) { left: 50%; top: calc(50% - 55px); transform: translate(-50%, -50%); }
+      &:nth-child(2) { left: calc(50% + 39px); top: calc(50% - 27px); transform: translate(-50%, -50%) rotate(45deg); }
+      &:nth-child(3) { left: calc(50% + 55px); top: 50%; transform: translate(-50%, -50%) rotate(90deg); }
+      &:nth-child(4) { left: calc(50% + 39px); top: calc(50% + 27px); transform: translate(-50%, -50%) rotate(135deg); }
+      &:nth-child(5) { left: 50%; top: calc(50% + 55px); transform: translate(-50%, -50%) rotate(180deg); }
+      &:nth-child(6) { left: calc(50% - 39px); top: calc(50% + 27px); transform: translate(-50%, -50%) rotate(225deg); }
+      &:nth-child(7) { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+    }
+  }
+
+  // Мост - 6 карт в форме моста
+  &--bridge {
+    min-height: 160px;
+
+    .spread-layout__card {
+      width: 35px;
+      height: 53px;
+
+      // 6 позиций в форме моста
+      &:nth-child(1) { left: calc(50% - 62px); top: calc(50% + 31px); transform: translate(-50%, -50%) rotate(-10deg); }
+      &:nth-child(2) { left: calc(50% - 31px); top: calc(50% + 15px); transform: translate(-50%, -50%) rotate(-5deg); }
+      &:nth-child(3) { left: 50%; top: calc(50% - 23px); transform: translate(-50%, -50%); }
+      &:nth-child(4) { left: calc(50% + 31px); top: calc(50% + 15px); transform: translate(-50%, -50%) rotate(5deg); }
+      &:nth-child(5) { left: calc(50% + 62px); top: calc(50% + 31px); transform: translate(-50%, -50%) rotate(10deg); }
+      &:nth-child(6) { left: 50%; top: calc(50% + 46px); transform: translate(-50%, -50%); }
+    }
+  }
+
+  // Ключ - 7 карт в форме ключа
+  &--key {
+    min-height: 170px;
+
+    .spread-layout__card {
+      width: 35px;
+      height: 53px;
+
+      // 7 позиций в форме ключа
+      &:nth-child(1) { left: calc(50% - 55px); top: 50%; transform: translate(-50%, -50%) rotate(-90deg); }
+      &:nth-child(2) { left: calc(50% - 37px); top: 50%; transform: translate(-50%, -50%) rotate(-90deg); }
+      &:nth-child(3) { left: calc(50% - 18px); top: 50%; transform: translate(-50%, -50%) rotate(-90deg); }
+      &:nth-child(4) { left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(-90deg); }
+      &:nth-child(5) { left: calc(50% + 18px); top: 50%; transform: translate(-50%, -50%) rotate(-90deg); }
+      &:nth-child(6) { left: calc(50% + 37px); top: calc(50% - 23px); transform: translate(-50%, -50%) rotate(-45deg); }
+      &:nth-child(7) { left: calc(50% + 37px); top: calc(50% + 23px); transform: translate(-50%, -50%) rotate(45deg); }
+    }
+  }
+
+  // Цветок лотоса - 8 карт в форме цветка лотоса
+  &--lotus-flower {
+    min-height: 180px;
+
+    .spread-layout__card {
+      width: 35px;
+      height: 53px;
+
+      // 8 позиций в форме цветка лотоса
+      &:nth-child(1) { left: 50%; top: calc(50% + 46px); transform: translate(-50%, -50%) rotate(180deg); }
+      &:nth-child(2) { left: 50%; top: calc(50% + 31px); transform: translate(-50%, -50%) rotate(180deg); }
+      &:nth-child(3) { left: calc(50% - 23px); top: calc(50% + 23px); transform: translate(-50%, -50%) rotate(-135deg); }
+      &:nth-child(4) { left: calc(50% + 23px); top: calc(50% + 23px); transform: translate(-50%, -50%) rotate(135deg); }
+      &:nth-child(5) { left: 50%; top: calc(50% + 8px); transform: translate(-50%, -50%); }
+      &:nth-child(6) { left: calc(50% - 31px); top: calc(50% - 15px); transform: translate(-50%, -50%) rotate(-45deg); }
+      &:nth-child(7) { left: calc(50% + 31px); top: calc(50% - 15px); transform: translate(-50%, -50%) rotate(45deg); }
+      &:nth-child(8) { left: 50%; top: calc(50% - 46px); transform: translate(-50%, -50%); }
+    }
+  }
+
+  // Анкх - 7 карт в форме египетского креста жизни
+  &--ankh {
+    min-height: 180px;
+
+    .spread-layout__card {
+      width: 35px;
+      height: 53px;
+
+      // 7 позиций в форме анкха
+      &:nth-child(1) { left: 50%; top: calc(50% - 50px); transform: translate(-50%, -50%); }
+      &:nth-child(2) { left: calc(50% - 31px); top: calc(50% - 23px); transform: translate(-50%, -50%) rotate(90deg); }
+      &:nth-child(3) { left: calc(50% + 31px); top: calc(50% - 23px); transform: translate(-50%, -50%) rotate(90deg); }
+      &:nth-child(4) { left: 50%; top: 50%; transform: translate(-50%, -50%) rotate(90deg); }
+      &:nth-child(5) { left: 50%; top: calc(50% + 23px); transform: translate(-50%, -50%); }
+      &:nth-child(6) { left: 50%; top: calc(50% + 46px); transform: translate(-50%, -50%); }
+      &:nth-child(7) { left: 50%; top: calc(50% + 62px); transform: translate(-50%, -50%); }
+    }
+  }
+
+  // Магический квадрат - 9 карт в форме квадрата 3x3
+  &--magic-square {
+    min-height: 170px;
+
+    .spread-layout__card {
+      width: 35px;
+      height: 53px;
+
+      // 9 позиций в форме квадрата 3x3
+      &:nth-child(1) { left: calc(50% - 39px); top: calc(50% - 39px); transform: translate(-50%, -50%); }
+      &:nth-child(2) { left: 50%; top: calc(50% - 39px); transform: translate(-50%, -50%); }
+      &:nth-child(3) { left: calc(50% + 39px); top: calc(50% - 39px); transform: translate(-50%, -50%); }
+      &:nth-child(4) { left: calc(50% - 39px); top: 50%; transform: translate(-50%, -50%); }
+      &:nth-child(5) { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+      &:nth-child(6) { left: calc(50% + 39px); top: 50%; transform: translate(-50%, -50%); }
+      &:nth-child(7) { left: calc(50% - 39px); top: calc(50% + 39px); transform: translate(-50%, -50%); }
+      &:nth-child(8) { left: 50%; top: calc(50% + 39px); transform: translate(-50%, -50%); }
+      &:nth-child(9) { left: calc(50% + 39px); top: calc(50% + 39px); transform: translate(-50%, -50%); }
+    }
+  }
+
+  // Древо Жизни - 10 карт в форме каббалистического древа
+  &--tree-of-life {
+    min-height: 200px;
+
+    .spread-layout__card {
+      width: 35px;
+      height: 53px;
+
+      // 10 позиций в форме Древа Жизни (сефирот)
+      &:nth-child(1) { left: 50%; top: calc(50% - 62px); transform: translate(-50%, -50%); }
+      &:nth-child(2) { left: calc(50% - 39px); top: calc(50% - 46px); transform: translate(-50%, -50%); }
+      &:nth-child(3) { left: calc(50% + 39px); top: calc(50% - 46px); transform: translate(-50%, -50%); }
+      &:nth-child(4) { left: calc(50% - 62px); top: calc(50% - 8px); transform: translate(-50%, -50%); }
+      &:nth-child(5) { left: calc(50% + 62px); top: calc(50% - 8px); transform: translate(-50%, -50%); }
+      &:nth-child(6) { left: 50%; top: calc(50% + 8px); transform: translate(-50%, -50%); }
+      &:nth-child(7) { left: calc(50% - 39px); top: calc(50% + 31px); transform: translate(-50%, -50%); }
+      &:nth-child(8) { left: calc(50% + 39px); top: calc(50% + 31px); transform: translate(-50%, -50%); }
+      &:nth-child(9) { left: 50%; top: calc(50% + 54px); transform: translate(-50%, -50%); }
+      &:nth-child(10) { left: 50%; top: calc(50% + 77px); transform: translate(-50%, -50%); }
+    }
+  }
 }
 
 // Адаптивность для мобильных
