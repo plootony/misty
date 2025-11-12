@@ -4,6 +4,13 @@ import { useModalStore } from '@/stores/modal.store';
 
 const modalStore = useModalStore();
 
+const props = defineProps({
+    onRetry: {
+        type: Function,
+        default: null
+    }
+});
+
 const emit = defineEmits(['loadFullReading']);
 
 const currentCard = computed(() => {
@@ -20,6 +27,18 @@ const isLastCard = computed(() => {
     const maxCards = modalStore.selectedSpread?.cardsCount || 3;
     return modalStore.selectedCards.length === maxCards;
 });
+
+// Проверяем, есть ли ошибка у текущей карты
+const hasError = computed(() => {
+    return currentCard.value?.hasError === true;
+});
+
+const handleRetry = () => {
+    if (props.onRetry && currentCard.value) {
+        const cardIndex = modalStore.selectedCards.length - 1;
+        props.onRetry(cardIndex);
+    }
+};
 
 // Таймер 5 секунд
 const countdown = ref(5);
@@ -54,10 +73,10 @@ const closeModal = () => {
 </script>
 
 <template>
-    <div class="modal">
+    <div class="modal modal--large modal--card-result">
         <div class="modal__overlay"></div>
         <div class="modal__container">
-            <div class="modal__content modal__content--card-result">
+            <div class="modal__content">
                 <div class="card-result">
                     <div class="card-result__card">
                         <img :src="currentCard?.image" alt="Карта Таро" class="card-result__card-image" :class="{ 'card-result__card-image--reversed': currentCard?.isReversed }" v-if="currentCard">
@@ -78,10 +97,22 @@ const closeModal = () => {
                             </p>
                         </div>
 
+                        <!-- Кнопка повтора при ошибке -->
                         <button
+                            v-if="hasError"
+                            class="btn btn--secondary"
+                            @click="handleRetry"
+                            :disabled="modalStore.isLoading"
+                        >
+                            <span>Повторить запрос</span>
+                        </button>
+
+                        <!-- Основная кнопка -->
+                        <button
+                            v-else
                             class="btn btn--primary"
                             @click="goToNext"
-                            :disabled="isButtonDisabled"
+                            :disabled="isButtonDisabled || modalStore.isLoading"
                         >
                             <span v-if="isButtonDisabled">{{ isLastCard ? 'Получить предсказание' : 'Следующая карта' }} ({{ countdown }}с)</span>
                             <span v-else>{{ isLastCard ? 'Получить предсказание' : 'Следующая карта' }}</span>
@@ -95,10 +126,6 @@ const closeModal = () => {
 
 <style scoped lang="scss">
 @use "../assets/scss/vars.scss" as *;
-
-.modal__content {
-    max-width: 1000px;
-}
 
 .card-result {
     display: flex;

@@ -104,10 +104,10 @@ const formatBirthDate = (event) => {
 
 <template>
     <Transition name="modal">
-        <div v-if="show" class="modal modal--required">
+        <div v-if="show" class="modal modal--small modal--profile-setup modal--required">
             <div class="modal__overlay"></div>
             <div class="modal__container">
-                <div class="modal__content modal__content--profile-setup">
+                <div class="modal__content">
                     <div class="profile-setup">
                         <div class="profile-setup__header">
                             <h1 class="profile-setup__title">Завершите настройку профиля</h1>
@@ -178,54 +178,6 @@ const formatBirthDate = (event) => {
 
 <style scoped lang="scss">
 @use "../assets/scss/vars.scss" as *;
-
-.modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: $spacing-middle;
-
-    &--required {
-        // Нельзя закрыть кликом вне модалки
-        .modal__overlay {
-            pointer-events: none;
-        }
-    }
-
-    &__overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(4px);
-    }
-
-    &__container {
-        position: relative;
-        z-index: 1;
-        width: 100%;
-        max-width: 500px;
-    }
-
-    &__content {
-        background-color: $color-bg-light;
-        box-shadow: 0px 20px 60px 0px rgba(0, 0, 0, 0.5);
-        overflow-y: auto;
-        max-height: 90vh;
-
-        &--profile-setup {
-            padding: $spacing-large;
-        }
-    }
-}
 
 .profile-setup {
     display: flex;

@@ -266,8 +266,8 @@ const getSpreadDescription = (spreadId) => {
 </script>
 
 <template>
-  <div v-if="show && spread" class="modal" @click="closeModal">
-    <div class="modal__overlay"></div>
+  <div v-if="show && spread" class="modal modal--medium modal--spread-details" @click="closeModal">
+    <div class="modal__overlay" @click="closeModal"></div>
     <div class="modal__container">
       <div class="modal__content">
         <div class="modal__header">
@@ -320,60 +320,6 @@ const getSpreadDescription = (spreadId) => {
 
 <style scoped lang="scss">
 @use "../assets/scss/vars.scss" as *;
-
-.modal {
-  &__content {
-    max-width: 900px;
-    width: 100%;
-    background-color: $color-bg-dark;
-    border-radius: 8px;
-    max-height: 90vh;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-  }
-
-  &__header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: $spacing-middle;
-    border-bottom: 1px solid $color-bg-light;
-  }
-
-  &__title {
-    font-family: "Playfair Display", Sans-serif;
-    font-size: 24px;
-    font-weight: 600;
-    color: $color-white;
-    margin: 0;
-  }
-
-  &__close {
-    background: none;
-    border: none;
-    font-size: 28px;
-    color: $color-grey;
-    cursor: pointer;
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color 0.3s;
-
-    &:hover {
-      color: $color-white;
-    }
-  }
-
-  &__body {
-    padding: $spacing-middle;
-    overflow-y: auto;
-    flex: 1;
-  }
-}
 
 .spread-details {
   display: grid;

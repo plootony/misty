@@ -60,6 +60,17 @@ export const useModalStore = defineStore('modalStore', () => {
         }
     }
 
+    const retryCardInterpretation = (cardIndex) => {
+        if (cardIndex >= 0 && cardIndex < selectedCards.value.length) {
+            selectedCards.value[cardIndex] = {
+                ...selectedCards.value[cardIndex],
+                interpretation: 'Загружается толкование...',
+                loading: true,
+                hasError: false
+            };
+        }
+    }
+
     const resetSelection = () => {
         selectedCards.value = []
         selectedSpread.value = null
@@ -86,6 +97,7 @@ export const useModalStore = defineStore('modalStore', () => {
         closeAnswerModal,
         addSelectedCard,
         updateLastCard,
+        retryCardInterpretation,
         startLoading,
         stopLoading,
         startFullReadingLoading,

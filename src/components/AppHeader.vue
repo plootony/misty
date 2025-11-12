@@ -46,7 +46,7 @@ const userStore = useUserStore();
     z-index: 100;
 
     &__container {
-        max-width: 1440px;
+        max-width: 1200px;
         margin: 0 auto;
         padding: $spacing-small;
         display: flex;

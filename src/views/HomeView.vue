@@ -46,6 +46,43 @@ onMounted(() => {
     cardStore.shuffleDeck();
 });
 
+const retryCardInterpretation = async (cardIndex) => {
+    const card = modalStore.selectedCards[cardIndex];
+    if (!card || !card.hasError) return;
+
+    modalStore.startLoading();
+    modalStore.retryCardInterpretation(cardIndex);
+
+    try {
+        const position = card.positionInfo;
+        const interpretation = await interpretSingleCard(
+            modalStore.userQuestion,
+            card,
+            position
+        );
+
+        modalStore.updateLastCard({
+            interpretation,
+            loading: false,
+            hasError: false,
+            error: null
+        });
+
+        modalStore.stopLoading();
+
+    } catch (error) {
+        console.error('Ошибка при повторном толковании карты:', error);
+        modalStore.stopLoading();
+
+        modalStore.updateLastCard({
+            interpretation: 'Не удалось получить толкование карты. Попробуйте ещё раз.',
+            loading: false,
+            hasError: true,
+            error: error.message
+        });
+    }
+};
+
 const selectCard = async (card) => {
     // Проверяем, что расклад выбран
     if (!modalStore.selectedSpread) {
@@ -97,18 +134,15 @@ const selectCard = async (card) => {
         } catch (error) {
             console.error('Ошибка при толковании карты:', error);
             modalStore.stopLoading();
-            
-            // Fallback: добавляем карту без толкования
-            const cardWithPosition = cardStore.createCardWithPosition(card);
-            const cardIndex = currentCardsCount; // Используем тот же индекс, что и для основной логики
-            const position = modalStore.selectedSpread.positions?.[cardIndex];
 
-            modalStore.addSelectedCard({
-                ...cardWithPosition,
-                interpretation: 'Не удалось получить толкование. Попробуйте ещё раз.',
-                positionInfo: position
+            // Обновляем последнюю карту с информацией об ошибке
+            modalStore.updateLastCard({
+                interpretation: 'Не удалось получить толкование карты. Проверьте подключение к интернету.',
+                loading: false,
+                hasError: true,
+                error: error.message
             });
-            
+
             modalStore.openCardResultModal();
         }
     }
@@ -236,7 +270,7 @@ const loadFullReading = async () => {
             </div>
         </div>
 
-        <CardResultModal v-if="modalStore.isCardResultModalOpen" @loadFullReading="loadFullReading" />
+        <CardResultModal v-if="modalStore.isCardResultModalOpen" @loadFullReading="loadFullReading" :onRetry="retryCardInterpretation" />
         <AnswerModal v-if="modalStore.isAnswerModalOpen" />
     </div>
 </template>

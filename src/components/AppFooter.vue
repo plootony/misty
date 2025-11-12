@@ -203,7 +203,7 @@ const closeTermsOfService = () => {
     margin-top: auto;
 
     &__container {
-        max-width: 1440px;
+        max-width: 1200px;
         margin: 0 auto;
         padding: $spacing-middle $spacing-small;
     }
@@ -264,7 +264,7 @@ const closeTermsOfService = () => {
 // Модалки
 .modal {
     &__content {
-        max-width: 1000px;
+        max-width: 1200px;
         width: 100%;
         background-color: $color-bg-dark;
         border-radius: 8px;

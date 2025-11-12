@@ -20,10 +20,10 @@ const closeModal = () => {
 </script>
 
 <template>
-    <div class="modal">
+    <div class="modal modal--large modal--answer">
         <div class="modal__overlay"></div>
         <div class="modal__container">
-            <div class="modal__content modal__content--answer">
+            <div class="modal__content">
                 <div class="answer">
                     <div class="answer__header">
                         <p class="answer__label">ОТВЕТ НА ТВОЙ ВОПРОС</p>
@@ -47,12 +47,7 @@ const closeModal = () => {
 <style scoped lang="scss">
 @use "../assets/scss/vars.scss" as *;
 
-.modal__content {
-    max-width: 1000px;
-}
-
 .answer {
-    padding: $spacing-large;
     display: flex;
     flex-direction: column;
     gap: $spacing-small;

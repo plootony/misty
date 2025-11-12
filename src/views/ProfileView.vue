@@ -414,7 +414,7 @@ const handleSignOut = async () => {
     padding: $spacing-middle;
 
     &__container {
-        max-width: 1440px;
+        max-width: 1200px;
         margin: 0 auto;
     }
 

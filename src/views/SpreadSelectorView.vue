@@ -163,7 +163,7 @@ const closeSpreadDetails = () => {
         display: flex;
         flex-wrap: wrap;
         gap: $spacing-middle;
-        max-width: 1440px;
+        max-width: 1200px;
         width: 100%;
     }
 

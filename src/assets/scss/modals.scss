@@ -11,6 +11,14 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 20px;
+
+    // Модификатор для обязательных модальных окон (нельзя закрыть кликом вне)
+    &--required {
+        .modal__overlay {
+            pointer-events: none;
+        }
+    }
 
     &__overlay {
         position: absolute;
@@ -19,15 +27,33 @@
         right: 0;
         bottom: 0;
         background-color: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(4px);
+        cursor: pointer;
     }
 
     &__container {
         position: relative;
         z-index: 1001;
-        max-width: 90vw;
+        width: 100%;
         max-height: 90vh;
         overflow: auto;
-        
+
+        // Размеры контейнера в зависимости от типа модального окна
+        .modal--small & {
+            max-width: 500px;
+        }
+
+        .modal--medium & {
+            max-width: 900px;
+        }
+
+        .modal--large & {
+            max-width: 1000px;
+        }
+
+        .modal--xl & {
+            max-width: 1200px;
+        }
     }
 
     &__content {
@@ -36,7 +62,74 @@
         background-position: center;
         background-repeat: no-repeat;
         background-color: $color-bg-light;
-        box-shadow: 0px 15px 35px 0px rgba(10, 10, 12, 0.3215686274509804);
+        box-shadow: 0px 20px 60px 0px rgba(0, 0, 0, 0.5);
+        border-radius: 8px;
+
+        // Стилизация контента в зависимости от типа модального окна
+        .modal--profile-setup & {
+            padding: 40px;
+        }
+
+        .modal--spread-details & {
+            background-color: $color-bg-dark;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal--card-result &,
+        .modal--answer & {
+            padding: 40px;
+        }
+    }
+
+    &__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px 30px;
+        border-bottom: 1px solid $color-bg-light;
+
+        .modal--spread-details & {
+            padding: 20px 30px;
+        }
+    }
+
+    &__title {
+        font-family: "Playfair Display", Sans-serif;
+        font-size: 24px;
+        font-weight: 600;
+        color: $color-white;
+        margin: 0;
+    }
+
+    &__close {
+        background: none;
+        border: none;
+        font-size: 28px;
+        color: $color-grey;
+        cursor: pointer;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: color 0.3s;
+
+        &:hover {
+            color: $color-white;
+        }
+    }
+
+    &__body {
+        padding: 30px;
+        overflow-y: auto;
+        flex: 1;
+
+        .modal--spread-details & {
+            padding: 20px 30px;
+        }
     }
 }
 
