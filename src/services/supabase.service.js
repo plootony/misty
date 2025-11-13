@@ -333,18 +333,42 @@ export async function deleteReadings(readingIds) {
 /**
  * Поиск пользователей (только для админа)
  */
-export async function searchUsers(query, limit = 20) {
-    const { data, error } = await supabase.rpc('admin_search_users', {
-        search_query: query || '',
-        limit_count: limit
+export async function searchUsers(query, limit = 20, offset = 0) {
+    // Получаем пользователей (пагинация на клиенте)
+    const { data: users, error: usersError } = await supabase.rpc('admin_search_users', {
+        limit_count: limit * 2, // Запрашиваем больше для пагинации на клиенте
+        search_query: query || ''
     })
 
-    if (error) {
-        console.error('Ошибка поиска пользователей:', error)
-        throw error
+    if (usersError) {
+        console.error('Ошибка поиска пользователей:', usersError)
+        throw usersError
     }
 
-    return data
+    // Пагинация на клиенте
+    const paginatedUsers = users ? users.slice(offset, offset + limit) : [];
+
+    // Получаем общее количество для пагинации
+    let countQuery = supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+
+    // Добавляем условие поиска только если есть запрос
+    if (query && query.trim()) {
+        countQuery = countQuery.or(`name.ilike.%${query}%,email.ilike.%${query}%,user_number.ilike.%${query}%`)
+    }
+
+    const { count, error: countError } = await countQuery
+
+    if (countError) {
+        console.error('Ошибка получения количества пользователей:', countError)
+        // Не выбрасываем ошибку, просто возвращаем null для count
+    }
+
+    return {
+        users: paginatedUsers,
+        total: count || 0
+    }
 }
 
 /**

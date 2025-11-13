@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user.store';
 import { searchUsers, updateUserTariff, toggleUserActive, deleteUser } from '@/services/supabase.service';
@@ -8,48 +8,134 @@ import ButtonSpinner from '@/components/ButtonSpinner.vue';
 const router = useRouter();
 const userStore = useUserStore();
 
-// Проверка прав доступа
-if (!userStore.isAdmin) {
-    router.push('/');
-}
-
+// Состояния компонента
 const searchQuery = ref('');
 const users = ref([]);
 const isLoading = ref(false);
-const isSearching = ref(false);
 const editingUser = ref(null);
 const selectedTariff = ref('');
+const isUpdatingTariff = ref(false);
+const isTogglingActive = ref(false);
+const isDeletingUser = ref(false);
 
-// Загружаем всех пользователей при монтировании
+// Пагинация
+const currentPage = ref(1);
+const pageSize = 20;
+const totalUsers = ref(0);
+const hasMorePages = computed(() => (currentPage.value * pageSize) < totalUsers.value);
+
+// Debounced поиск
+let searchTimeout = null;
+const debouncedSearch = () => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        handleSearch();
+    }, 500);
+};
+
+// Асинхронная проверка прав доступа
+const checkAdminAccess = async () => {
+    // Ждем инициализации аутентификации
+    if (userStore.isAuthChecking) {
+        await new Promise(resolve => {
+            const unwatch = userStore.$subscribe(() => {
+                if (!userStore.isAuthChecking) {
+                    unwatch();
+                    resolve();
+                }
+            });
+        });
+    }
+
+    if (!userStore.isAdmin) {
+        router.push('/');
+        return false;
+    }
+    return true;
+};
+
+// Загружаем пользователей при монтировании
 onMounted(async () => {
-    await loadUsers();
+    const hasAccess = await checkAdminAccess();
+    if (hasAccess) {
+        await loadUsers();
+    }
 });
 
-const loadUsers = async () => {
+const loadUsers = async (page = 1, append = false) => {
     isLoading.value = true;
     try {
-        users.value = await searchUsers('', 50);
+        const offset = (page - 1) * pageSize;
+        const result = await searchUsers('', pageSize, offset);
+
+        if (append) {
+            users.value = [...users.value, ...result.users];
+        } else {
+            users.value = result.users;
+        }
+
+        totalUsers.value = result.total;
+        currentPage.value = page;
     } catch (error) {
         console.error('Ошибка загрузки пользователей:', error);
-        alert('Не удалось загрузить пользователей');
+        showError('Не удалось загрузить пользователей', error);
     } finally {
         isLoading.value = false;
     }
 };
 
 const handleSearch = async () => {
-    isSearching.value = true;
+    if (!searchQuery.value.trim()) {
+        await loadUsers(1, false);
+        return;
+    }
+
     try {
-        users.value = await searchUsers(searchQuery.value, 50);
+        const result = await searchUsers(searchQuery.value.trim(), pageSize, 0);
+        users.value = result.users;
+        totalUsers.value = result.total;
+        currentPage.value = 1;
     } catch (error) {
         console.error('Ошибка поиска:', error);
-        alert('Ошибка поиска пользователей');
-    } finally {
-        isSearching.value = false;
+        showError('Ошибка поиска пользователей', error);
     }
 };
 
+const loadMoreUsers = async () => {
+    if (isLoading.value || !hasMorePages.value) return;
+    await loadUsers(currentPage.value + 1, true);
+};
+
+const clearSearch = async () => {
+    searchQuery.value = '';
+    await loadUsers(1, false);
+};
+
+// Улучшенная обработка ошибок
+const showError = (message, error = null) => {
+    let fullMessage = message;
+
+    if (error) {
+        if (error.message?.includes('Access denied') || error.message?.includes('permission')) {
+            fullMessage = 'У вас нет прав для выполнения этого действия';
+        } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+            fullMessage = 'Ошибка сети. Проверьте подключение к интернету';
+        } else if (error.message?.includes('timeout')) {
+            fullMessage = 'Превышено время ожидания ответа сервера';
+        }
+    }
+
+    alert(fullMessage);
+    console.error('Admin error:', error);
+};
+
 const startEdit = (user) => {
+    // Защита от редактирования самого себя
+    if (user.id === userStore.userData?.id) {
+        alert('Вы не можете редактировать свой собственный профиль');
+        return;
+    }
+
     editingUser.value = user;
     selectedTariff.value = user.tariff;
 };
@@ -60,51 +146,102 @@ const cancelEdit = () => {
 };
 
 const saveTariff = async () => {
-    if (!editingUser.value) return;
-    
+    if (!editingUser.value || !selectedTariff.value) return;
+
+    isUpdatingTariff.value = true;
     try {
+        // Логируем действие
+        console.log(`Admin ${userStore.userData?.name} изменяет тариф пользователя ${editingUser.value.name} с ${editingUser.value.tariff} на ${selectedTariff.value}`);
+
         await updateUserTariff(editingUser.value.id, selectedTariff.value);
-        // Обновляем локально
+
+        // Обновляем локально только после успешного сохранения на сервере
         const user = users.value.find(u => u.id === editingUser.value.id);
         if (user) {
             user.tariff = selectedTariff.value;
         }
+
         editingUser.value = null;
-        alert('Тариф обновлен');
+        selectedTariff.value = '';
+        alert('Тариф успешно обновлен');
+
     } catch (error) {
         console.error('Ошибка обновления тарифа:', error);
-        alert('Не удалось обновить тариф');
+        showError('Не удалось обновить тариф', error);
+    } finally {
+        isUpdatingTariff.value = false;
     }
 };
 
 const toggleActive = async (user) => {
+    // Защита от блокировки самого себя
+    if (user.id === userStore.userData?.id) {
+        alert('Вы не можете заблокировать свой собственный аккаунт');
+        return;
+    }
+
     const newStatus = !user.is_active;
-    const confirmMessage = newStatus 
+    const confirmMessage = newStatus
         ? `Разблокировать пользователя ${user.name}?`
-        : `Заблокировать пользователя ${user.name}?`;
-    
+        : `Заблокировать пользователя ${user.name}? Это ограничит доступ к системе.`;
+
     if (!confirm(confirmMessage)) return;
-    
+
+    isTogglingActive.value = true;
     try {
+        // Логируем действие
+        console.log(`Admin ${userStore.userData?.name} ${newStatus ? 'разблокирует' : 'блокирует'} пользователя ${user.name}`);
+
         await toggleUserActive(user.id, newStatus);
+
+        // Обновляем локально только после успешного сохранения на сервере
         user.is_active = newStatus;
-        alert(newStatus ? 'Пользователь разблокирован' : 'Пользователь заблокирован');
+        alert(newStatus ? 'Пользователь успешно разблокирован' : 'Пользователь успешно заблокирован');
+
     } catch (error) {
         console.error('Ошибка изменения статуса:', error);
-        alert('Не удалось изменить статус пользователя');
+        showError('Не удалось изменить статус пользователя', error);
+    } finally {
+        isTogglingActive.value = false;
     }
 };
 
 const handleDelete = async (user) => {
-    if (!confirm(`Удалить пользователя ${user.name}? Это действие необратимо!`)) return;
-    
+    // Защита от удаления самого себя
+    if (user.id === userStore.userData?.id) {
+        alert('Вы не можете удалить свой собственный аккаунт');
+        return;
+    }
+
+    // Дополнительная проверка для администраторов
+    if (user.is_admin) {
+        if (!confirm(`ВНИМАНИЕ! Вы собираетесь удалить администратора ${user.name}!\n\nЭто может нарушить работу системы. Убедитесь, что есть другие администраторы.\n\nДействительно удалить?`)) {
+            return;
+        }
+    }
+
+    const confirmMessage = `Удалить пользователя ${user.name}?\n\nЭто действие необратимо! Будут удалены все данные пользователя, включая историю гаданий.`;
+
+    if (!confirm(confirmMessage)) return;
+
+    isDeletingUser.value = true;
     try {
+        // Логируем критическое действие
+        console.warn(`Admin ${userStore.userData?.name} УДАЛЯЕТ пользователя ${user.name} (ID: ${user.id})`);
+
         await deleteUser(user.id);
+
+        // Удаляем из локального массива только после успешного удаления на сервере
         users.value = users.value.filter(u => u.id !== user.id);
-        alert('Пользователь удален');
+        totalUsers.value = Math.max(0, totalUsers.value - 1);
+
+        alert('Пользователь успешно удален');
+
     } catch (error) {
-        console.error('Ошибка удаления:', error);
-        alert('Не удалось удалить пользователя');
+        console.error('Ошибка удаления пользователя:', error);
+        showError('Не удалось удалить пользователя', error);
+    } finally {
+        isDeletingUser.value = false;
     }
 };
 
@@ -135,23 +272,33 @@ const formatDate = (dateString) => {
         <div class="admin__container">
             <h1 class="admin__title">Панель администратора</h1>
             
-            <!-- Поиск -->
-            <div class="admin__search">
-                <input 
-                    v-model="searchQuery" 
-                    type="text" 
-                    placeholder="Поиск по имени, email или номеру..."
-                    class="admin__search-input"
-                    @keyup.enter="handleSearch"
-                >
-                <button 
-                    class="btn btn--primary admin__search-btn"
-                    @click="handleSearch"
-                    :disabled="isSearching"
-                >
-                    <ButtonSpinner v-if="isSearching" />
-                    <span>{{ isSearching ? 'Поиск...' : 'Найти' }}</span>
-                </button>
+            <!-- Поиск и статистика -->
+            <div class="admin__search-section">
+                <div class="admin__search">
+                    <input
+                        v-model="searchQuery"
+                        type="text"
+                        placeholder="Поиск по имени, email или номеру..."
+                        class="admin__search-input"
+                        @input="debouncedSearch"
+                    >
+                    <button
+                        v-if="searchQuery"
+                        class="btn btn--secondary admin__clear-btn"
+                        @click="clearSearch"
+                        title="Очистить поиск"
+                    >
+                        ✕
+                    </button>
+                </div>
+
+                <!-- Статистика -->
+                <div class="admin__stats">
+                    <span class="admin__stats-text">
+                        Показано {{ users.length }} из {{ totalUsers }} пользователей
+                        <span v-if="currentPage > 1">(страница {{ currentPage }})</span>
+                    </span>
+                </div>
             </div>
 
             <!-- Загрузка -->
@@ -227,10 +374,19 @@ const formatDate = (dateString) => {
                                     <option value="supreme-arcana">Верховный Аркан</option>
                                 </select>
                                 <div class="admin__edit-actions">
-                                    <button class="btn btn--primary" @click="saveTariff">
-                                        Сохранить
+                                    <button
+                                        class="btn btn--primary"
+                                        @click="saveTariff"
+                                        :disabled="isUpdatingTariff || !selectedTariff"
+                                    >
+                                        <ButtonSpinner v-if="isUpdatingTariff" />
+                                        <span>{{ isUpdatingTariff ? 'Сохранение...' : 'Сохранить' }}</span>
                                     </button>
-                                    <button class="btn btn--secondary" @click="cancelEdit">
+                                    <button
+                                        class="btn btn--secondary"
+                                        @click="cancelEdit"
+                                        :disabled="isUpdatingTariff"
+                                    >
                                         Отмена
                                     </button>
                                 </div>
@@ -246,22 +402,36 @@ const formatDate = (dateString) => {
                             >
                                 Сменить тариф
                             </button>
-                            <button 
+                            <button
                                 class="btn admin__action-btn"
                                 :class="user.is_active ? 'btn--warning' : 'btn--primary'"
                                 @click="toggleActive(user)"
+                                :disabled="isTogglingActive"
                             >
-                                {{ user.is_active ? 'Заблокировать' : 'Разблокировать' }}
+                                <ButtonSpinner v-if="isTogglingActive" />
+                                <span>{{ isTogglingActive ? 'Обработка...' : (user.is_active ? 'Заблокировать' : 'Разблокировать') }}</span>
                             </button>
-                            <button 
+                            <button
                                 class="btn btn--danger admin__action-btn"
                                 @click="handleDelete(user)"
+                                :disabled="isDeletingUser"
                             >
-                                Удалить
+                                <ButtonSpinner v-if="isDeletingUser" />
+                                <span>{{ isDeletingUser ? 'Удаление...' : 'Удалить' }}</span>
                             </button>
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Загрузить еще -->
+            <div v-if="hasMorePages && !isLoading" class="admin__load-more">
+                <button
+                    class="btn btn--secondary"
+                    @click="loadMoreUsers"
+                >
+                    Загрузить еще пользователей
+                </button>
             </div>
 
             <!-- Пусто -->
@@ -498,6 +668,32 @@ const formatDate = (dateString) => {
     &__action-btn {
         flex: 1;
         min-width: 150px;
+    }
+
+    &__search-section {
+        margin-bottom: $spacing-large;
+    }
+
+    &__stats {
+        margin-top: $spacing-middle;
+        text-align: center;
+    }
+
+    &__stats-text {
+        font-family: "Inter", Sans-serif;
+        font-size: 14px;
+        color: $color-grey;
+    }
+
+    &__clear-btn {
+        margin-right: $spacing-small;
+        padding: $spacing-small $spacing-middle;
+        min-width: auto;
+    }
+
+    &__load-more {
+        margin-top: $spacing-large;
+        text-align: center;
     }
 }
 
