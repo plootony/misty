@@ -135,7 +135,7 @@ const loadHistory = async (append = false) => {
                     name: card.name,
                     position: card.isReversed ? 'Перевернутое' : 'Прямое',
                     description: card.meaning,
-                    image: cardData?.image || '/cards/card-back.png'
+                    image: cardData?.image || '/images/card-back.png'
                 };
             }),
             finalReading: reading.interpretation

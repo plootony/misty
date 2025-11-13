@@ -244,7 +244,7 @@ const loadFullReading = async () => {
             >
                 <img 
                     class="card-selector__deck-card-image" 
-                    src="@/assets/images/card-back.png" 
+                    src="/images/card-back.png" 
                     alt="Карта Таро"
                 >
             </div>

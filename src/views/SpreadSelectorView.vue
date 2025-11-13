@@ -113,7 +113,7 @@ const closeSpreadDetails = () => {
 @use "../assets/scss/vars.scss" as *;
 
 .spread-selector {
-    background-image: url('/src/assets/images/bg-1.png');
+    background-image: url('/images/bg-1.png');
     background-size: contain;
     background-position: top center;
     background-attachment: fixed;

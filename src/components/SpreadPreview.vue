@@ -88,7 +88,7 @@ const spreadClass = computed(() => {
         >
             <img
                 class="spread-preview__card-image"
-                :src="animated ? `src/assets/images/${cardImages[index]}` : 'src/assets/images/back-min.jpg'"
+                :src="animated ? `/images/${cardImages[index]}` : '/images/back-min.jpg'"
                 alt="Карта Таро"
             >
         </div>

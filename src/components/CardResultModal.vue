@@ -80,7 +80,7 @@ const closeModal = () => {
                 <div class="card-result">
                     <div class="card-result__card">
                         <img :src="currentCard?.image" alt="Карта Таро" class="card-result__card-image" :class="{ 'card-result__card-image--reversed': currentCard?.isReversed }" v-if="currentCard">
-                        <img src="@/assets/images/card-back.png" alt="Карта Таро" class="card-result__card-image" v-else>
+                        <img src="/images/card-back.png" alt="Карта Таро" class="card-result__card-image" v-else>
                     </div>
 
                     <div class="card-result__content" v-if="currentCard">

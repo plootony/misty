@@ -62,7 +62,7 @@ watch(() => route.path, () => {
   flex-direction: column;
   justify-content: center;
 
-  background-image: url('/src/assets/images/bg-1.png');
+  background-image: url('/images/bg-1.png');
     background-size: contain;
     background-position: top center;
     background-attachment: fixed;
