@@ -37,9 +37,24 @@ const cardImages = ref([]);
 
 const generateCardImages = () => {
     cardImages.value = [];
+
+    // Создаем копию массива доступных карт
+    const availableCards = [...cardThumbnails];
+
+    // Если карт меньше чем нужно, дублируем массив
+    while (availableCards.length < props.cardsCount) {
+        availableCards.push(...cardThumbnails);
+    }
+
+    // Перемешиваем массив для случайности
+    for (let i = availableCards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [availableCards[i], availableCards[j]] = [availableCards[j], availableCards[i]];
+    }
+
+    // Берем нужное количество уникальных карт
     for (let i = 0; i < props.cardsCount; i++) {
-        const randomIndex = Math.floor(Math.random() * cardThumbnails.length);
-        cardImages.value.push(cardThumbnails[randomIndex]);
+        cardImages.value.push(availableCards[i]);
     }
 };
 

@@ -1,24 +1,57 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 
 const showPrivacyPolicy = ref(false);
 const showTermsOfService = ref(false);
 
 const openPrivacyPolicy = () => {
     showPrivacyPolicy.value = true;
+    document.body.style.overflow = 'hidden';
 };
 
 const closePrivacyPolicy = () => {
     showPrivacyPolicy.value = false;
+    // Проверяем, закрыты ли все модальные окна
+    if (!showTermsOfService.value) {
+        document.body.style.overflow = '';
+    }
 };
 
 const openTermsOfService = () => {
     showTermsOfService.value = true;
+    document.body.style.overflow = 'hidden';
 };
 
 const closeTermsOfService = () => {
     showTermsOfService.value = false;
+    // Проверяем, закрыты ли все модальные окна
+    if (!showPrivacyPolicy.value) {
+        document.body.style.overflow = '';
+    }
 };
+
+// Обработчик клавиши Escape
+const handleEscapeKey = (event) => {
+    if (event.key === 'Escape') {
+        if (showPrivacyPolicy.value) {
+            closePrivacyPolicy();
+        } else if (showTermsOfService.value) {
+            closeTermsOfService();
+        }
+    }
+};
+
+// Устанавливаем обработчик клавиши Escape при монтировании
+onMounted(() => {
+    document.addEventListener('keydown', handleEscapeKey);
+});
+
+// Удаляем обработчик при размонтировании
+onUnmounted(() => {
+    document.removeEventListener('keydown', handleEscapeKey);
+    // Восстанавливаем скролл body при размонтировании компонента
+    document.body.style.overflow = '';
+});
 </script>
 
 <template>
@@ -61,7 +94,7 @@ const closeTermsOfService = () => {
     <div v-if="showPrivacyPolicy" class="modal" @click="closePrivacyPolicy">
         <div class="modal__overlay"></div>
         <div class="modal__container">
-            <div class="modal__content">
+            <div class="modal__content" @click.stop>
                 <div class="modal__header">
                     <h2 class="modal__title">Политика конфиденциальности</h2>
                     <button type="button" class="modal__close" @click="closePrivacyPolicy">×</button>
@@ -119,7 +152,7 @@ const closeTermsOfService = () => {
     <div v-if="showTermsOfService" class="modal" @click="closeTermsOfService">
         <div class="modal__overlay"></div>
         <div class="modal__container">
-            <div class="modal__content">
+            <div class="modal__content" @click.stop>
                 <div class="modal__header">
                     <h2 class="modal__title">Пользовательское соглашение</h2>
                     <button type="button" class="modal__close" @click="closeTermsOfService">×</button>
@@ -263,15 +296,41 @@ const closeTermsOfService = () => {
 
 // Модалки
 .modal {
-    &__content {
-        max-width: 1200px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &__overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
         width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.8);
+        z-index: 1;
+    }
+
+    &__container {
+        position: relative;
+        z-index: 2;
+        max-width: 1200px;
+        width: 90%;
+        max-height: 90vh;
+    }
+
+    &__content {
         background-color: $color-bg-dark;
         border-radius: 8px;
-        max-height: 90vh;
         overflow: hidden;
         display: flex;
         flex-direction: column;
+        max-height: 100%;
     }
 
     &__header {
