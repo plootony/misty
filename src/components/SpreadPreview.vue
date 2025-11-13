@@ -37,24 +37,9 @@ const cardImages = ref([]);
 
 const generateCardImages = () => {
     cardImages.value = [];
-
-    // Создаем копию массива доступных карт
-    const availableCards = [...cardThumbnails];
-
-    // Если карт меньше чем нужно, дублируем массив
-    while (availableCards.length < props.cardsCount) {
-        availableCards.push(...cardThumbnails);
-    }
-
-    // Перемешиваем массив для случайности
-    for (let i = availableCards.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [availableCards[i], availableCards[j]] = [availableCards[j], availableCards[i]];
-    }
-
-    // Берем нужное количество уникальных карт
     for (let i = 0; i < props.cardsCount; i++) {
-        cardImages.value.push(availableCards[i]);
+        const randomIndex = Math.floor(Math.random() * cardThumbnails.length);
+        cardImages.value.push(cardThumbnails[randomIndex]);
     }
 };
 
@@ -118,8 +103,6 @@ const spreadClass = computed(() => {
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        position: relative;
-        transition: all 0.3s ease-out;
     }
 
     &__card-image {
@@ -132,14 +115,6 @@ const spreadClass = computed(() => {
     // Анимация при наведении - карты вылетают из-за пределов превью
     &--animated {
         .spread-preview__card {
-            position: absolute;
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -50%) translateY(120px) scale(0.8);
-            opacity: 0;
-
-            will-change: transform, opacity;
-
             &:nth-child(1) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0s; }
             &:nth-child(2) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.08s; }
             &:nth-child(3) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.16s; }
