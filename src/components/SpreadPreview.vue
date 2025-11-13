@@ -37,9 +37,24 @@ const cardImages = ref([]);
 
 const generateCardImages = () => {
     cardImages.value = [];
+
+    // Создаем копию массива доступных карт
+    const availableCards = [...cardThumbnails];
+
+    // Если карт меньше чем нужно, дублируем массив
+    while (availableCards.length < props.cardsCount) {
+        availableCards.push(...cardThumbnails);
+    }
+
+    // Перемешиваем массив для случайности
+    for (let i = availableCards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [availableCards[i], availableCards[j]] = [availableCards[j], availableCards[i]];
+    }
+
+    // Берем нужное количество уникальных карт
     for (let i = 0; i < props.cardsCount; i++) {
-        const randomIndex = Math.floor(Math.random() * cardThumbnails.length);
-        cardImages.value.push(cardThumbnails[randomIndex]);
+        cardImages.value.push(availableCards[i]);
     }
 };
 
@@ -99,22 +114,32 @@ const spreadClass = computed(() => {
         height: 45px;
         background-color: $color-bg-dark;
         border-radius: 3px;
-        box-shadow: 0px 2px 8px 0px rgba(10, 10, 12, 0.5);
         display: flex;
         align-items: center;
         justify-content: center;
         overflow: hidden;
+        position: relative;
+        transition: all 0.3s ease-out;
     }
 
     &__card-image {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        transition: opacity 0.1s ease-out;
     }
 
     // Анимация при наведении - карты вылетают из-за пределов превью
     &--animated {
         .spread-preview__card {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%) translateY(120px) scale(0.8);
+            opacity: 0;
+
+            will-change: transform, opacity;
+
             &:nth-child(1) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0s; }
             &:nth-child(2) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.08s; }
             &:nth-child(3) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.16s; }
@@ -127,6 +152,25 @@ const spreadClass = computed(() => {
             &:nth-child(10) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.72s; }
             &:nth-child(11) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.8s; }
             &:nth-child(12) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.88s; }
+
+            // Скрываем изображения в начале анимации
+            .spread-preview__card-image {
+                opacity: 0;
+                animation: revealCard 0.1s ease-out forwards;
+            }
+
+            &:nth-child(1) .spread-preview__card-image { animation-delay: 0.2s; }
+            &:nth-child(2) .spread-preview__card-image { animation-delay: 0.28s; }
+            &:nth-child(3) .spread-preview__card-image { animation-delay: 0.36s; }
+            &:nth-child(4) .spread-preview__card-image { animation-delay: 0.44s; }
+            &:nth-child(5) .spread-preview__card-image { animation-delay: 0.52s; }
+            &:nth-child(6) .spread-preview__card-image { animation-delay: 0.6s; }
+            &:nth-child(7) .spread-preview__card-image { animation-delay: 0.68s; }
+            &:nth-child(8) .spread-preview__card-image { animation-delay: 0.76s; }
+            &:nth-child(9) .spread-preview__card-image { animation-delay: 0.84s; }
+            &:nth-child(10) .spread-preview__card-image { animation-delay: 0.92s; }
+            &:nth-child(11) .spread-preview__card-image { animation-delay: 1s; }
+            &:nth-child(12) .spread-preview__card-image { animation-delay: 1.08s; }
         }
     }
 
@@ -562,6 +606,15 @@ const spreadClass = computed(() => {
     100% {
         opacity: 1;
         transform: translateY(0) translateX(0) scale(1) rotate(0deg);
+    }
+}
+
+@keyframes revealCard {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
     }
 }
 </style>
