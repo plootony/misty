@@ -19,6 +19,58 @@ const notification = ref({
     message: ''
 });
 
+// Функция для определения типа ошибки
+const getErrorType = (error) => {
+    const errorMessage = error?.message?.toLowerCase() || '';
+    const errorCode = error?.code || error?.status;
+
+    // Сетевые ошибки
+    if (errorMessage.includes('network') ||
+        errorMessage.includes('fetch') ||
+        errorMessage.includes('connection') ||
+        errorMessage.includes('internet') ||
+        errorCode === 'NETWORK_ERROR' ||
+        errorCode === 'ENOTFOUND' ||
+        errorCode === 'ECONNREFUSED' ||
+        errorCode === 'ETIMEDOUT' ||
+        !navigator.onLine) {
+        return 'network';
+    }
+
+    // Ошибки сервера
+    if (errorCode >= 500 && errorCode < 600) {
+        return 'server';
+    }
+
+    // Ошибки клиента
+    if (errorCode >= 400 && errorCode < 500) {
+        return 'client';
+    }
+
+    // Таймаут
+    if (errorMessage.includes('timeout') || errorCode === 'TIMEOUT') {
+        return 'timeout';
+    }
+
+    return 'unknown';
+};
+
+// Функция для создания сообщения об ошибке
+const createErrorMessage = (errorType, originalError = null) => {
+    switch (errorType) {
+        case 'network':
+            return 'Отсутствует подключение к интернету. Проверьте соединение и попробуйте еще раз.';
+        case 'timeout':
+            return 'Превышено время ожидания ответа сервера. Попробуйте еще раз.';
+        case 'server':
+            return 'Сервер временно недоступен. Попробуйте через несколько минут.';
+        case 'client':
+            return 'Ошибка в запросе. Проверьте введенные данные.';
+        default:
+            return 'Произошла неизвестная ошибка. Попробуйте еще раз.';
+    }
+};
+
 // Базовая клиентская валидация (быстрая проверка перед AI)
 const basicValidation = (text) => {
     // Проверка на пустой вопрос
@@ -91,7 +143,14 @@ const submitQuestion = async () => {
         if (!aiValidation.isValid) {
             isLoading.value = false;
 
-            // Формируем сообщение с причиной и предложением
+            // Специальная обработка сетевых ошибок
+            if (aiValidation.reason === 'network_error') {
+                const errorMessage = aiValidation.suggestion || 'Отсутствует подключение к интернету. Проверьте соединение и попробуйте еще раз.';
+                showNotification('warning', errorMessage);
+                return;
+            }
+
+            // Обработка других ошибок валидации
             let errorMessage = aiValidation.reason || 'Вопрос не подходит для гадания на Таро';
             if (aiValidation.suggestion) {
                 errorMessage += `\n\nПопробуйте переформулировать: ${aiValidation.suggestion}`;
@@ -114,7 +173,15 @@ const submitQuestion = async () => {
     } catch (error) {
         console.error('Ошибка при валидации вопроса:', error);
         isLoading.value = false;
-        showNotification('error', 'Произошла ошибка. Попробуйте еще раз.');
+
+        // Определяем тип ошибки и показываем соответствующее уведомление
+        const errorType = getErrorType(error);
+        const errorMessage = createErrorMessage(errorType, error);
+
+        // Для сетевых ошибок используем warning тип, чтобы не пугать пользователя
+        const notificationType = errorType === 'network' ? 'warning' : 'error';
+
+        showNotification(notificationType, errorMessage);
     }
 };
 </script>

@@ -198,14 +198,36 @@ export async function validateTarotQuestion(question) {
         } catch (error) {
             console.error('Ошибка валидации вопроса:', error);
 
-            // В случае ошибки API возвращаем fallback валидацию с соответствующим сообщением
-            const errorMessage = createErrorMessage(error).replace('Попробуйте', 'Валидация пропущена. Попробуйте');
+            // Определяем тип ошибки
+            const errorMessage = error.message?.toLowerCase() || '';
+            const isNetworkError = errorMessage.includes('network') ||
+                                 errorMessage.includes('fetch') ||
+                                 errorMessage.includes('connection') ||
+                                 errorMessage.includes('internet') ||
+                                 error.code === 'NETWORK_ERROR' ||
+                                 error.code === 'ENOTFOUND' ||
+                                 error.code === 'ECONNREFUSED' ||
+                                 error.code === 'ETIMEDOUT' ||
+                                 !navigator.onLine;
+
+            // Для сетевых ошибок возвращаем isValid: false, чтобы показать уведомление пользователю
+            if (isNetworkError) {
+                return {
+                    isValid: false,
+                    reason: 'network_error',
+                    suggestion: 'Проверьте подключение к интернету и попробуйте еще раз.',
+                    error: createErrorMessage(error)
+                };
+            }
+
+            // Для других ошибок возвращаем fallback валидацию
+            const fallbackMessage = createErrorMessage(error).replace('Попробуйте', 'Валидация пропущена. Попробуйте');
 
             return {
                 isValid: true, // Разрешаем по умолчанию, чтобы не блокировать пользователя
                 reason: null,
                 suggestion: null,
-                error: errorMessage
+                error: fallbackMessage
             };
         }
     });
