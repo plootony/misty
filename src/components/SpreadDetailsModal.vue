@@ -429,10 +429,38 @@ const getSpreadDescription = (spreadId) => {
       max-width: 95vw;
       max-height: 95vh;
     }
+
+    &__header {
+      padding: $spacing-small;
+    }
+
+    &__title {
+      font-size: 18px;
+    }
+
+    &__close {
+      font-size: 24px;
+      width: 28px;
+      height: 28px;
+    }
+
+    &__body {
+      padding: $spacing-small;
+    }
   }
 
   .spread-details {
     gap: $spacing-middle;
+
+    &__visual,
+    &__description,
+    &__positions {
+      h3 {
+        font-size: 16px;
+        margin-bottom: $spacing-small;
+        padding-bottom: $spacing-x-smal;
+      }
+    }
 
     &__positions {
       .position-item {
@@ -443,6 +471,27 @@ const getSpreadDescription = (spreadId) => {
 
       .position-number {
         align-self: flex-start;
+        font-size: 14px;
+      }
+
+      .position-name {
+        font-size: 14px;
+      }
+
+      .position-meaning {
+        font-size: 13px;
+      }
+    }
+
+    &__description {
+      .spread-description {
+        &__text {
+          font-size: 14px;
+        }
+
+        &__usage {
+          font-size: 14px;
+        }
       }
     }
   }

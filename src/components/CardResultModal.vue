@@ -252,7 +252,7 @@ const closeModal = () => {
         }
 
         &__title {
-            font-size: 36px;
+            font-size: 24px;
         }
 
         &__text {
@@ -270,7 +270,7 @@ const closeModal = () => {
         }
 
         &__title {
-            font-size: 32px;
+            font-size: 20px;
         }
 
         &__position,

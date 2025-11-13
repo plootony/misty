@@ -548,7 +548,7 @@ const performAccountDeletion = async () => {
         // Адаптив для мобильных устройств
         @media (max-width: 768px) {
             flex-direction: column;
-            gap: $spacing-large;
+            gap: $spacing-small;
         }
     }
 
@@ -564,6 +564,14 @@ const performAccountDeletion = async () => {
         &:last-child {
             flex: 1;
         }
+
+        @media (max-width: 768px) {
+            padding: $spacing-middle;
+
+            &:first-child {
+                flex: none;
+            }
+        }
     }
 
     &__section-title {
@@ -571,6 +579,10 @@ const performAccountDeletion = async () => {
         font-size: 28px;
         font-weight: 600;
         color: $color-white;
+
+        @media (max-width: 768px) {
+            font-size: 20px;
+        }
     }
 
     &__history-header {
@@ -580,6 +592,11 @@ const performAccountDeletion = async () => {
         gap: $spacing-middle;
         margin-bottom: $spacing-middle;
         flex-wrap: wrap;
+
+        @media (max-width: 768px) {
+            gap: $spacing-small;
+            margin-bottom: $spacing-small;
+        }
     }
 
     &__history-controls {
@@ -587,6 +604,10 @@ const performAccountDeletion = async () => {
         align-items: center;
         gap: $spacing-middle;
         flex-wrap: wrap;
+
+        @media (max-width: 768px) {
+            gap: $spacing-small;
+        }
     }
 
     &__checkbox-label {
@@ -728,6 +749,17 @@ const performAccountDeletion = async () => {
 
         button {
             min-width: 200px;
+        }
+
+        @media (max-width: 768px) {
+            padding-top: $spacing-small;
+            margin-top: $spacing-small;
+
+            button {
+                min-width: 150px;
+                font-size: 14px;
+                padding: $spacing-x-smal $spacing-small;
+            }
         }
     }
 

@@ -418,10 +418,23 @@ onUnmounted(() => {
 // Адаптивность
 @media (max-width: 768px) {
     .footer {
+        &__container {
+            padding: $spacing-small $spacing-x-smal;
+        }
+
         &__nav {
             flex-direction: column;
-            gap: $spacing-middle;
+            gap: $spacing-small;
             align-items: center;
+        }
+
+        &__link {
+            font-size: 12px;
+            padding: $spacing-x-smal;
+        }
+
+        &__copyright {
+            font-size: 10px;
         }
     }
 
@@ -429,6 +442,53 @@ onUnmounted(() => {
         &__content {
             max-width: 95vw;
             max-height: 90vh;
+        }
+
+        &__header {
+            padding: $spacing-small;
+        }
+
+        &__title {
+            font-size: 18px;
+        }
+
+        &__close {
+            font-size: 24px;
+            width: 28px;
+            height: 28px;
+        }
+
+        &__body {
+            padding: $spacing-small;
+        }
+
+        &__text {
+            h3 {
+                font-size: 14px;
+                margin-top: $spacing-middle;
+                margin-bottom: $spacing-small;
+            }
+
+            h4 {
+                font-size: 13px;
+                margin-top: $spacing-small;
+                margin-bottom: $spacing-x-smal;
+            }
+
+            p {
+                font-size: 13px;
+                margin-bottom: $spacing-small;
+            }
+
+            ul {
+                padding-left: $spacing-middle;
+                margin-bottom: $spacing-small;
+
+                li {
+                    font-size: 13px;
+                    margin-bottom: $spacing-x-smal;
+                }
+            }
         }
     }
 }
