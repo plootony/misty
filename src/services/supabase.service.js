@@ -318,9 +318,25 @@ export async function deleteReadings(readingIds) {
         .from('readings')
         .delete()
         .in('id', readingIds)
-    
+
     if (error) {
         console.error('Ошибка удаления гаданий:', error)
+        throw error
+    }
+}
+
+/**
+ * Удаляет все записи гаданий пользователя
+ * @param {string} userId - ID пользователя
+ */
+export async function deleteReadingsByUserId(userId) {
+    const { error } = await supabase
+        .from('readings')
+        .delete()
+        .eq('user_id', userId)
+
+    if (error) {
+        console.error('Ошибка удаления гаданий пользователя:', error)
         throw error
     }
 }

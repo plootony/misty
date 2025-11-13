@@ -3,10 +3,12 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user.store';
 import { useCardSelector } from '@/stores/cardSelector.store';
-import { getReadings, getReadingsCount, deleteReading, deleteReadings } from '@/services/supabase.service';
+import { getReadings, getReadingsCount, deleteReading, deleteReadings, deleteReadingsByUserId } from '@/services/supabase.service';
+import { supabase } from '@/services/supabase.service';
 import { getZodiacSign } from '@/utils/zodiac';
 import SpreadPreview from '@/components/SpreadPreview.vue';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -27,6 +29,30 @@ const hasMore = ref(true);
 const selectedReadings = ref([]);
 const isDeleting = ref(false);
 const selectAllMode = ref(false); // Флаг режима "выбрать все"
+
+// Удаление аккаунта
+const isDeletingAccount = ref(false);
+const showDeleteConfirm = ref(false);
+const deleteStep = ref(1); // 1 - первое предупреждение, 2 - второе, 3 - ввод текста
+
+// Вычисляемые свойства для модального окна
+const confirmModalType = computed(() => deleteStep.value === 1 ? 'warning' : 'danger');
+const confirmModalTitle = computed(() => {
+    if (deleteStep.value === 1) return '⚠️ Удаление аккаунта';
+    if (deleteStep.value === 2) return '🔴 Последнее предупреждение';
+    return '🔒 Подтверждение удаления';
+});
+const confirmModalMessage = computed(() => {
+    if (deleteStep.value === 1) {
+        return 'Вы собираетесь УДАЛИТЬ СВОЙ АККАУНТ.\n\nЭто действие НЕОБРАТИМО! Будут удалены:\n• Все ваши данные\n• История гаданий\n• Настройки профиля\n\nВы действительно хотите продолжить?';
+    }
+    if (deleteStep.value === 2) {
+        return 'После удаления аккаунта:\n• Вы не сможете восстановить данные\n• Все платежи и подписки будут отменены\n• Вы потеряете доступ к премиум-функциям';
+    }
+    return 'Для окончательного подтверждения нажмите "Удалить аккаунт".\n\nЭто действие нельзя отменить!';
+});
+const confirmModalConfirmText = computed(() => deleteStep.value === 3 ? 'Удалить аккаунт' : 'Продолжить');
+const confirmModalButtonClass = computed(() => deleteStep.value === 3 ? 'btn--danger' : 'btn--warning');
 
 // Проверка, выбраны ли все записи
 const allSelected = computed({
@@ -211,6 +237,64 @@ const handleSignOut = async () => {
         }
     }
 };
+
+const handleDeleteAccount = () => {
+    deleteStep.value = 1;
+    showDeleteConfirm.value = true;
+};
+
+const handleDeleteConfirm = () => {
+    if (deleteStep.value === 1) {
+        // Переходим ко второму шагу
+        deleteStep.value = 2;
+    } else if (deleteStep.value === 2) {
+        // Переходим к третьему шагу
+        deleteStep.value = 3;
+    } else if (deleteStep.value === 3) {
+        // Начинаем процесс удаления
+        performAccountDeletion();
+    }
+};
+
+const handleDeleteCancel = () => {
+    showDeleteConfirm.value = false;
+    deleteStep.value = 1;
+};
+
+const performAccountDeletion = async () => {
+    showDeleteConfirm.value = false;
+    isDeletingAccount.value = true;
+
+    try {
+        // Удаляем все записи пользователя
+        if (totalReadingsCount.value > 0) {
+            await deleteReadingsByUserId(userStore.userData.id);
+        }
+
+        // Удаляем аккаунт пользователя
+        // Поскольку функция deleteUser требует админских прав,
+        // используем прямой вызов Supabase для удаления профиля
+        const { error } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', userStore.userData.id);
+
+        if (error) throw error;
+
+        // Выходим из системы
+        await userStore.signOut();
+
+        // Показываем сообщение и перенаправляем
+        alert('Ваш аккаунт успешно удален. Спасибо за использование нашего сервиса!');
+        router.push('/');
+
+    } catch (error) {
+        console.error('Ошибка удаления аккаунта:', error);
+        alert('Произошла ошибка при удалении аккаунта. Попробуйте еще раз или обратитесь в поддержку.');
+    } finally {
+        isDeletingAccount.value = false;
+    }
+};
 </script>
 
 <template>
@@ -265,6 +349,22 @@ const handleSignOut = async () => {
                                 @click="handleSignOut"
                             >
                                 Выйти
+                            </button>
+
+                            <button
+                                v-if="!userStore.isAdmin"
+                                type="button"
+                                class="btn btn--danger profile__delete-btn"
+                                @click="handleDeleteAccount"
+                                :disabled="isDeletingAccount"
+                            >
+                                <span v-if="isDeletingAccount">
+                                    <ButtonSpinner />
+                                    Удаление...
+                                </span>
+                                <span v-else>
+                                    Удалить аккаунт
+                                </span>
                             </button>
                         </div>
                     </div>
@@ -404,6 +504,20 @@ const handleSignOut = async () => {
             </div>
         </div>
     </div>
+
+    <!-- Модальное окно подтверждения удаления аккаунта -->
+    <ConfirmModal
+        :show="showDeleteConfirm"
+        :type="confirmModalType"
+        :title="confirmModalTitle"
+        :message="confirmModalMessage"
+        :confirm-text="confirmModalConfirmText"
+        :cancel-text="'Отмена'"
+        :confirm-button-class="confirmModalButtonClass"
+        @confirm="handleDeleteConfirm"
+        @cancel="handleDeleteCancel"
+        @close="handleDeleteCancel"
+    />
 </template>
 
 <style scoped lang="scss">
@@ -883,6 +997,13 @@ const handleSignOut = async () => {
         &:hover:not(:disabled) {
             opacity: 0.9;
         }
+    }
+}
+
+// Специфичные стили для профиля
+.profile {
+    &__delete-btn {
+        margin-top: $spacing-small;
     }
 }
 </style>
