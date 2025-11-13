@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 const props = defineProps({
     spreadId: {
@@ -16,6 +16,45 @@ const props = defineProps({
     }
 });
 
+// Массив доступных миниатюр карт для анимации
+const cardThumbnails = [
+    'ace_of_cups-min.jpg',
+    'eight_of_cups-min.jpg',
+    'five_of_cups-min.jpg',
+    'ace_of_pentacles-min.jpg',
+    'eight_of_pentacles-min.jpg',
+    'five_of_pentacles-min.jpg',
+    'ace_of_swords-min.jpg',
+    'eight_of_swords-min.jpg',
+    'five_of_swords-min.jpg',
+    'ace_of_wands-min.jpg',
+    'eight_of_wands-min.jpg',
+    'five_of_wands-min.jpg'
+];
+
+// Генерируем случайные миниатюры для каждой позиции карты
+const cardImages = ref([]);
+
+const generateCardImages = () => {
+    cardImages.value = [];
+    for (let i = 0; i < props.cardsCount; i++) {
+        const randomIndex = Math.floor(Math.random() * cardThumbnails.length);
+        cardImages.value.push(cardThumbnails[randomIndex]);
+    }
+};
+
+// Генерируем миниатюры при изменении количества карт
+if (props.cardsCount > 0) {
+    generateCardImages();
+}
+
+// Генерируем новые случайные миниатюры при каждом запуске анимации
+watch(() => props.animated, (newValue) => {
+    if (newValue && props.cardsCount > 0) {
+        generateCardImages();
+    }
+});
+
 const spreadClass = computed(() => {
     const classes = [`spread-preview--${props.spreadId}`];
     if (props.animated) {
@@ -27,14 +66,14 @@ const spreadClass = computed(() => {
 
 <template>
     <div class="spread-preview" :class="spreadClass">
-        <div 
-            v-for="index in cardsCount" 
+        <div
+            v-for="(card, index) in cardsCount"
             :key="index"
             class="spread-preview__card"
         >
-            <img 
-                class="spread-preview__card-image" 
-                src="@/assets/images/card-back.png" 
+            <img
+                class="spread-preview__card-image"
+                :src="animated ? `src/assets/images/${cardImages[index]}` : 'src/assets/images/back-min.jpg'"
                 alt="Карта Таро"
             >
         </div>
