@@ -63,10 +63,19 @@ if (props.cardsCount > 0) {
     generateCardImages();
 }
 
+// Управление показом изображений карт
+const showCardImages = ref(false);
+
 // Генерируем новые случайные миниатюры при каждом запуске анимации
 watch(() => props.animated, (newValue) => {
     if (newValue && props.cardsCount > 0) {
         generateCardImages();
+        // Задержка перед показом изображений, чтобы синхронизировать с анимацией
+        setTimeout(() => {
+            showCardImages.value = true;
+        }, 200); // 200ms задержка совпадает с началом revealCard анимации
+    } else {
+        showCardImages.value = false;
     }
 });
 
@@ -88,7 +97,7 @@ const spreadClass = computed(() => {
         >
             <img
                 class="spread-preview__card-image"
-                :src="animated ? `/images/${cardImages[index]}` : '/images/back-min.jpg'"
+                :src="showCardImages ? `/images/${cardImages[index]}` : '/images/back-min.jpg'"
                 alt="Карта Таро"
             >
         </div>
@@ -118,6 +127,7 @@ const spreadClass = computed(() => {
         align-items: center;
         justify-content: center;
         overflow: hidden;
+        transition: opacity 0.2s ease-out; // Плавный переход для предотвращения резких изменений
     }
 
     &__card-image {
@@ -130,6 +140,8 @@ const spreadClass = computed(() => {
     // Анимация при наведении - карты вылетают из-за пределов превью
     &--animated {
         .spread-preview__card {
+            opacity: 0; // Скрываем карты сразу при активации анимации
+
             &:nth-child(1) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0s; }
             &:nth-child(2) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.08s; }
             &:nth-child(3) { animation: cardDeal 1.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; animation-delay: 0.16s; }
@@ -145,7 +157,7 @@ const spreadClass = computed(() => {
 
             // Скрываем изображения в начале анимации
             .spread-preview__card-image {
-                opacity: 0;
+                opacity: 0z;
                 animation: revealCard 0.1s ease-out forwards;
             }
 
