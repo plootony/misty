@@ -153,22 +153,23 @@ const validateProfileForm = async () => {
     isValidatingProfile.value = true;
 
     try {
-        // AI-валидация имени
+        // AI-валидация имени (обязательная - ждем ответа от Mistral)
         const nameValidation = await validateUserName(editedName.value.trim());
         if (!nameValidation.isValid) {
             profileError.value = nameValidation.reason || 'Пожалуйста, укажите реальное имя';
             return false;
         }
 
-        // AI-валидация возраста
+        // AI-валидация возраста (обязательная - ждем ответа от Mistral)
         const ageValidation = await validateUserAge(editedBirthDate.value);
         if (!ageValidation.isValid) {
             profileError.value = ageValidation.reason || 'Указанная дата рождения выглядит нереалистичной';
             return false;
         }
     } catch (error) {
-        console.warn('Ошибка AI-валидации:', error);
-        // Продолжаем валидацию даже при ошибке AI
+        console.error('Ошибка AI-валидации:', error);
+        profileError.value = 'Не удалось проверить данные. Повторите попытку позже.';
+        return false;
     } finally {
         isValidatingProfile.value = false;
     }
