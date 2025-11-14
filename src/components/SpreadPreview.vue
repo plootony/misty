@@ -127,7 +127,7 @@ const spreadClass = computed(() => {
         align-items: center;
         justify-content: center;
         overflow: hidden;
-        transition: opacity 0.2s ease-out; // Плавный переход для предотвращения резких изменений
+        transition: opacity 0.2s ease-out, transform 0.3s ease-out; // Плавный переход для предотвращения резких изменений
     }
 
     &__card-image {
@@ -607,7 +607,7 @@ const spreadClass = computed(() => {
     }
     100% {
         opacity: 1;
-        transform: translateY(0) translateX(0) scale(1) rotate(0deg);
+        /* Не указываем transform - используем CSS transition для плавного возврата к базовому позиционированию */
     }
 }
 
