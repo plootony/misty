@@ -3,7 +3,8 @@ import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user.store';
 import { useCardSelector } from '@/stores/cardSelector.store';
-import { getReadings, getReadingsCount, deleteReading, deleteReadings, deleteReadingsByUserId } from '@/services/supabase.service';
+import { getReadings, getReadingsCount, deleteReading, deleteReadings, deleteReadingsByUserId, selfDeactivateAccount } from '@/services/supabase.service';
+import { validateUserName, validateUserAge } from '@/services/mistral.service';
 import { supabase } from '@/services/supabase.service';
 import { getZodiacSign } from '@/utils/zodiac';
 import SpreadPreview from '@/components/SpreadPreview.vue';
@@ -30,8 +31,8 @@ const selectedReadings = ref([]);
 const isDeleting = ref(false);
 const selectAllMode = ref(false); // Флаг режима "выбрать все"
 
-// Удаление аккаунта
-const isDeletingAccount = ref(false);
+// Деактивация аккаунта
+const isDeactivatingAccount = ref(false);
 const showDeleteConfirm = ref(false);
 const deleteStep = ref(1); // 1 - первое предупреждение, 2 - второе, 3 - ввод текста
 
@@ -40,25 +41,26 @@ const isEditing = ref(false);
 const editedName = ref('');
 const editedBirthDate = ref('');
 const isSavingProfile = ref(false);
+const isValidatingProfile = ref(false);
 const profileError = ref('');
 
 // Вычисляемые свойства для модального окна
 const confirmModalType = computed(() => deleteStep.value === 1 ? 'warning' : 'danger');
 const confirmModalTitle = computed(() => {
-    if (deleteStep.value === 1) return '⚠️ Удаление аккаунта';
+    if (deleteStep.value === 1) return '⚠️ Деактивация аккаунта';
     if (deleteStep.value === 2) return '🔴 Последнее предупреждение';
-    return '🔒 Подтверждение удаления';
+    return '🔒 Подтверждение деактивации';
 });
 const confirmModalMessage = computed(() => {
     if (deleteStep.value === 1) {
-        return 'Вы собираетесь УДАЛИТЬ СВОЙ АККАУНТ.\n\nЭто действие НЕОБРАТИМО! Будут удалены:\n• Все ваши данные\n• История гаданий\n• Настройки профиля\n\nВы действительно хотите продолжить?';
+        return 'Вы собираетесь ДЕАКТИВИРОВАТЬ СВОЙ АККАУНТ.\n\nЭто действие НЕОБРАТИМО! Будут удалены:\n• Все ваши данные\n• История гаданий\n• Настройки профиля\n\nАккаунт будет полностью деактивирован и вы не сможете войти снова.';
     }
     if (deleteStep.value === 2) {
-        return 'После удаления аккаунта:\n• Вы не сможете восстановить данные\n• Все платежи и подписки будут отменены\n• Вы потеряете доступ к премиум-функциям';
+        return 'После деактивации аккаунта:\n• Вы не сможете восстановить данные\n• Все платежи и подписки будут отменены\n• Вы потеряете доступ к премиум-функциям\n• Аккаунт будет полностью заблокирован';
     }
-    return 'Для окончательного подтверждения нажмите "Удалить аккаунт".\n\nЭто действие нельзя отменить!';
+    return 'Для окончательного подтверждения нажмите "Деактивировать аккаунт".\n\nЭто действие нельзя отменить!';
 });
-const confirmModalConfirmText = computed(() => deleteStep.value === 3 ? 'Удалить аккаунт' : 'Продолжить');
+const confirmModalConfirmText = computed(() => deleteStep.value === 3 ? 'Деактивировать аккаунт' : 'Продолжить');
 const confirmModalButtonClass = computed(() => deleteStep.value === 3 ? 'btn--danger' : 'btn--warning');
 
 // Проверка, выбраны ли все записи
@@ -115,14 +117,17 @@ const cancelEditing = () => {
     editedName.value = '';
     editedBirthDate.value = '';
     profileError.value = '';
+    isValidatingProfile.value = false;
 };
 
-const validateProfileForm = () => {
+const validateProfileForm = async () => {
+    // Базовая проверка имени
     if (!editedName.value.trim()) {
         profileError.value = 'Пожалуйста, укажите ваше имя';
         return false;
     }
 
+    // Базовая проверка даты рождения
     if (!editedBirthDate.value) {
         profileError.value = 'Пожалуйста, укажите дату рождения';
         return false;
@@ -158,13 +163,38 @@ const validateProfileForm = () => {
         return false;
     }
 
+    // Начинаем AI-валидацию
+    isValidatingProfile.value = true;
+
+    try {
+        // AI-валидация имени
+        const nameValidation = await validateUserName(editedName.value.trim());
+        if (!nameValidation.isValid) {
+            profileError.value = nameValidation.reason || 'Пожалуйста, укажите реальное имя';
+            return false;
+        }
+
+        // AI-валидация возраста
+        const ageValidation = await validateUserAge(editedBirthDate.value);
+        if (!ageValidation.isValid) {
+            profileError.value = ageValidation.reason || 'Указанная дата рождения выглядит нереалистичной';
+            return false;
+        }
+    } catch (error) {
+        console.warn('Ошибка AI-валидации:', error);
+        // Продолжаем валидацию даже при ошибке AI
+    } finally {
+        isValidatingProfile.value = false;
+    }
+
     return true;
 };
 
 const saveProfile = async () => {
     profileError.value = '';
+    isValidatingProfile.value = false;
 
-    if (!validateProfileForm()) {
+    if (!(await validateProfileForm())) {
         return;
     }
 
@@ -184,6 +214,7 @@ const saveProfile = async () => {
         profileError.value = 'Не удалось сохранить изменения. Попробуйте еще раз.';
     } finally {
         isSavingProfile.value = false;
+        isValidatingProfile.value = false;
     }
 };
 
@@ -369,36 +400,24 @@ const handleDeleteCancel = () => {
 
 const performAccountDeletion = async () => {
     showDeleteConfirm.value = false;
-    isDeletingAccount.value = true;
+    isDeactivatingAccount.value = true;
 
     try {
-        // Удаляем все записи пользователя
-        if (totalReadingsCount.value > 0) {
-            await deleteReadingsByUserId(userStore.userData.id);
-        }
-
-        // Удаляем аккаунт пользователя
-        // Поскольку функция deleteUser требует админских прав,
-        // используем прямой вызов Supabase для удаления профиля
-        const { error } = await supabase
-            .from('profiles')
-            .delete()
-            .eq('id', userStore.userData.id);
-
-        if (error) throw error;
+        // Деактивируем аккаунт пользователя с удалением всех данных
+        await selfDeactivateAccount(userStore.userData.id);
 
         // Выходим из системы
         await userStore.signOut();
 
         // Показываем сообщение и перенаправляем
-        alert('Ваш аккаунт успешно удален. Спасибо за использование нашего сервиса!');
+        alert('Ваш аккаунт успешно деактивирован. Спасибо за использование нашего сервиса!');
         router.push('/');
 
     } catch (error) {
-        console.error('Ошибка удаления аккаунта:', error);
-        alert('Произошла ошибка при удалении аккаунта. Попробуйте еще раз или обратитесь в поддержку.');
+        console.error('Ошибка деактивации аккаунта:', error);
+        alert('Произошла ошибка при деактивации аккаунта. Попробуйте еще раз или обратитесь в поддержку.');
     } finally {
-        isDeletingAccount.value = false;
+        isDeactivatingAccount.value = false;
     }
 };
 </script>
@@ -462,14 +481,14 @@ const performAccountDeletion = async () => {
                                 type="button"
                                 class="btn btn--danger profile__delete-btn"
                                 @click="handleDeleteAccount"
-                                :disabled="isDeletingAccount"
+                                :disabled="isDeactivatingAccount"
                             >
-                                <span v-if="isDeletingAccount">
+                                <span v-if="isDeactivatingAccount">
                                     <ButtonSpinner />
-                                    Удаление...
+                                    Деактивация...
                                 </span>
                                 <span v-else>
-                                    Удалить аккаунт
+                                    Деактивировать аккаунт
                                 </span>
                             </button>
                         </div>

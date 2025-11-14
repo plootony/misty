@@ -361,6 +361,149 @@ export async function interpretSingleCard(question, card, position) {
 }
 
 /**
+ * Валидация имени пользователя через AI
+ * @param {string} name - Имя для проверки
+ * @returns {Promise<{isValid: boolean, reason?: string}>}
+ */
+export async function validateUserName(name) {
+    return mistralRateLimiter.execute(async () => {
+        try {
+            const client = initMistralClient();
+
+            const systemPrompt = `Ты эксперт по именам и антропонимике. Твоя задача - определить, является ли предоставленное имя реальным человеческим именем.
+
+ПРАВИЛА ПРОВЕРКИ:
+- Реальные имена: Александр, Мария, Иван, Анна, Сергей, Ольга и т.д.
+- НЕ реальные имена: Никнеймы (Gamer123, DarkLord, Ninja), случайные буквы (asdf), числа, символы, аббревиатуры
+- Принимай имена из разных культур и языков
+- Будь терпимым к вариациям написания (Alex, Sasha для Александр)
+
+ОТВЕТЬ ТОЛЬКО чистым JSON без markdown форматирования:
+{
+  "isValid": true или false,
+  "reason": "краткая причина, если невалидно"
+}`;
+
+            const apiCall = async () => {
+                const result = await client.chat.complete({
+                    model: 'mistral-small-latest',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: systemPrompt
+                        },
+                        {
+                            role: 'user',
+                            content: `Проверь имя: "${name}"`
+                        }
+                    ],
+                    temperature: 0.1, // Низкая температура для консистентности
+                    response_format: { type: 'json_object' },
+                    max_tokens: 150
+                });
+
+                const response = result.choices[0].message.content;
+
+                // Парсинг JSON с использованием утилиты
+                const validation = parseAIResponse(response);
+
+                // Валидация структуры ответа
+                if (!validation || typeof validation.isValid !== 'boolean') {
+                    console.warn('Некорректная структура ответа от AI:', validation);
+                    return { isValid: true, reason: null }; // В случае ошибки - пропускаем
+                }
+
+                return {
+                    isValid: validation.isValid,
+                    reason: validation.reason || null
+                };
+            };
+
+            return await executeWithRetry(apiCall, 2, 10000);
+
+        } catch (error) {
+            console.error('Ошибка валидации имени:', error);
+            // В случае ошибки API - пропускаем валидацию, чтобы не блокировать пользователя
+            return { isValid: true, reason: null };
+        }
+    });
+}
+
+/**
+ * Валидация возраста на реалистичность через AI
+ * @param {string} birthDate - Дата рождения в формате DD.MM.YYYY
+ * @returns {Promise<{isValid: boolean, reason?: string}>}
+ */
+export async function validateUserAge(birthDate) {
+    return mistralRateLimiter.execute(async () => {
+        try {
+            const client = initMistralClient();
+
+            const currentDate = new Date();
+            const currentYear = currentDate.getFullYear();
+
+            const systemPrompt = `Ты эксперт по демографии и возрастной психологии. Твоя задача - определить, является ли указанный возраст правдоподобным для человека, использующего приложение гадания на Таро.
+
+ПРАВИЛА ПРОВЕРКИ ВОЗРАСТА:
+- Минимальный возраст: 13 лет (законодательные ограничения)
+- Максимальный возраст: 120 лет (биологическая возможность)
+- Подозрительные возраста: слишком круглые числа (100, 99, 13), недавние даты (сегодня, вчера)
+- Реалистичные возраста: 18-80 лет для большинства пользователей
+
+Текущий год: ${currentYear}
+
+ОТВЕТЬ ТОЛЬКО чистым JSON без markdown форматирования:
+{
+  "isValid": true или false,
+  "reason": "краткая причина, если невалидно"
+}`;
+
+            const apiCall = async () => {
+                const result = await client.chat.complete({
+                    model: 'mistral-small-latest',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: systemPrompt
+                        },
+                        {
+                            role: 'user',
+                            content: `Проверь дату рождения: "${birthDate}"`
+                        }
+                    ],
+                    temperature: 0.1, // Низкая температура для консистентности
+                    response_format: { type: 'json_object' },
+                    max_tokens: 150
+                });
+
+                const response = result.choices[0].message.content;
+
+                // Парсинг JSON с использованием утилиты
+                const validation = parseAIResponse(response);
+
+                // Валидация структуры ответа
+                if (!validation || typeof validation.isValid !== 'boolean') {
+                    console.warn('Некорректная структура ответа от AI:', validation);
+                    return { isValid: true, reason: null }; // В случае ошибки - пропускаем
+                }
+
+                return {
+                    isValid: validation.isValid,
+                    reason: validation.reason || null
+                };
+            };
+
+            return await executeWithRetry(apiCall, 2, 10000);
+
+        } catch (error) {
+            console.error('Ошибка валидации возраста:', error);
+            // В случае ошибки API - пропускаем валидацию, чтобы не блокировать пользователя
+            return { isValid: true, reason: null };
+        }
+    });
+}
+
+/**
  * Финальное толкование всего расклада
  * @param {Object} userData - Данные пользователя (имя, дата рождения)
  * @param {string} zodiacSign - Знак зодиака

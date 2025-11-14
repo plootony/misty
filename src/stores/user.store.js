@@ -80,9 +80,9 @@ export const useUserStore = defineStore('userStore', () => {
 
             // Если профиля нет, создаем его
             if (!profile) {
-                const name = supabaseUser.user_metadata?.full_name || 
-                            supabaseUser.user_metadata?.name || 
-                            supabaseUser.email?.split('@')[0] || 
+                const name = supabaseUser.user_metadata?.full_name ||
+                            supabaseUser.user_metadata?.name ||
+                            supabaseUser.email?.split('@')[0] ||
                             'Пользователь'
 
                 profile = await upsertProfile(supabaseUser.id, {
@@ -91,6 +91,11 @@ export const useUserStore = defineStore('userStore', () => {
                     tariff: 'neophyte',
                     birth: null
                 })
+            }
+
+            // Проверяем, активен ли аккаунт
+            if (profile.is_active === false) {
+                throw new Error('Неверный email или пароль');
             }
 
             // Устанавливаем данные пользователя

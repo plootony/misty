@@ -423,10 +423,10 @@ export async function toggleUserActive(userId, isActive) {
         target_user_id: userId,
         new_is_active: isActive
     })
-    
+
     if (error) {
         console.error('Ошибка изменения статуса пользователя:', error)
-        
+
         // Обработка специфичных ошибок
         if (error.message?.includes('Access denied')) {
             throw new Error('У вас нет прав для выполнения этого действия')
@@ -434,10 +434,57 @@ export async function toggleUserActive(userId, isActive) {
         if (error.message?.includes('Cannot change own')) {
             throw new Error('Нельзя изменить статус своего аккаунта')
         }
-        
+
         throw error
     }
-    
+
+    return data
+}
+
+/**
+ * Самодеактивация аккаунта пользователем
+ * Пользователь может деактивировать только свой собственный аккаунт
+ */
+export async function selfDeactivateAccount(userId) {
+    // Получаем текущего пользователя для проверки
+    const { data: { user }, error: userError } = await supabase.auth.getUser()
+
+    if (userError) {
+        console.error('Ошибка получения текущего пользователя:', userError)
+        throw new Error('Не удалось проверить авторизацию')
+    }
+
+    if (!user || user.id !== userId) {
+        throw new Error('Нельзя деактивировать чужой аккаунт')
+    }
+
+    // Сначала удаляем все записи гаданий пользователя
+    const { error: deleteError } = await supabase
+        .from('readings')
+        .delete()
+        .eq('user_id', userId)
+
+    if (deleteError) {
+        console.error('Ошибка удаления истории гаданий:', deleteError)
+        throw new Error('Не удалось очистить историю гаданий')
+    }
+
+    // Затем деактивируем профиль пользователя
+    const { data, error } = await supabase
+        .from('profiles')
+        .update({
+            is_active: false,
+            updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+        .select()
+        .single()
+
+    if (error) {
+        console.error('Ошибка деактивации аккаунта:', error)
+        throw new Error('Не удалось деактивировать аккаунт')
+    }
+
     return data
 }
 
