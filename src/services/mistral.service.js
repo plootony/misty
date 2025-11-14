@@ -361,11 +361,85 @@ export async function interpretSingleCard(question, card, position) {
 }
 
 /**
+ * Клиентская валидация имени на очевидные никнеймы
+ * @param {string} name - Имя для проверки
+ * @returns {{isValid: boolean, reason?: string}}
+ */
+function validateNameClientSide(name) {
+    const trimmedName = name.trim();
+
+    // Проверка на пустое имя
+    if (!trimmedName) {
+        return { isValid: false, reason: 'Имя не может быть пустым' };
+    }
+
+    // Проверка на слишком короткое имя
+    if (trimmedName.length < 2) {
+        return { isValid: false, reason: 'Имя слишком короткое' };
+    }
+
+    // Проверка на слишком длинное имя
+    if (trimmedName.length > 50) {
+        return { isValid: false, reason: 'Имя слишком длинное' };
+    }
+
+    // Проверка на цифры в имени
+    if (/\d/.test(trimmedName)) {
+        return { isValid: false, reason: 'Имя не может содержать цифры' };
+    }
+
+    // Проверка на специальные символы (кроме дефиса, апострофа и пробела)
+    if (/[^a-zA-Zа-яА-ЯёЁ\s\-']/.test(trimmedName)) {
+        return { isValid: false, reason: 'Имя может содержать только буквы, пробелы, дефисы и апострофы' };
+    }
+
+    // Проверка на последовательности одинаковых символов (aaa, bbb и т.д.)
+    if (/(.)\1{2,}/.test(trimmedName)) {
+        return { isValid: false, reason: 'Имя не может содержать повторяющиеся символы' };
+    }
+
+    // Проверка на слишком много заглавных букв (признак никнейма)
+    const uppercaseCount = (trimmedName.match(/[A-ZА-ЯЁ]/g) || []).length;
+    const totalLetters = (trimmedName.match(/[a-zA-Zа-яА-ЯёЁ]/g) || []).length;
+
+    if (totalLetters > 0 && uppercaseCount / totalLetters > 0.7) {
+        return { isValid: false, reason: 'Имя не может состоять преимущественно из заглавных букв' };
+    }
+
+    // Проверка на распространенные паттерны никнеймов
+    const nicknamePatterns = [
+        /^admin/i,
+        /^user/i,
+        /^test/i,
+        /^guest/i,
+        /^bot/i,
+        /^system/i,
+        /^root/i,
+        /^anonymous/i,
+        /^unknown/i
+    ];
+
+    for (const pattern of nicknamePatterns) {
+        if (pattern.test(trimmedName)) {
+            return { isValid: false, reason: 'Это служебное имя, укажите ваше реальное имя' };
+        }
+    }
+
+    return { isValid: true };
+}
+
+/**
  * Валидация имени пользователя через AI
  * @param {string} name - Имя для проверки
  * @returns {Promise<{isValid: boolean, reason?: string}>}
  */
 export async function validateUserName(name) {
+    // Предварительная клиентская проверка на очевидные никнеймы
+    const clientValidation = validateNameClientSide(name);
+    if (!clientValidation.isValid) {
+        return clientValidation;
+    }
+
     return mistralRateLimiter.execute(async () => {
         try {
             const client = initMistralClient();
@@ -374,9 +448,10 @@ export async function validateUserName(name) {
 
 ПРАВИЛА ПРОВЕРКИ:
 - Реальные имена: Александр, Мария, Иван, Анна, Сергей, Ольга и т.д.
-- НЕ реальные имена: Никнеймы (Gamer123, DarkLord, Ninja), случайные буквы (asdf), числа, символы, аббревиатуры
+- НЕ реальные имена: Никнеймы (Gamer123, DarkLord, Ninja), случайные буквы (asdf), числа, символы, аббревиатуры, случайные сочетания букв и цифр
 - Принимай имена из разных культур и языков
 - Будь терпимым к вариациям написания (Alex, Sasha для Александр)
+- Отклоняй имена, которые выглядят как случайно сгенерированные (yerofa5379, abc123, xyz999)
 
 ОТВЕТЬ ТОЛЬКО чистым JSON без markdown форматирования:
 {
@@ -430,11 +505,72 @@ export async function validateUserName(name) {
 }
 
 /**
+ * Клиентская валидация возраста на очевидные проблемы
+ * @param {string} birthDate - Дата рождения в формате DD.MM.YYYY
+ * @returns {{isValid: boolean, reason?: string}}
+ */
+function validateAgeClientSide(birthDate) {
+    const dateRegex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
+    if (!dateRegex.test(birthDate)) {
+        return { isValid: false, reason: 'Неверный формат даты' };
+    }
+
+    const [, day, month, year] = birthDate.match(dateRegex);
+    const birthDateObj = new Date(year, month - 1, day);
+    const now = new Date();
+
+    // Проверка на корректность даты
+    if (birthDateObj.getDate() != day || birthDateObj.getMonth() != month - 1 || birthDateObj.getFullYear() != year) {
+        return { isValid: false, reason: 'Указана некорректная дата' };
+    }
+
+    // Проверка на будущее
+    if (birthDateObj > now) {
+        return { isValid: false, reason: 'Дата рождения не может быть в будущем' };
+    }
+
+    const age = now.getFullYear() - birthDateObj.getFullYear() -
+                (now.getMonth() < birthDateObj.getMonth() ||
+                 (now.getMonth() === birthDateObj.getMonth() && now.getDate() < birthDateObj.getDate()) ? 1 : 0);
+
+    // Проверка на минимальный возраст
+    if (age < 13) {
+        return { isValid: false, reason: 'Вам должно быть не менее 13 лет' };
+    }
+
+    // Проверка на максимальный возраст
+    if (age > 120) {
+        return { isValid: false, reason: 'Возраст не может превышать 120 лет' };
+    }
+
+    // Проверка на подозрительные даты (ровно круглые числа лет назад)
+    const suspiciousAges = [100, 99, 98, 13, 14, 15];
+    if (suspiciousAges.includes(age)) {
+        return { isValid: false, reason: 'Указанная дата рождения выглядит нереалистичной' };
+    }
+
+    // Проверка на даты, которые слишком близки к сегодняшнему дню (менее года назад)
+    const oneYearAgo = new Date();
+    oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+    if (birthDateObj > oneYearAgo) {
+        return { isValid: false, reason: 'Дата рождения не может быть менее года назад' };
+    }
+
+    return { isValid: true };
+}
+
+/**
  * Валидация возраста на реалистичность через AI
  * @param {string} birthDate - Дата рождения в формате DD.MM.YYYY
  * @returns {Promise<{isValid: boolean, reason?: string}>}
  */
 export async function validateUserAge(birthDate) {
+    // Предварительная клиентская проверка
+    const clientValidation = validateAgeClientSide(birthDate);
+    if (!clientValidation.isValid) {
+        return clientValidation;
+    }
+
     return mistralRateLimiter.execute(async () => {
         try {
             const client = initMistralClient();
@@ -447,8 +583,9 @@ export async function validateUserAge(birthDate) {
 ПРАВИЛА ПРОВЕРКИ ВОЗРАСТА:
 - Минимальный возраст: 13 лет (законодательные ограничения)
 - Максимальный возраст: 120 лет (биологическая возможность)
-- Подозрительные возраста: слишком круглые числа (100, 99, 13), недавние даты (сегодня, вчера)
+- Подозрительные возраста: слишком круглые числа (100, 99, 13), недавние даты (сегодня, вчера, месяц назад)
 - Реалистичные возраста: 18-80 лет для большинства пользователей
+- Отклоняй даты, которые выглядят как случайно выбранные или тестовые
 
 Текущий год: ${currentYear}
 

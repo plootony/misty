@@ -149,20 +149,6 @@ const validateProfileForm = async () => {
         return false;
     }
 
-    // Проверка, что дата не в будущем
-    if (date > new Date()) {
-        profileError.value = 'Дата рождения не может быть в будущем';
-        return false;
-    }
-
-    // Проверка минимального возраста (13 лет)
-    const minDate = new Date();
-    minDate.setFullYear(minDate.getFullYear() - 13);
-    if (date > minDate) {
-        profileError.value = 'Вам должно быть не менее 13 лет';
-        return false;
-    }
-
     // Начинаем AI-валидацию
     isValidatingProfile.value = true;
 
