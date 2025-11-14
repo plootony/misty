@@ -50,10 +50,10 @@ const closeSpreadDetails = () => {
 
 <template>
     <div class="spread-selector">
-        <div class="spread-selector__header">
-            <p class="spread-selector__greeting">ПРИВЕТСТВУЮ ТЕБЯ, {{ userStore.userData?.name?.toUpperCase() || 'ГОСТЬ' }}</p>
-            <h1 class="spread-selector__title">Сделай свой выбор</h1>
-            <p class="spread-selector__subtitle">Решай с сердцем - оно знает путь</p>
+        <div class="page-header">
+            <p class="page-header__greeting">ПРИВЕТСТВУЮ ТЕБЯ, {{ userStore.userData?.name?.toUpperCase() || 'ГОСТЬ' }}</p>
+            <h1 class="page-header__title">Сделай свой выбор</h1>
+            <p class="page-header__subtitle">Решай с сердцем - оно знает путь</p>
         </div>
 
         <div class="spread-selector__grid">
@@ -123,40 +123,9 @@ const closeSpreadDetails = () => {
     align-items: center;
     gap: $spacing-middle;
 
-    &__header {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: $spacing-small;
-    }
-
     &__icon {
         width: 42px;
         height: auto;
-    }
-
-    &__greeting {
-        font-family: "Inter", Sans-serif;
-        color: $color-pastel-gold;
-        font-size: 14px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    &__title {
-        font-family: "Playfair Display", Sans-serif;
-        font-size: 46px;
-        font-weight: 600;
-        line-height: 1.3em;
-        color: $color-white;
-    }
-
-    &__subtitle {
-        font-family: "Inter", Sans-serif;
-        font-size: 16px;
-        color: #b2abb5;
     }
 
     &__grid {

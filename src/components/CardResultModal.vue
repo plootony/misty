@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, watchEffect } from 'vue';
 import { useModalStore } from '@/stores/modal.store';
 
 const modalStore = useModalStore();
@@ -12,6 +12,19 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['loadFullReading']);
+
+// Блокировка скролла body при открытии модалки
+watchEffect(() => {
+    if (modalStore.isCardResultModalOpen) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+
+    return () => {
+        document.body.style.overflow = '';
+    };
+});
 
 const currentCard = computed(() => {
     const cards = modalStore.selectedCards;
@@ -131,7 +144,6 @@ const closeModal = () => {
     display: flex;
     gap: $spacing-large;
     align-items: center;
-    padding: $spacing-large;
 
     &__card {
         flex-shrink: 0;
@@ -181,7 +193,7 @@ const closeModal = () => {
 
     &__title {
         font-family: "Playfair Display", Sans-serif;
-        font-size: 42px;
+        font-size: 36px;
         font-weight: 600;
         line-height: 1.3em;
         color: $color-white;

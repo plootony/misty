@@ -198,10 +198,10 @@ const loadFullReading = async () => {
 
 <template>
     <div class="card-selector">
-        <div class="card-selector__header">
-            <p class="card-selector__greeting">ПРИВЕТСТВУЮ ТЕБЯ, {{ userStore.userData?.name?.toUpperCase() || 'ГОСТЬ' }}</p>
-            <h1 class="card-selector__title">{{ pageTitle }}</h1>
-            <p class="card-selector__subtitle">{{ pageSubtitle }}</p>
+        <div class="page-header">
+            <p class="page-header__greeting">ПРИВЕТСТВУЮ ТЕБЯ, {{ userStore.userData?.name?.toUpperCase() || 'ГОСТЬ' }}</p>
+            <h1 class="page-header__title">{{ pageTitle }}</h1>
+            <p class="page-header__subtitle">{{ pageSubtitle }}</p>
         </div>
 
         <!-- Подпись во время загрузки итогового предсказания -->
@@ -285,41 +285,9 @@ const loadFullReading = async () => {
     flex-direction: column;
     align-items: center;
 
-    &__header {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: $spacing-small;
-        margin-bottom: $spacing-large;
-    }
-
     &__icon {
         width: 42px;
         height: auto;
-    }
-
-    &__greeting {
-        font-family: "Inter", Sans-serif;
-        color: $color-pastel-gold;
-        font-size: 14px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    &__title {
-        font-family: "Playfair Display", Sans-serif;
-        font-size: 46px;
-        font-weight: 600;
-        line-height: 1.3em;
-        color: $color-white;
-    }
-
-    &__subtitle {
-        font-family: "Inter", Sans-serif;
-        font-size: 16px;
-        color: $color-grey;
     }
 
     &__selected {
@@ -763,7 +731,7 @@ const loadFullReading = async () => {
         width: 100%;
         justify-content: center;
         position: relative;
-        height: 400px;
+        height: 300px;
         align-items: center;
         perspective: 1000px; // Добавляем перспективу для 3D эффектов
     }

@@ -195,10 +195,10 @@ const submitQuestion = async () => {
             @close="closeNotification"
         />
 
-        <div class="question__header">
-            <p class="question__greeting">ПРИВЕТСТВУЮ ТЕБЯ, {{ userStore.userData?.name?.toUpperCase() || 'ГОСТЬ' }}</p>
-            <h1 class="question__title">Задай свой вопрос</h1>
-            <p class="question__subtitle">Спроси не тогда, когда хочется знать, а когда готова душа</p>
+        <div class="page-header">
+            <p class="page-header__greeting">ПРИВЕТСТВУЮ ТЕБЯ, {{ userStore.userData?.name?.toUpperCase() || 'ГОСТЬ' }}</p>
+            <h1 class="page-header__title">Задай свой вопрос</h1>
+            <p class="page-header__subtitle">Спроси не тогда, когда хочется знать, а когда готова душа</p>
         </div>
 
         <div class="question__content">
@@ -217,7 +217,7 @@ const submitQuestion = async () => {
                     @click="goBack"
                     :disabled="isLoading"
                 >
-                    ← Назад
+                    Назад
                 </button>
                 
                 <button
@@ -244,40 +244,9 @@ const submitQuestion = async () => {
     align-items: center;
     gap: $spacing-large;
 
-    &__header {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        gap: $spacing-small;
-    }
-
     &__icon {
         width: 42px;
         height: auto;
-    }
-
-    &__greeting {
-        font-family: "Inter", Sans-serif;
-        color: $color-pastel-gold;
-        font-size: 14px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    &__title {
-        font-family: "Playfair Display", Sans-serif;
-        font-size: 46px;
-        font-weight: 600;
-        line-height: 1.3em;
-        color: $color-white;
-    }
-
-    &__subtitle {
-        font-family: "Inter", Sans-serif;
-         font-size: 16px;
-        color: #b2abb5;
     }
 
     &__content {

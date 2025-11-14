@@ -1,4 +1,5 @@
 <script setup>
+import { watchEffect } from 'vue';
 import { useSpreadSelector } from '@/stores/spreadSelector.store';
 import SpreadLayout from '@/components/SpreadLayout.vue';
 
@@ -17,6 +18,19 @@ const props = defineProps({
 const emit = defineEmits(['close']);
 
 const spreadStore = useSpreadSelector();
+
+// Блокировка скролла body при открытии модалки
+watchEffect(() => {
+    if (props.show) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+
+    return () => {
+        document.body.style.overflow = '';
+    };
+});
 
 const closeModal = () => {
   emit('close');

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watchEffect } from 'vue';
 import { useUserStore } from '@/stores/user.store';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 
@@ -13,6 +13,19 @@ const props = defineProps({
 const emit = defineEmits(['complete']);
 
 const userStore = useUserStore();
+
+// Блокировка скролла body при открытии модалки
+watchEffect(() => {
+    if (props.show) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+
+    return () => {
+        document.body.style.overflow = '';
+    };
+});
 const name = ref(userStore.userData?.name || '');
 const birthDate = ref('');
 const isLoading = ref(false);

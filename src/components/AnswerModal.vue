@@ -1,4 +1,5 @@
 <script setup>
+import { watchEffect } from 'vue';
 import { useRouter } from 'vue-router';
 import { useModalStore } from '@/stores/modal.store';
 import { useCardSelector } from '@/stores/cardSelector.store';
@@ -6,6 +7,19 @@ import { useCardSelector } from '@/stores/cardSelector.store';
 const router = useRouter();
 const modalStore = useModalStore();
 const cardStore = useCardSelector();
+
+// Блокировка скролла body при открытии модалки
+watchEffect(() => {
+    if (modalStore.isAnswerModalOpen) {
+        document.body.style.overflow = 'hidden';
+    } else {
+        document.body.style.overflow = '';
+    }
+
+    return () => {
+        document.body.style.overflow = '';
+    };
+});
 
 const startOver = () => {
     modalStore.resetSelection();
