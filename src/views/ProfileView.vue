@@ -35,6 +35,13 @@ const isDeletingAccount = ref(false);
 const showDeleteConfirm = ref(false);
 const deleteStep = ref(1); // 1 - первое предупреждение, 2 - второе, 3 - ввод текста
 
+// Редактирование профиля
+const isEditing = ref(false);
+const editedName = ref('');
+const editedBirthDate = ref('');
+const isSavingProfile = ref(false);
+const profileError = ref('');
+
 // Вычисляемые свойства для модального окна
 const confirmModalType = computed(() => deleteStep.value === 1 ? 'warning' : 'danger');
 const confirmModalTitle = computed(() => {
@@ -94,6 +101,105 @@ const selectedCount = computed(() => {
 const zodiacSign = computed(() => {
     return getZodiacSign(userStore.userData?.birth);
 });
+
+// Функции редактирования профиля
+const startEditing = () => {
+    isEditing.value = true;
+    editedName.value = userStore.userData?.name || '';
+    editedBirthDate.value = userStore.userData?.birth || '';
+    profileError.value = '';
+};
+
+const cancelEditing = () => {
+    isEditing.value = false;
+    editedName.value = '';
+    editedBirthDate.value = '';
+    profileError.value = '';
+};
+
+const validateProfileForm = () => {
+    if (!editedName.value.trim()) {
+        profileError.value = 'Пожалуйста, укажите ваше имя';
+        return false;
+    }
+
+    if (!editedBirthDate.value) {
+        profileError.value = 'Пожалуйста, укажите дату рождения';
+        return false;
+    }
+
+    // Проверка формата даты DD.MM.YYYY
+    const dateRegex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
+    if (!dateRegex.test(editedBirthDate.value)) {
+        profileError.value = 'Неверный формат даты. Используйте ДД.ММ.ГГГГ';
+        return false;
+    }
+
+    // Проверка валидности даты
+    const [, day, month, year] = editedBirthDate.value.match(dateRegex);
+    const date = new Date(year, month - 1, day);
+
+    if (date.getDate() != day || date.getMonth() != month - 1 || date.getFullYear() != year) {
+        profileError.value = 'Указана некорректная дата';
+        return false;
+    }
+
+    // Проверка, что дата не в будущем
+    if (date > new Date()) {
+        profileError.value = 'Дата рождения не может быть в будущем';
+        return false;
+    }
+
+    // Проверка минимального возраста (13 лет)
+    const minDate = new Date();
+    minDate.setFullYear(minDate.getFullYear() - 13);
+    if (date > minDate) {
+        profileError.value = 'Вам должно быть не менее 13 лет';
+        return false;
+    }
+
+    return true;
+};
+
+const saveProfile = async () => {
+    profileError.value = '';
+
+    if (!validateProfileForm()) {
+        return;
+    }
+
+    isSavingProfile.value = true;
+
+    try {
+        await userStore.updateProfile({
+            name: editedName.value.trim(),
+            birth: editedBirthDate.value
+        });
+
+        isEditing.value = false;
+        editedName.value = '';
+        editedBirthDate.value = '';
+    } catch (error) {
+        console.error('Ошибка сохранения профиля:', error);
+        profileError.value = 'Не удалось сохранить изменения. Попробуйте еще раз.';
+    } finally {
+        isSavingProfile.value = false;
+    }
+};
+
+// Автоматическое форматирование даты при вводе
+const formatBirthDate = (event) => {
+    let value = event.target.value.replace(/\D/g, '');
+
+    if (value.length >= 2) {
+        value = value.slice(0, 2) + '.' + value.slice(2);
+    }
+    if (value.length >= 5) {
+        value = value.slice(0, 5) + '.' + value.slice(5, 9);
+    }
+
+    editedBirthDate.value = value;
+};
 
 // Загружаем историю при монтировании компонента
 onMounted(async () => {

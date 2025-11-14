@@ -66,6 +66,15 @@ router.beforeEach(async (to, from, next) => {
       next('/auth')
       return
     }
+
+    // Проверка: требуется заполненный профиль (кроме страниц auth, profile, admin)
+    if (!to.path.startsWith('/auth') && to.path !== '/profile' && to.path !== '/admin') {
+      if (userStore.needsProfileSetup) {
+        // Профиль не заполнен - редирект на профиль
+        next('/profile')
+        return
+      }
+    }
   }
 
   // Проверка: требуется выбранный расклад

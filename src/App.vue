@@ -12,10 +12,17 @@ const route = useRoute();
 const userStore = useUserStore();
 const { showProfileSetup, checkProfileSetup, handleProfileSetupComplete } = useProfileSetup();
 
-// Проверяем профиль при каждой смене роута
+// Проверяем профиль при первой загрузке и при каждой смене роута
 watch(() => route.path, () => {
   // Не проверяем на страницах auth и callback
   if (!route.path.startsWith('/auth') && userStore.isAuthenticated) {
+    checkProfileSetup();
+  }
+}, { immediate: true }); // Добавляем immediate: true для проверки при первой загрузке
+
+// Также проверяем профиль при завершении проверки авторизации
+watch(() => userStore.isAuthChecking, (newValue) => {
+  if (!newValue && userStore.isAuthenticated && !route.path.startsWith('/auth')) {
     checkProfileSetup();
   }
 });
