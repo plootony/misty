@@ -4,7 +4,6 @@ import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user.store';
 import { useCardSelector } from '@/stores/cardSelector.store';
 import { getReadings, getReadingsCount, deleteReading, deleteReadings, deleteReadingsByUserId, selfDeactivateAccount } from '@/services/supabase.service';
-import { validateUserName, validateUserAge } from '@/services/mistral.service';
 import { supabase } from '@/services/supabase.service';
 import { getZodiacSign } from '@/utils/zodiac';
 import SpreadPreview from '@/components/SpreadPreview.vue';
@@ -41,7 +40,6 @@ const isEditing = ref(false);
 const editedName = ref('');
 const editedBirthDate = ref('');
 const isSavingProfile = ref(false);
-const isValidatingProfile = ref(false);
 const profileError = ref('');
 
 // Вычисляемые свойства для модального окна
@@ -117,10 +115,9 @@ const cancelEditing = () => {
     editedName.value = '';
     editedBirthDate.value = '';
     profileError.value = '';
-    isValidatingProfile.value = false;
 };
 
-const validateProfileForm = async () => {
+const validateProfileForm = () => {
     // Базовая проверка имени
     if (!editedName.value.trim()) {
         profileError.value = 'Пожалуйста, укажите ваше имя';
@@ -149,39 +146,13 @@ const validateProfileForm = async () => {
         return false;
     }
 
-    // Начинаем AI-валидацию
-    isValidatingProfile.value = true;
-
-    try {
-        // AI-валидация имени (обязательная - ждем ответа от Mistral)
-        const nameValidation = await validateUserName(editedName.value.trim());
-        if (!nameValidation.isValid) {
-            profileError.value = nameValidation.reason || 'Пожалуйста, укажите реальное имя';
-            return false;
-        }
-
-        // AI-валидация возраста (обязательная - ждем ответа от Mistral)
-        const ageValidation = await validateUserAge(editedBirthDate.value);
-        if (!ageValidation.isValid) {
-            profileError.value = ageValidation.reason || 'Указанная дата рождения выглядит нереалистичной';
-            return false;
-        }
-    } catch (error) {
-        console.error('Ошибка AI-валидации:', error);
-        profileError.value = 'Не удалось проверить данные. Повторите попытку позже.';
-        return false;
-    } finally {
-        isValidatingProfile.value = false;
-    }
-
     return true;
 };
 
 const saveProfile = async () => {
     profileError.value = '';
-    isValidatingProfile.value = false;
 
-    if (!(await validateProfileForm())) {
+    if (!validateProfileForm()) {
         return;
     }
 
@@ -201,7 +172,6 @@ const saveProfile = async () => {
         profileError.value = 'Не удалось сохранить изменения. Попробуйте еще раз.';
     } finally {
         isSavingProfile.value = false;
-        isValidatingProfile.value = false;
     }
 };
 

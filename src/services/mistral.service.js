@@ -434,6 +434,11 @@ function validateNameClientSide(name) {
  * @returns {Promise<{isValid: boolean, reason?: string}>}
  */
 export async function validateUserName(name) {
+    // Строгая клиентская проверка - имена с цифрами всегда блокируются
+    if (/\d/.test(name.trim())) {
+        return { isValid: false, reason: 'Имя не может содержать цифры' };
+    }
+
     // Предварительная клиентская проверка на очевидные никнеймы
     const clientValidation = validateNameClientSide(name);
     if (!clientValidation.isValid) {

@@ -1,7 +1,6 @@
 <script setup>
 import { ref, watchEffect } from 'vue';
 import { useUserStore } from '@/stores/user.store';
-import { validateUserName, validateUserAge } from '@/services/mistral.service';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 
 const props = defineProps({
@@ -32,23 +31,11 @@ const birthDate = ref('');
 const isLoading = ref(false);
 const error = ref('');
 
-const validateForm = async () => {
+const validateForm = () => {
     // Проверка имени
     if (!name.value.trim()) {
         error.value = 'Пожалуйста, укажите ваше имя';
         return false;
-    }
-
-    // ИИ-валидация имени
-    try {
-        const nameValidation = await validateUserName(name.value.trim());
-        if (!nameValidation.isValid) {
-            error.value = nameValidation.reason || 'Указано некорректное имя';
-            return false;
-        }
-    } catch (err) {
-        console.warn('Ошибка валидации имени через ИИ, продолжаем с базовой проверкой:', err);
-        // В случае ошибки ИИ продолжаем без блокировки
     }
 
     // Проверка даты рождения
@@ -87,18 +74,6 @@ const validateForm = async () => {
         return false;
     }
 
-    // ИИ-валидация возраста
-    try {
-        const ageValidation = await validateUserAge(birthDate.value);
-        if (!ageValidation.isValid) {
-            error.value = ageValidation.reason || 'Указана нереалистичная дата рождения';
-            return false;
-        }
-    } catch (err) {
-        console.warn('Ошибка валидации возраста через ИИ, продолжаем без блокировки:', err);
-        // В случае ошибки ИИ продолжаем без блокировки
-    }
-
     return true;
 };
 
@@ -106,7 +81,7 @@ const handleSubmit = async (event) => {
     event.preventDefault();
     error.value = '';
 
-    if (!(await validateForm())) {
+    if (!validateForm()) {
         return;
     }
 
@@ -165,11 +140,11 @@ const formatBirthDate = (event) => {
                                 <label class="profile-setup__label" for="setup-name">
                                     Ваше настоящее имя *
                                 </label>
-                                <input 
+                                <input
                                     v-model="name"
-                                    type="text" 
+                                    type="text"
                                     id="setup-name"
-                                    class="profile-setup__input" 
+                                    class="profile-setup__input"
                                     placeholder="Например: Антон"
                                     :disabled="isLoading"
                                     required
