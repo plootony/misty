@@ -24,6 +24,28 @@ const pageSize = 20;
 const totalUsers = ref(0);
 const hasMorePages = computed(() => (currentPage.value * pageSize) < totalUsers.value);
 
+// Статистика по тарифам
+const tariffStats = computed(() => {
+    const stats = {
+        'neophyte': { name: 'Неофит', count: 0 },
+        'initiated': { name: 'Посвящённый', count: 0 },
+        'adept': { name: 'Адепт', count: 0 },
+        'oracle': { name: 'Оракул', count: 0 },
+        'master': { name: 'Мастер', count: 0 },
+        'archmage': { name: 'Архимаг', count: 0 },
+        'supreme-arcana': { name: 'Верховный Аркан', count: 0 }
+    };
+
+    // Подсчитываем пользователей по тарифам
+    users.value.forEach(user => {
+        if (stats[user.tariff]) {
+            stats[user.tariff].count++;
+        }
+    });
+
+    return stats;
+});
+
 // Debounced поиск
 let searchTimeout = null;
 const debouncedSearch = () => {
@@ -90,6 +112,25 @@ const handleSearch = async () => {
         return;
     }
 
+    // Обрабатываем специальные фильтры по тарифу
+    if (searchQuery.value.startsWith('__tariff:')) {
+        const tariffKey = searchQuery.value.replace('__tariff:', '');
+        try {
+            // Получаем всех пользователей и фильтруем на клиенте по тарифу
+            const result = await searchUsers('', 1000, 0); // Получаем много пользователей для фильтрации
+            const filteredUsers = result.users.filter(user => user.tariff === tariffKey);
+
+            users.value = filteredUsers.slice(0, pageSize);
+            totalUsers.value = filteredUsers.length;
+            currentPage.value = 1;
+        } catch (error) {
+            console.error('Ошибка фильтрации по тарифу:', error);
+            showError('Ошибка фильтрации пользователей', error);
+        }
+        return;
+    }
+
+    // Обычный поиск
     try {
         const result = await searchUsers(searchQuery.value.trim(), pageSize, 0);
         users.value = result.users;
@@ -110,6 +151,27 @@ const clearSearch = async () => {
     searchQuery.value = '';
     await loadUsers(1, false);
 };
+
+// Сбросить фильтр по тарифу
+const clearTariffFilter = async () => {
+    searchQuery.value = '';
+    await loadUsers(1, false);
+};
+
+// Применить фильтр по тарифу
+const applyTariffFilter = (tariffKey) => {
+    // Устанавливаем специальный поисковый запрос для фильтрации по тарифу
+    searchQuery.value = `__tariff:${tariffKey}`;
+    handleSearch();
+};
+
+// Получить активный тариф из поискового запроса
+const activeTariffFilter = computed(() => {
+    if (searchQuery.value?.startsWith('__tariff:')) {
+        return searchQuery.value.replace('__tariff:', '');
+    }
+    return null;
+});
 
 // Улучшенная обработка ошибок
 const showError = (message, error = null) => {
@@ -294,10 +356,40 @@ const formatDate = (dateString) => {
 
                 <!-- Статистика -->
                 <div class="admin__stats">
-                    <span class="admin__stats-text">
-                        Показано {{ users.length }} из {{ totalUsers }} пользователей
-                        <span v-if="currentPage > 1">(страница {{ currentPage }})</span>
-                    </span>
+                    <div class="admin__stats-main">
+                        <span class="admin__stats-text">
+                            Показано {{ users.length }} из {{ totalUsers }} пользователей
+                            <span v-if="currentPage > 1">(страница {{ currentPage }})</span>
+                        </span>
+                    </div>
+
+                    <!-- Расширенная статистика по тарифам -->
+                    <div class="admin__stats-tariffs">
+                        <div class="admin__stats-tariff-header">
+                            <h3 class="admin__stats-tariff-title">Пользователи по тарифам</h3>
+                            <button
+                                v-if="activeTariffFilter"
+                                class="admin__stats-tariff-reset"
+                                @click="clearTariffFilter"
+                                title="Сбросить фильтр"
+                            >
+                                ✕
+                            </button>
+                        </div>
+
+                        <div class="admin__stats-tariff-grid">
+                            <div
+                                class="admin__stats-tariff"
+                                v-for="(tariff, key) in tariffStats"
+                                :key="key"
+                                :class="{ 'admin__stats-tariff--active': activeTariffFilter === key }"
+                                @click="applyTariffFilter(key)"
+                            >
+                                <span class="admin__stats-tariff-name">{{ tariff.name }}</span>
+                                <span class="admin__stats-tariff-count">{{ tariff.count }}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -314,8 +406,8 @@ const formatDate = (dateString) => {
                 </div>
 
                 <div class="admin__users-list">
-                    <div 
-                        v-for="user in users" 
+                    <div
+                        v-for="user in users"
                         :key="user.id"
                         class="admin__user-card"
                         :class="{ 'admin__user-card--inactive': !user.is_active }"
@@ -328,14 +420,14 @@ const formatDate = (dateString) => {
                             <div class="admin__user-info">
                                 <div class="admin__user-name-row">
                                     <h3 class="admin__user-name">{{ user.name }}</h3>
-                                    <span 
-                                        v-if="user.is_admin" 
+                                    <span
+                                        v-if="user.is_admin"
                                         class="admin__user-badge admin__user-badge--admin"
                                     >
                                         Админ
                                     </span>
-                                    <span 
-                                        v-if="!user.is_active" 
+                                    <span
+                                        v-if="!user.is_active"
                                         class="admin__user-badge admin__user-badge--blocked"
                                     >
                                         🚫 Заблокирован
@@ -395,7 +487,7 @@ const formatDate = (dateString) => {
 
                         <!-- Действия -->
                         <div v-if="!user.is_admin" class="admin__user-actions">
-                            <button 
+                            <button
                                 class="btn btn--secondary admin__action-btn"
                                 @click="startEdit(user)"
                                 v-if="!editingUser || editingUser.id !== user.id"
@@ -422,16 +514,16 @@ const formatDate = (dateString) => {
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Загрузить еще -->
-            <div v-if="hasMorePages && !isLoading" class="admin__load-more">
-                <button
-                    class="btn btn--secondary"
-                    @click="loadMoreUsers"
-                >
-                    Загрузить еще пользователей
-                </button>
+                <!-- Загрузить еще -->
+                <div v-if="hasMorePages && !isLoading" class="admin__load-more">
+                    <button
+                        class="btn btn--secondary"
+                        @click="loadMoreUsers"
+                    >
+                        Загрузить еще пользователей
+                    </button>
+                </div>
             </div>
 
             <!-- Пусто -->
@@ -676,6 +768,12 @@ const formatDate = (dateString) => {
 
     &__stats {
         margin-top: $spacing-middle;
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-middle;
+    }
+
+    &__stats-main {
         text-align: center;
     }
 
@@ -683,6 +781,106 @@ const formatDate = (dateString) => {
         font-family: "Inter", Sans-serif;
         font-size: 14px;
         color: $color-grey;
+    }
+
+    &__stats-tariffs {
+        display: flex;
+        flex-direction: column;
+        gap: $spacing-middle;
+        padding: $spacing-middle;
+        background-color: $color-bg-light;
+        border-radius: 8px;
+    }
+
+    &__stats-tariff-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    &__stats-tariff-title {
+        font-family: "Playfair Display", Sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        color: $color-white;
+        margin: 0;
+    }
+
+    &__stats-tariff-reset {
+        background: none;
+        border: 1px solid rgba($color-grey, 0.5);
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: $color-grey;
+        cursor: pointer;
+        font-size: 12px;
+        transition: all 0.3s;
+
+        &:hover {
+            border-color: $color-gold;
+            color: $color-gold;
+            background-color: rgba($color-gold, 0.1);
+        }
+    }
+
+    &__stats-tariff-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: $spacing-small;
+    }
+
+    &__stats-tariff {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: $spacing-x-smal $spacing-small;
+        background-color: $color-bg-dark;
+        border-radius: 4px;
+        border: 1px solid rgba($color-grey, 0.3);
+        cursor: pointer;
+        transition: all 0.3s;
+
+        &:hover {
+            border-color: $color-pastel-gold;
+            background-color: rgba($color-pastel-gold, 0.05);
+        }
+
+        &--active {
+            border-color: $color-gold;
+            background-color: rgba($color-gold, 0.1);
+
+            .admin__stats-tariff-name {
+                color: $color-pastel-gold;
+            }
+
+            .admin__stats-tariff-count {
+                background-color: rgba($color-gold, 0.2);
+                color: $color-gold;
+            }
+        }
+    }
+
+    &__stats-tariff-name {
+        font-family: "Inter", Sans-serif;
+        font-size: 12px;
+        color: $color-grey;
+        font-weight: 500;
+    }
+
+    &__stats-tariff-count {
+        font-family: "Inter", Sans-serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: $color-pastel-gold;
+        background-color: rgba($color-gold, 0.1);
+        padding: 2px 8px;
+        border-radius: 12px;
+        min-width: 24px;
+        text-align: center;
     }
 
     &__clear-btn {

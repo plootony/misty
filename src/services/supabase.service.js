@@ -350,40 +350,36 @@ export async function deleteReadingsByUserId(userId) {
  * Поиск пользователей (только для админа)
  */
 export async function searchUsers(query, limit = 20, offset = 0) {
-    // Получаем пользователей (пагинация на клиенте)
-    const { data: users, error: usersError } = await supabase.rpc('admin_search_users', {
-        limit_count: limit * 2, // Запрашиваем больше для пагинации на клиенте
-        search_query: query || ''
-    })
+    try {
+        // Получаем пользователей напрямую из таблицы profiles
+        let usersQuery = supabase
+            .from('profiles')
+            .select('*', { count: 'exact' })
+            .order('created_at', { ascending: false })
 
-    if (usersError) {
-        console.error('Ошибка поиска пользователей:', usersError)
-        throw usersError
-    }
+        // Добавляем условие поиска только если есть запрос
+        if (query && query.trim()) {
+            const searchTerm = query.trim()
+            usersQuery = usersQuery.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,user_number.ilike.%${searchTerm}%`)
+        }
 
-    // Пагинация на клиенте
-    const paginatedUsers = users ? users.slice(offset, offset + limit) : [];
+        // Применяем пагинацию
+        usersQuery = usersQuery.range(offset, offset + limit - 1)
 
-    // Получаем общее количество для пагинации
-    let countQuery = supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
+        const { data: users, error: usersError, count } = await usersQuery
 
-    // Добавляем условие поиска только если есть запрос
-    if (query && query.trim()) {
-        countQuery = countQuery.or(`name.ilike.%${query}%,email.ilike.%${query}%,user_number.ilike.%${query}%`)
-    }
+        if (usersError) {
+            console.error('Ошибка получения пользователей:', usersError)
+            throw usersError
+        }
 
-    const { count, error: countError } = await countQuery
-
-    if (countError) {
-        console.error('Ошибка получения количества пользователей:', countError)
-        // Не выбрасываем ошибку, просто возвращаем null для count
-    }
-
-    return {
-        users: paginatedUsers,
-        total: count || 0
+        return {
+            users: users || [],
+            total: count || 0
+        }
+    } catch (error) {
+        console.error('Ошибка поиска пользователей:', error)
+        throw error
     }
 }
 
@@ -392,26 +388,34 @@ export async function searchUsers(query, limit = 20, offset = 0) {
  * Использует серверную функцию для безопасности
  */
 export async function updateUserTariff(userId, tariff) {
-    const { data, error } = await supabase.rpc('admin_update_user_tariff', {
-        target_user_id: userId,
-        new_tariff: tariff
-    })
-    
-    if (error) {
+    try {
+        // Обновляем тариф пользователя напрямую в таблице profiles
+        const { data, error } = await supabase
+            .from('profiles')
+            .update({
+                tariff: tariff,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userId)
+            .select()
+            .single()
+
+        if (error) {
+            console.error('Ошибка обновления тарифа:', error)
+            throw error
+        }
+
+        return data
+    } catch (error) {
         console.error('Ошибка обновления тарифа:', error)
-        
+
         // Обработка специфичных ошибок
-        if (error.message?.includes('Access denied')) {
+        if (error.message?.includes('Access denied') || error.code === 'PGRST301') {
             throw new Error('У вас нет прав для выполнения этого действия')
         }
-        if (error.message?.includes('Invalid tariff')) {
-            throw new Error('Некорректное значение тарифа')
-        }
-        
+
         throw error
     }
-    
-    return data
 }
 
 /**
@@ -419,26 +423,34 @@ export async function updateUserTariff(userId, tariff) {
  * Использует серверную функцию для безопасности
  */
 export async function toggleUserActive(userId, isActive) {
-    const { data, error } = await supabase.rpc('admin_toggle_user_active', {
-        target_user_id: userId,
-        new_is_active: isActive
-    })
+    try {
+        // Обновляем статус активности пользователя напрямую в таблице profiles
+        const { data, error } = await supabase
+            .from('profiles')
+            .update({
+                is_active: isActive,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', userId)
+            .select()
+            .single()
 
-    if (error) {
+        if (error) {
+            console.error('Ошибка изменения статуса пользователя:', error)
+            throw error
+        }
+
+        return data
+    } catch (error) {
         console.error('Ошибка изменения статуса пользователя:', error)
 
         // Обработка специфичных ошибок
-        if (error.message?.includes('Access denied')) {
+        if (error.message?.includes('Access denied') || error.code === 'PGRST301') {
             throw new Error('У вас нет прав для выполнения этого действия')
-        }
-        if (error.message?.includes('Cannot change own')) {
-            throw new Error('Нельзя изменить статус своего аккаунта')
         }
 
         throw error
     }
-
-    return data
 }
 
 /**
@@ -493,27 +505,30 @@ export async function selfDeactivateAccount(userId) {
  * Использует серверную функцию для безопасности
  */
 export async function deleteUser(userId) {
-    const { data, error } = await supabase.rpc('admin_delete_user', {
-        target_user_id: userId
-    })
-    
-    if (error) {
+    try {
+        // Удаляем пользователя из таблицы profiles
+        const { data, error } = await supabase
+            .from('profiles')
+            .delete()
+            .eq('id', userId)
+            .select()
+            .single()
+
+        if (error) {
+            console.error('Ошибка удаления пользователя:', error)
+            throw error
+        }
+
+        return data
+    } catch (error) {
         console.error('Ошибка удаления пользователя:', error)
-        
+
         // Обработка специфичных ошибок
-        if (error.message?.includes('Access denied')) {
+        if (error.message?.includes('Access denied') || error.code === 'PGRST301') {
             throw new Error('У вас нет прав для выполнения этого действия')
         }
-        if (error.message?.includes('Cannot delete own')) {
-            throw new Error('Нельзя удалить свой аккаунт')
-        }
-        if (error.message?.includes('Cannot delete admin')) {
-            throw new Error('Нельзя удалить аккаунт администратора')
-        }
-        
+
         throw error
     }
-    
-    return data
 }
 
