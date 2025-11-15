@@ -13,9 +13,16 @@ const userStore = useUserStore();
             </RouterLink>
 
             <nav class="header__nav">
-                <RouterLink 
-                    v-if="userStore.isAuthenticated" 
-                    to="/profile" 
+                <RouterLink
+                    v-if="userStore.isAuthenticated"
+                    to="/natal-chart"
+                    class="header__link"
+                >
+                    Натальная карта
+                </RouterLink>
+                <RouterLink
+                    v-if="userStore.isAuthenticated"
+                    to="/profile"
                     class="header__link header__link--profile"
                 >
                     <div class="header__user-info">
@@ -23,9 +30,9 @@ const userStore = useUserStore();
                         <span class="header__tariff">{{ userStore.currentTariff.name }}</span>
                     </div>
                 </RouterLink>
-                <RouterLink 
-                    v-else 
-                    to="/auth" 
+                <RouterLink
+                    v-else
+                    to="/auth"
                     class="header__link"
                 >
                     Войти

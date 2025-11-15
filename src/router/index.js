@@ -45,6 +45,12 @@ const router = createRouter({
       component: () => import('../views/AdminView.vue'),
       meta: { requiresAuth: true, requiresAdmin: true }
     },
+    {
+      path: '/natal-chart',
+      name: 'natal-chart',
+      component: () => import('../views/NatalChartView.vue'),
+      meta: { requiresAuth: true }
+    },
   ],
 })
 
