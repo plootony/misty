@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watchEffect } from 'vue';
 import { useUserStore } from '@/stores/user.store';
+import { validateUserName, validateUserAge } from '@/services/mistral.service';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 
 const props = defineProps({
@@ -31,12 +32,26 @@ const birthDate = ref('');
 const isLoading = ref(false);
 const error = ref('');
 
-const validateForm = () => {
+const validateForm = async () => {
+    // Проверка имени
     if (!name.value.trim()) {
         error.value = 'Пожалуйста, укажите ваше имя';
         return false;
     }
 
+    // ИИ-валидация имени
+    try {
+        const nameValidation = await validateUserName(name.value.trim());
+        if (!nameValidation.isValid) {
+            error.value = nameValidation.reason || 'Указано некорректное имя';
+            return false;
+        }
+    } catch (err) {
+        console.warn('Ошибка валидации имени через ИИ, продолжаем с базовой проверкой:', err);
+        // В случае ошибки ИИ продолжаем без блокировки
+    }
+
+    // Проверка даты рождения
     if (!birthDate.value) {
         error.value = 'Пожалуйста, укажите дату рождения';
         return false;
@@ -52,7 +67,7 @@ const validateForm = () => {
     // Проверка валидности даты
     const [, day, month, year] = birthDate.value.match(dateRegex);
     const date = new Date(year, month - 1, day);
-    
+
     if (date.getDate() != day || date.getMonth() != month - 1 || date.getFullYear() != year) {
         error.value = 'Указана некорректная дата';
         return false;
@@ -72,6 +87,18 @@ const validateForm = () => {
         return false;
     }
 
+    // ИИ-валидация возраста
+    try {
+        const ageValidation = await validateUserAge(birthDate.value);
+        if (!ageValidation.isValid) {
+            error.value = ageValidation.reason || 'Указана нереалистичная дата рождения';
+            return false;
+        }
+    } catch (err) {
+        console.warn('Ошибка валидации возраста через ИИ, продолжаем без блокировки:', err);
+        // В случае ошибки ИИ продолжаем без блокировки
+    }
+
     return true;
 };
 
@@ -79,7 +106,7 @@ const handleSubmit = async (event) => {
     event.preventDefault();
     error.value = '';
 
-    if (!validateForm()) {
+    if (!(await validateForm())) {
         return;
     }
 
