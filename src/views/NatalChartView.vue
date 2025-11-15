@@ -3,10 +3,13 @@ import { ref, onMounted } from 'vue';
 import { useUserStore } from '@/stores/user.store';
 import natalChartService, { ZODIAC_SIGNS, PLANET_INFO } from '@/services/natalChart.service';
 import { geocodePlace, validateCoordinates, formatCoordinates } from '@/services/geocoding.service';
+import { interpretNatalChart } from '@/services/mistral.service';
+import { useModalStore } from '@/stores/modal.store';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 import NatalChartVisualization from '@/components/NatalChartVisualization.vue';
 
 const userStore = useUserStore();
+const modalStore = useModalStore();
 
 // Данные для расчета натальной карты
 const birthData = ref({
@@ -20,6 +23,9 @@ const birthData = ref({
 const isCalculating = ref(false);
 const natalChart = ref(null);
 const error = ref('');
+
+// Интерпретация натальной карты
+const isInterpreting = ref(false);
 
 // Система домов (по умолчанию Placidus)
 const houseSystem = ref('P');
@@ -106,6 +112,24 @@ const handlePlaceBlur = () => {
   setTimeout(() => {
     showPlaceSuggestions.value = false;
   }, 200);
+};
+
+// Получение интерпретации натальной карты от ИИ
+const getInterpretation = async () => {
+  if (!natalChart.value) return;
+
+  isInterpreting.value = true;
+
+  try {
+    const result = await interpretNatalChart(natalChart.value, userStore.userData);
+    modalStore.setNatalChartInterpretationText(result);
+    modalStore.openNatalChartInterpretationModal();
+  } catch (error) {
+    console.error('Ошибка получения интерпретации:', error);
+    // Можно добавить показ toast или другого уведомления об ошибке
+  } finally {
+    isInterpreting.value = false;
+  }
 };
 
 // Расчет натальной карты
@@ -409,6 +433,18 @@ const resetChart = () => {
                 </div>
               </div>
             </div>
+          </div>
+
+          <!-- Кнопка получения интерпретации -->
+          <div class="natal-chart__interpretation-button">
+            <button
+              class="btn btn--primary natal-chart__interpretation-btn"
+              @click="getInterpretation"
+              :disabled="isInterpreting"
+            >
+              <ButtonSpinner v-if="isInterpreting" />
+              <span>{{ isInterpreting ? 'Получаю интерпретацию...' : 'Получить значение' }}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -799,6 +835,22 @@ const resetChart = () => {
   &__visualization {
     margin-top: $spacing-large;
     text-align: center;
+  }
+
+  &__interpretation-button {
+    margin-top: $spacing-large;
+    text-align: center;
+  }
+
+  &__interpretation-btn {
+    min-width: 250px;
+    font-size: 18px;
+    padding: $spacing-large $spacing-large * 2;
+
+    @media (max-width: 768px) {
+      width: 100%;
+      min-width: auto;
+    }
   }
 }
 

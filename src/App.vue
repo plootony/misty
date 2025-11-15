@@ -7,6 +7,7 @@ import AppFooter from '@/components/AppFooter.vue';
 import ProfileSetupModal from '@/components/ProfileSetupModal.vue';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 import { useProfileSetup } from '@/composables/useProfileSetup';
+import NatalChartInterpretationModal from '@/components/NatalChartInterpretationModal.vue';
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -53,6 +54,9 @@ watch(() => userStore.isAuthChecking, (newValue) => {
       :show="showProfileSetup"
       @complete="handleProfileSetupComplete"
     />
+
+    <!-- Модальное окно интерпретации натальной карты -->
+    <NatalChartInterpretationModal />
   </template>
 </template>
 

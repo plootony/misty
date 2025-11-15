@@ -739,3 +739,95 @@ ${cardsDescription}
         }
     });
 }
+
+/**
+ * Интерпретирует натальную карту с помощью ИИ
+ * @param {Object} natalChartData - данные натальной карты
+ * @param {Object} userData - данные пользователя
+ * @returns {Promise<string>} HTML интерпретация натальной карты
+ */
+export async function interpretNatalChart(natalChartData, userData) {
+    return mistralRateLimiter.execute(async () => {
+        try {
+            const client = initMistralClient();
+
+            const systemPrompt = `Ты опытный астролог с глубокими знаниями традиционной и современной астрологии.
+Дай подробную интерпретацию натальной карты в формате HTML, учитывая:
+
+- Личность человека и его основные черты характера
+- Жизненные уроки и предназначение
+- Сильные и слабые стороны
+- Карьерные склонности и таланты
+- Отношения и любовь
+- Здоровье и жизненная энергия
+- Финансовое благополучие
+
+Анализируй планеты в знаках, аспекты между ними, положение домов и их управителей.
+Будь позитивным, поддерживающим и вдохновляющим. Обращайся к человеку по имени.
+
+СТРУКТУРИРУЙ ОТВЕТ С ПОМОЩЬЮ HTML-ТЕГОВ:
+
+- <h2> для основных разделов (личность, предназначение, отношения и т.д.)
+- <h3> для подразделов
+- <p> для параграфов
+- <strong> или <b> для выделения важных моментов
+- <em> или <i> для курсива
+- <ul>/<ol> с <li> для списков при необходимости
+
+Объём: 800-1000 слов. Возвращай только чистый HTML без markdown обёрток.`;
+
+            // Форматируем данные натальной карты для ИИ
+            const planetsInfo = natalChartData.planets?.map(planet =>
+                `${planet.name} в ${planet.sign.name} (${planet.degree.toFixed(1)}°) ${planet.retrograde ? '(R)' : ''}`
+            ).join(', ') || 'Данные планет недоступны';
+
+            const housesInfo = natalChartData.houses?.map(house =>
+                `Дом ${house.number}: ${house.sign.name} (${house.cusp.toFixed(1)}°)`
+            ).join(', ') || 'Данные домов недоступны';
+
+            const aspectsInfo = natalChartData.aspects?.slice(0, 10).map(aspect =>
+                `${aspect.planet1} ${aspect.aspect} ${aspect.planet2} (${aspect.angle}°) ${aspect.strength ? `- ${aspect.strength}` : ''}`
+            ).join(', ') || 'Данные аспектов недоступны';
+
+            const chartSummary = `
+Планеты: ${planetsInfo}
+Дома: ${housesInfo}
+Ключевые аспекты: ${aspectsInfo}
+            `.trim();
+
+            const apiCall = async () => {
+                const result = await client.chat.complete({
+                    model: 'mistral-small-latest',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: systemPrompt
+                        },
+                        {
+                            role: 'user',
+                            content: `Имя: ${userData?.name || 'Дорогой друг'}
+Дата рождения: ${natalChartData.birthData?.date || 'не указана'}
+Время рождения: ${natalChartData.birthData?.time || 'не указано'}
+Место рождения: ${natalChartData.birthData?.place || 'не указано'}
+
+${chartSummary}
+
+Пожалуйста, дай подробную астрологическую интерпретацию этой натальной карты.`
+                        }
+                    ],
+                    temperature: 0.7,
+                    maxTokens: 2000
+                });
+
+                return result.choices[0].message.content;
+            };
+
+            const response = await apiCall();
+            return cleanMarkdownFromHtml(response);
+
+        } catch (error) {
+            console.error('Ошибка интерпретации натальной карты:', error);
+            throw new Error('Не удалось получить интерпретацию натальной карты. Попробуйте позже.');
+        }
+    });
+}

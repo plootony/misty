@@ -4,12 +4,14 @@ import { defineStore } from 'pinia'
 export const useModalStore = defineStore('modalStore', () => {
     const isCardResultModalOpen = ref(false)
     const isAnswerModalOpen = ref(false)
+    const isNatalChartInterpretationModalOpen = ref(false)
     const isLoading = ref(false)
     const isFullReadingLoading = ref(false)
     const selectedCards = ref([])
     const selectedSpread = ref(null)
     const userQuestion = ref('')
     const fullReadingText = ref('')
+    const natalChartInterpretationText = ref('')
 
     const openCardResultModal = () => {
         isCardResultModalOpen.value = true
@@ -25,6 +27,14 @@ export const useModalStore = defineStore('modalStore', () => {
 
     const closeAnswerModal = () => {
         isAnswerModalOpen.value = false
+    }
+
+    const openNatalChartInterpretationModal = () => {
+        isNatalChartInterpretationModalOpen.value = true
+    }
+
+    const closeNatalChartInterpretationModal = () => {
+        isNatalChartInterpretationModalOpen.value = false
     }
 
     const addSelectedCard = (card) => {
@@ -51,6 +61,10 @@ export const useModalStore = defineStore('modalStore', () => {
 
     const setFullReadingText = (text) => {
         fullReadingText.value = text
+    }
+
+    const setNatalChartInterpretationText = (text) => {
+        natalChartInterpretationText.value = text
     }
 
     const updateLastCard = (cardData) => {
@@ -85,16 +99,20 @@ export const useModalStore = defineStore('modalStore', () => {
     return {
         isCardResultModalOpen,
         isAnswerModalOpen,
+        isNatalChartInterpretationModalOpen,
         isLoading,
         isFullReadingLoading,
         selectedCards,
         selectedSpread,
         userQuestion,
         fullReadingText,
+        natalChartInterpretationText,
         openCardResultModal,
         closeCardResultModal,
         openAnswerModal,
         closeAnswerModal,
+        openNatalChartInterpretationModal,
+        closeNatalChartInterpretationModal,
         addSelectedCard,
         updateLastCard,
         retryCardInterpretation,
@@ -103,6 +121,7 @@ export const useModalStore = defineStore('modalStore', () => {
         startFullReadingLoading,
         stopFullReadingLoading,
         setFullReadingText,
+        setNatalChartInterpretationText,
         resetSelection
     }
 })
