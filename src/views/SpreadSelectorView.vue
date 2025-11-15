@@ -30,7 +30,10 @@ const selectSpread = (spread) => {
 };
 
 const onMouseEnter = (spreadId) => {
-    hoveredSpreadId.value = spreadId;
+    // Сбрасываем предыдущее состояние перед установкой нового
+    if (hoveredSpreadId.value !== spreadId) {
+        hoveredSpreadId.value = spreadId;
+    }
 };
 
 const onMouseLeave = () => {

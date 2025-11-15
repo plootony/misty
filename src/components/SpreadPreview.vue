@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue';
+import { computed, ref, watch, onUnmounted } from 'vue';
 
 const props = defineProps({
     spreadId: {
@@ -66,16 +66,40 @@ if (props.cardsCount > 0) {
 // Управление показом изображений карт
 const showCardImages = ref(false);
 
+// Таймеры для управления анимацией
+let animationStartTimer = null;
+let animationResetTimer = null;
+
 // Генерируем новые случайные миниатюры при каждом запуске анимации
-watch(() => props.animated, (newValue) => {
+watch(() => props.animated, (newValue, oldValue) => {
+    // Очищаем все предыдущие таймеры
+    if (animationStartTimer) {
+        clearTimeout(animationStartTimer);
+        animationStartTimer = null;
+    }
+    if (animationResetTimer) {
+        clearTimeout(animationResetTimer);
+        animationResetTimer = null;
+    }
+
     if (newValue && props.cardsCount > 0) {
+        // Немедленно скрываем изображения при новом запуске анимации
+        showCardImages.value = false;
+
         generateCardImages();
+
         // Задержка перед показом изображений, чтобы синхронизировать с анимацией
-        setTimeout(() => {
+        animationStartTimer = setTimeout(() => {
             showCardImages.value = true;
         }, 200); // 200ms задержка совпадает с началом revealCard анимации
-    } else {
+    } else if (oldValue === true && newValue === false) {
+        // При отключении анимации немедленно скрываем изображения
         showCardImages.value = false;
+
+        // Дополнительный сброс состояния через короткий таймаут для надежности
+        animationResetTimer = setTimeout(() => {
+            showCardImages.value = false;
+        }, 50);
     }
 });
 
@@ -85,6 +109,18 @@ const spreadClass = computed(() => {
         classes.push('spread-preview--animated');
     }
     return classes.join(' ');
+});
+
+// Очистка таймеров при размонтировании компонента
+onUnmounted(() => {
+    if (animationStartTimer) {
+        clearTimeout(animationStartTimer);
+        animationStartTimer = null;
+    }
+    if (animationResetTimer) {
+        clearTimeout(animationResetTimer);
+        animationResetTimer = null;
+    }
 });
 </script>
 
