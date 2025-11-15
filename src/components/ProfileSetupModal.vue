@@ -30,6 +30,7 @@ const name = ref(userStore.userData?.name || '');
 const birthDate = ref('');
 const isLoading = ref(false);
 const error = ref('');
+const termsAccepted = ref(false);
 
 const validateForm = () => {
     // Проверка имени
@@ -71,6 +72,12 @@ const validateForm = () => {
     minDate.setFullYear(minDate.getFullYear() - 13);
     if (date > minDate) {
         error.value = 'Вам должно быть не менее 13 лет';
+        return false;
+    }
+
+    // Проверка принятия условий
+    if (!termsAccepted.value) {
+        error.value = 'Пожалуйста, подтвердите, что вы ознакомились с условиями использования';
         return false;
     }
 
@@ -169,6 +176,20 @@ const formatBirthDate = (event) => {
                                 <span class="profile-setup__hint">
                                     Формат: 03.06.1991
                                 </span>
+                            </div>
+
+                            <div class="profile-setup__terms">
+                                <label class="profile-setup__terms-label">
+                                    <input
+                                        v-model="termsAccepted"
+                                        type="checkbox"
+                                        class="profile-setup__checkbox"
+                                        required
+                                    >
+                                    <span class="profile-setup__terms-text">
+                                        Я осознаю, что сервис предоставляет информацию исключительно в развлекательных целях. Все предсказания и консультации носят вероятностный характер и не могут рассматриваться как точные прогнозы или профессиональные консультации.
+                                    </span>
+                                </label>
                             </div>
 
                             <button 
@@ -293,6 +314,39 @@ const formatBirthDate = (event) => {
     &__submit {
         margin-top: $spacing-small;
         width: 100%;
+    }
+
+    &__terms {
+        margin-top: $spacing-middle;
+        padding: $spacing-middle;
+        background-color: rgba($color-bg-dark, 0.5);
+        border-radius: 8px;
+        border: 1px solid rgba($color-grey, 0.3);
+    }
+
+    &__terms-label {
+        display: flex;
+        align-items: flex-start;
+        gap: $spacing-small;
+        cursor: pointer;
+        font-size: 14px;
+        line-height: 1.5;
+    }
+
+    &__checkbox {
+        flex-shrink: 0;
+        width: 18px;
+        height: 18px;
+        margin-top: 2px;
+        accent-color: $color-gold;
+        cursor: pointer;
+    }
+
+    &__terms-text {
+        color: $color-grey;
+        font-family: "Inter", Sans-serif;
+        font-size: 13px;
+        line-height: 1.5;
     }
 
     &__note {
