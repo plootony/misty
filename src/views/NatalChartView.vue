@@ -114,6 +114,22 @@ const handlePlaceBlur = () => {
   }, 200);
 };
 
+// Получение названия системы домов для отображения
+const getHouseSystemName = (system) => {
+  const names = {
+    'P': 'Placidus (Плацидус)',
+    'K': 'Koch (Кох)',
+    'E': 'Equal House (Равнодомная)',
+    'W': 'Whole Sign (Целый знак)',
+    'O': 'Porphyry (Порфирий)',
+    'B': 'Alcabitius (Алькабитиус)',
+    'C': 'Campanus (Кампанус)',
+    'R': 'Regiomontanus (Региомонтан)',
+    'M': 'Morinus (Моринус)'
+  };
+  return names[system] || system;
+};
+
 // Получение интерпретации натальной карты от ИИ
 const getInterpretation = async () => {
   if (!natalChart.value) return;
@@ -197,6 +213,11 @@ const formatDegree = (degree) => {
 const resetChart = () => {
   natalChart.value = null;
   error.value = '';
+};
+
+// Показать подробную информацию о системе расчетов
+const showCalculationDetails = () => {
+  modalStore.openCalculationDetailsModal();
 };
 </script>
 
@@ -320,12 +341,35 @@ const resetChart = () => {
                 Система домов
               </label>
               <select v-model="houseSystem" class="natal-chart__select">
-                <option value="P">Placidus (Плацидус)</option>
-                <option value="K">Koch (Кох)</option>
-                <option value="E">Equal House (Равнодомная)</option>
-                <option value="W">Whole Sign (Целый знак)</option>
+                <option value="P">Placidus (Плацидус) - Рекомендуется</option>
+                <option value="K">Koch (Кох) - Современная</option>
+                <option value="E">Equal House (Равнодомная) - Простая</option>
+                <option value="W">Whole Sign (Целый знак) - Традиционная</option>
+                <option value="O">Porphyry (Порфирий)</option>
+                <option value="B">Alcabitius (Алькабитиус)</option>
+                <option value="C">Campanus (Кампанус)</option>
+                <option value="R">Regiomontanus (Региомонтан)</option>
+                <option value="M">Morinus (Моринус)</option>
               </select>
             </div>
+          </div>
+
+          <!-- Информация о системе расчетов -->
+          <div class="natal-chart__calculation-info">
+            <p class="natal-chart__info-text">
+              <span class="natal-chart__info-icon">🔭</span>
+              Расчеты выполняются с использованием
+              <a href="https://github.com/cosinekitty/astronomy-engine" target="_blank" rel="noopener noreferrer" class="natal-chart__engine-link">
+                Astronomy Engine
+              </a>
+              — современной астрономической библиотеки для точных вычислений положений небесных тел.
+            </p>
+            <button
+              class="natal-chart__details-link"
+              @click="showCalculationDetails"
+            >
+              Подробнее о системе расчетов
+            </button>
           </div>
 
           <div class="natal-chart__actions">
@@ -353,6 +397,16 @@ const resetChart = () => {
       <div v-if="natalChart" class="natal-chart__results-section">
         <div class="natal-chart__results">
           <h2 class="natal-chart__section-title">Ваша натальная карта</h2>
+          <p class="natal-chart__system-info">
+            <strong>Система домов:</strong> {{ getHouseSystemName(houseSystem) }}
+            <em>(влияет на интерпретацию сфер жизни)</em>
+          </p>
+          <p class="natal-chart__data-source">
+            <strong>Источник данных:</strong>
+            <span :class="natalChartService?.usingRealEphemeris ? 'natal-chart__real-data' : 'natal-chart__fallback-data'">
+              {{ natalChartService?.usingRealEphemeris ? '✨ Swiss Ephemeris (реальные астрономические данные)' : '🔧 Fallback (упрощенные расчеты)' }}
+            </span>
+          </p>
 
           <!-- Визуализация натальной карты -->
           <div class="natal-chart__visualization">
@@ -494,6 +548,59 @@ const resetChart = () => {
     text-align: center;
   }
 
+  &__system-info {
+    font-family: "Inter", Sans-serif;
+    font-size: 16px;
+    color: $color-grey;
+    margin: 0 0 $spacing-small 0;
+    padding: $spacing-small $spacing-middle;
+    background-color: rgba($color-gold, 0.1);
+    border-left: 3px solid $color-gold;
+    border-radius: 4px;
+    text-align: center;
+
+    strong {
+      color: $color-gold;
+    }
+
+    em {
+      font-style: italic;
+      color: $color-grey;
+    }
+  }
+
+  &__data-source {
+    font-family: "Inter", Sans-serif;
+    font-size: 14px;
+    color: $color-grey;
+    margin: 0 0 $spacing-large 0;
+    padding: $spacing-small $spacing-middle;
+    border-radius: 4px;
+    text-align: center;
+
+    strong {
+      color: $color-white;
+    }
+
+    span {
+      font-weight: 500;
+    }
+
+    & .natal-chart__real-data {
+      color: #4CAF50;
+      background-color: rgba(76, 175, 80, 0.1);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    & .natal-chart__fallback-data {
+      color: #FF9800;
+      background-color: rgba(255, 152, 0, 0.1);
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+  }
+
   &__error {
     padding: $spacing-middle;
     background-color: rgba(255, 84, 84, 0.1);
@@ -506,19 +613,17 @@ const resetChart = () => {
   }
 
   &__form-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: $spacing-middle;
   }
 
   &__field {
+    width: calc(33.33% - $spacing-middle);
     display: flex;
     flex-direction: column;
     gap: $spacing-x-smal;
 
-    &--full {
-      grid-column: 1 / -1;
-    }
   }
 
   &__label {
@@ -648,9 +753,14 @@ const resetChart = () => {
 
   // Планеты
   &__planets-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: $spacing-middle;
+
+    .natal-chart__planet-card {
+      flex: 1;
+      min-width: 200px;
+    }
   }
 
   &__planet-card {
@@ -711,9 +821,14 @@ const resetChart = () => {
 
   // Дома
   &__houses-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: $spacing-small;
+
+    .natal-chart__house-card {
+      flex: 1;
+      min-width: 120px;
+    }
   }
 
   &__house-card {
@@ -850,6 +965,57 @@ const resetChart = () => {
     @media (max-width: 768px) {
       width: 100%;
       min-width: auto;
+    }
+  }
+
+  &__calculation-info {
+    margin-bottom: $spacing-large;
+    padding: $spacing-large;
+    background: rgba($color-primary, 0.05);
+    border-radius: 8px;
+    border-left: 4px solid $color-primary;
+  }
+
+  &__info-text {
+    font-size: 14px;
+    line-height: 1.5;
+    color: $color-text-secondary;
+    margin-bottom: $spacing-middle;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  &__info-icon {
+    margin-right: $spacing-small;
+  }
+
+  &__engine-link {
+    color: $color-primary;
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+
+    &:hover {
+      border-bottom-color: $color-primary;
+    }
+  }
+
+  &__details-link {
+    background: none;
+    border: none;
+    color: $color-primary;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+    transition: opacity 0.2s ease;
+
+    &:hover {
+      opacity: 0.8;
     }
   }
 }

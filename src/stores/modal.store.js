@@ -5,6 +5,7 @@ export const useModalStore = defineStore('modalStore', () => {
     const isCardResultModalOpen = ref(false)
     const isAnswerModalOpen = ref(false)
     const isNatalChartInterpretationModalOpen = ref(false)
+    const isCalculationDetailsModalOpen = ref(false)
     const isLoading = ref(false)
     const isFullReadingLoading = ref(false)
     const selectedCards = ref([])
@@ -35,6 +36,14 @@ export const useModalStore = defineStore('modalStore', () => {
 
     const closeNatalChartInterpretationModal = () => {
         isNatalChartInterpretationModalOpen.value = false
+    }
+
+    const openCalculationDetailsModal = () => {
+        isCalculationDetailsModalOpen.value = true
+    }
+
+    const closeCalculationDetailsModal = () => {
+        isCalculationDetailsModalOpen.value = false
     }
 
     const addSelectedCard = (card) => {
@@ -100,6 +109,7 @@ export const useModalStore = defineStore('modalStore', () => {
         isCardResultModalOpen,
         isAnswerModalOpen,
         isNatalChartInterpretationModalOpen,
+        isCalculationDetailsModalOpen,
         isLoading,
         isFullReadingLoading,
         selectedCards,
@@ -113,6 +123,8 @@ export const useModalStore = defineStore('modalStore', () => {
         closeAnswerModal,
         openNatalChartInterpretationModal,
         closeNatalChartInterpretationModal,
+        openCalculationDetailsModal,
+        closeCalculationDetailsModal,
         addSelectedCard,
         updateLastCard,
         retryCardInterpretation,

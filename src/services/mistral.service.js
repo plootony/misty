@@ -774,7 +774,12 @@ export async function interpretNatalChart(natalChartData, userData) {
 - <em> или <i> для курсива
 - <ul>/<ol> с <li> для списков при необходимости
 
-Объём: 800-1000 слов. Возвращай только чистый HTML без markdown обёрток.`;
+Объём: 800-1000 слов. КРИТИЧНО ВАЖНО:
+- Всегда завершай интерпретацию полностью
+- Не обрывай на половине предложения или мысли
+- Закончи все разделы и параграфы
+- Добавь заключительное резюме в конце
+- Возвращай только чистый HTML без markdown обёрток.`;
 
             // Форматируем данные натальной карты для ИИ
             const planetsInfo = natalChartData.planets?.map(planet =>
@@ -815,15 +820,70 @@ ${chartSummary}
 Пожалуйста, дай подробную астрологическую интерпретацию этой натальной карты.`
                         }
                     ],
-                    temperature: 0.7,
-                    maxTokens: 2000
+                    temperature: 0.6, // Немного уменьшаем для более последовательного ответа
+                    maxTokens: 4000 // Увеличиваем лимит токенов
                 });
 
                 return result.choices[0].message.content;
             };
 
-            const response = await apiCall();
-            return cleanMarkdownFromHtml(response);
+            let response = await apiCall();
+
+            // Логируем сырой ответ для отладки
+            console.log('Сырой ответ от Mistral AI:', response?.substring(0, 500) + '...');
+
+            response = cleanMarkdownFromHtml(response);
+
+            console.log('Очищенный ответ:', response?.substring(0, 500) + '...');
+
+            // Проверяем, завершен ли ответ (не обрывается ли на половине предложения)
+            const isIncomplete = response && (
+                !response.trim().endsWith('.') &&
+                !response.trim().endsWith('!') &&
+                !response.trim().endsWith('?') &&
+                !response.trim().endsWith('</p>') &&
+                !response.includes('</p></p>') // двойное закрытие параграфов
+            );
+
+            if (isIncomplete) {
+                console.warn('Ответ ИИ кажется незавершенным, пытаемся получить продолжение...');
+
+                // Пытаемся получить продолжение, если ответ кажется незавершенным
+                try {
+                    const continuationCall = async () => {
+                        const result = await client.chat.complete({
+                            model: 'mistral-small-latest',
+                            messages: [
+                                {
+                                    role: 'system',
+                                    content: 'Продолжи незавершенную астрологическую интерпретацию. Заверши все начатые мысли и предложения.'
+                                },
+                                {
+                                    role: 'user',
+                                    content: `Предыдущий текст: ${response.slice(-200)}\n\nПродолжи и заверши интерпретацию полностью.`
+                                }
+                            ],
+                            temperature: 0.7,
+                            maxTokens: 1000
+                        });
+                        return result.choices[0].message.content;
+                    };
+
+                    const continuation = await executeWithRetry(continuationCall, 1, 15000);
+                    if (continuation) {
+                        response += ' ' + cleanMarkdownFromHtml(continuation);
+                        console.log('Успешно получено продолжение интерпретации');
+                    }
+                } catch (continuationError) {
+                    console.warn('Не удалось получить продолжение:', continuationError);
+                    // Добавляем завершающий текст, если не удалось получить продолжение
+                    if (!response.includes('</p>') || !response.trim().endsWith('.')) {
+                        response += '</p><p><em>Интерпретация была завершена на основе доступных данных.</em></p>';
+                    }
+                }
+            }
+
+            return response;
 
         } catch (error) {
             console.error('Ошибка интерпретации натальной карты:', error);

@@ -8,6 +8,7 @@ import ProfileSetupModal from '@/components/ProfileSetupModal.vue';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 import { useProfileSetup } from '@/composables/useProfileSetup';
 import NatalChartInterpretationModal from '@/components/NatalChartInterpretationModal.vue';
+import CalculationDetailsModal from '@/components/CalculationDetailsModal.vue';
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -57,6 +58,9 @@ watch(() => userStore.isAuthChecking, (newValue) => {
 
     <!-- Модальное окно интерпретации натальной карты -->
     <NatalChartInterpretationModal />
+
+    <!-- Модальное окно с деталями системы расчетов -->
+    <CalculationDetailsModal />
   </template>
 </template>
 

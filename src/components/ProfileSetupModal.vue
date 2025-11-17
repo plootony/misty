@@ -259,24 +259,6 @@ const formatBirthDate = (event) => {
         animation: shake 0.3s ease-in-out;
     }
 
-    // Form styles removed - using global .form component
-        outline: none;
-        transition: border-color 0.3s;
-
-        &::placeholder {
-            color: $color-grey;
-        }
-
-        &:focus {
-            border-color: $color-pastel-gold;
-        }
-
-        &:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-    }
-
     &__hint {
         font-family: "Inter", Sans-serif;
         font-size: 12px;
