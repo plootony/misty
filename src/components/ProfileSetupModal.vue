@@ -162,10 +162,10 @@ const formatBirthDate = (event) => {
                                 <label class="form__label" for="setup-birth">
                                     Дата рождения *
                                 </label>
-                                <input
+                                <input 
                                     v-model="birthDate"
                                     @input="formatBirthDate"
-                                    type="text"
+                                    type="text" 
                                     id="setup-birth"
                                     class="form__input"
                                     placeholder="ДД.ММ.ГГГГ"
@@ -192,8 +192,8 @@ const formatBirthDate = (event) => {
                                 </label>
                             </div>
 
-                            <button
-                                type="submit"
+                            <button 
+                                type="submit" 
                                 class="btn btn--primary btn--medium btn--full-width"
                                 :disabled="isLoading"
                             >

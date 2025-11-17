@@ -592,35 +592,6 @@ const showAstrologyHelp = () => {
     }
   }
 
-  &__data-source {
-    font-family: "Inter", Sans-serif;
-    font-size: 14px;
-    color: $color-grey;
-    border-radius: 4px;
-    text-align: center;
-
-    strong {
-      color: $color-white;
-    }
-
-    span {
-      font-weight: 500;
-    }
-
-    & .natal-chart__real-data {
-      color: #4CAF50;
-      background-color: rgba(76, 175, 80, 0.1);
-      padding: 2px 6px;
-      border-radius: 3px;
-    }
-
-    & .natal-chart__fallback-data {
-      color: #FF9800;
-      background-color: rgba(255, 152, 0, 0.1);
-      padding: 2px 6px;
-      border-radius: 3px;
-    }
-  }
 
   &__error {
     padding: $spacing-middle;
@@ -751,10 +722,6 @@ const showAstrologyHelp = () => {
     gap: $spacing-middle;
     justify-content: center;
     flex-wrap: wrap;
-  }
-
-  &__calculate-btn {
-    min-width: 200px;
   }
 
   // Результаты
@@ -1008,15 +975,6 @@ const showAstrologyHelp = () => {
     text-align: center;
   }
 
-  &__interpretation-btn {
-    font-size: 18px;
-    padding: $spacing-middle $spacing-large;
-
-    @media (max-width: 768px) {
-      width: 100%;
-      min-width: auto;
-    }
-  }
 
   &__info-text {
     font-size: 14px;

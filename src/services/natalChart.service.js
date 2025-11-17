@@ -521,9 +521,6 @@ class NatalChartService {
 
         const sign = ZODIAC_SIGNS[signIndex] || ZODIAC_SIGNS[0];
 
-        console.log(`🪐 ${planetInfo.name}: ${longitude.toFixed(4)}° (${sign.name} ${signDegree.toFixed(2)}°)` +
-                   `${retrograde ? ' 🔄' : ''} | Скорость: ${speed.toFixed(4)}°/день` +
-                   `${this.usingRealEphemeris ? ' ✨' : ' 🔧'}`);
 
         planets.push({
           ...planetInfo,
@@ -677,10 +674,6 @@ class NatalChartService {
         });
       }
 
-      console.log(`🏠 Дома [${houseSystem}]:`, resultHouses.map(h =>
-        `Д${h.number}: ${h.cusp.toFixed(4)}° (${h.sign.name} ${h.degree.toFixed(2)}°)`
-      ).join(' | '));
-      console.log(`${this.usingRealEphemeris ? '✨ Реальные астрономические данные домов' : '🔧 Упрощенные расчеты домов'}`);
 
       return resultHouses;
     } catch (error) {
