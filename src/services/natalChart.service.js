@@ -315,9 +315,21 @@ class NatalChartService {
       const aspects = this.calculateAspects(planets);
       console.log(`⭐ Рассчитано аспектов: ${aspects.length}`);
       if (aspects.length > 0) {
-        console.log('⭐ Ключевые аспекты:', aspects.slice(0, 3).map(a =>
-          `${a.planet1} ${a.aspect} ${a.planet2} (${a.angle.toFixed(1)}°)`
-        ).join(' | '));
+
+        // Группировка аспектов по типам
+        const aspectStats = aspects.reduce((acc, aspect) => {
+          acc[aspect.aspectElement] = (acc[aspect.aspectElement] || 0) + 1;
+          return acc;
+        }, {});
+
+        const strengthStats = aspects.reduce((acc, aspect) => {
+          acc[aspect.strength] = (acc[aspect.strength] || 0) + 1;
+          return acc;
+        }, {});
+
+        console.log('📊 Статистика аспектов:');
+        console.log(`   По типам: ${Object.entries(aspectStats).map(([type, count]) => `${type}: ${count}`).join(', ')}`);
+        console.log(`   По силе: ${Object.entries(strengthStats).map(([strength, count]) => `${strength}: ${count}`).join(', ')}`);
       }
 
       const result = {
@@ -691,17 +703,17 @@ class NatalChartService {
   calculateAspects(planets) {
     const aspects = [];
     const aspectTypes = [
-      { name: 'соединение', angle: 0, orb: 8, symbol: '☌', element: 'нейтральный' },
-      { name: 'полусекстиль', angle: 30, orb: 2, symbol: '⚺', element: 'минорный' },
-      { name: 'семиквадрат', angle: 45, orb: 2, symbol: '∠', element: 'минорный' },
-      { name: 'секстиль', angle: 60, orb: 6, symbol: '⚹', element: 'гармоничный' },
-      { name: 'квинтиль', angle: 72, orb: 2, symbol: '∟', element: 'минорный' },
-      { name: 'квадратура', angle: 90, orb: 8, symbol: '□', element: 'напряженный' },
-      { name: 'тридециль', angle: 108, orb: 1, symbol: '∴', element: 'минорный' },
-      { name: 'тригон', angle: 120, orb: 8, symbol: '△', element: 'гармоничный' },
-      { name: 'бинонагон', angle: 135, orb: 2, symbol: '⊕', element: 'минорный' },
-      { name: 'квинкункс', angle: 150, orb: 3, symbol: '⚻', element: 'напряженный' },
-      { name: 'оппозиция', angle: 180, orb: 8, symbol: '☍', element: 'напряженный' }
+      { name: 'соединение', angle: 0, orb: 8, symbol: '☌', element: 'neutral' },
+      { name: 'полусекстиль', angle: 30, orb: 2, symbol: '⚺', element: 'minor' },
+      { name: 'семиквадрат', angle: 45, orb: 2, symbol: '∠', element: 'minor' },
+      { name: 'секстиль', angle: 60, orb: 6, symbol: '⚹', element: 'harmonious' },
+      { name: 'квинтиль', angle: 72, orb: 2, symbol: '∟', element: 'minor' },
+      { name: 'квадратура', angle: 90, orb: 8, symbol: '□', element: 'tense' },
+      { name: 'тридециль', angle: 108, orb: 1, symbol: '∴', element: 'minor' },
+      { name: 'тригон', angle: 120, orb: 8, symbol: '△', element: 'harmonious' },
+      { name: 'бинонагон', angle: 135, orb: 2, symbol: '⊕', element: 'minor' },
+      { name: 'квинкункс', angle: 150, orb: 3, symbol: '⚻', element: 'tense' },
+      { name: 'оппозиция', angle: 180, orb: 8, symbol: '☍', element: 'tense' }
     ];
 
     // Орбисы зависят от планет (внешние планеты имеют больший орбис)
@@ -732,11 +744,11 @@ class NatalChartService {
 
           if (orb <= effectiveOrb) {
             // Определяем силу аспекта на основе точности
-            let strength = 'слабый';
-            if (orb <= effectiveOrb * 0.3) strength = 'точный';
-            else if (orb <= effectiveOrb * 0.6) strength = 'средний';
+            let strength = 'weak';
+            if (orb <= effectiveOrb * 0.1) strength = 'exact';
+            else if (orb <= effectiveOrb * 0.3) strength = 'medium';
 
-            aspects.push({
+            const aspectData = {
               planet1: planet1.name,
               planet2: planet2.name,
               planet1Symbol: planet1.symbol,
@@ -749,7 +761,11 @@ class NatalChartService {
               orb: orb,
               strength: strength,
               exactness: Math.max(0, 100 - (orb / effectiveOrb * 100))
-            });
+            };
+
+
+            aspects.push(aspectData);
+
             break; // Нашли аспект, переходим к следующей паре
           }
         }

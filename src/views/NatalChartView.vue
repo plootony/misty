@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useUserStore } from '@/stores/user.store';
 import natalChartService, { ZODIAC_SIGNS, PLANET_INFO } from '@/services/natalChart.service';
 import { geocodePlace, validateCoordinates, formatCoordinates } from '@/services/geocoding.service';
@@ -209,6 +209,16 @@ const formatDegree = (degree) => {
   return natalChartService.formatDegree(degree);
 };
 
+// Перевод силы аспекта на русский
+const translateAspectStrength = (strength) => {
+  const translations = {
+    'exact': 'точный',
+    'medium': 'средний',
+    'weak': 'слабый'
+  };
+  return translations[strength] || strength;
+};
+
 // Сброс результатов
 const resetChart = () => {
   natalChart.value = null;
@@ -219,6 +229,12 @@ const resetChart = () => {
 const showCalculationDetails = () => {
   modalStore.openCalculationDetailsModal();
 };
+
+// Показать справку по астрологии
+const showAstrologyHelp = () => {
+  modalStore.openAstrologyHelpModal();
+};
+
 </script>
 
 <template>
@@ -229,8 +245,9 @@ const showCalculationDetails = () => {
     </div>
 
     <div class="natal-chart__container">
+
       <!-- Форма ввода данных -->
-      <div class="natal-chart__form-section">
+      <div v-if="!natalChart" class="natal-chart__form-section">
         <div class="natal-chart__form">
           <h2 class="natal-chart__section-title">Данные рождения</h2>
 
@@ -355,22 +372,14 @@ const showCalculationDetails = () => {
           </div>
 
           <!-- Информация о системе расчетов -->
-          <div class="natal-chart__calculation-info">
-            <p class="natal-chart__info-text">
-              <span class="natal-chart__info-icon">🔭</span>
-              Расчеты выполняются с использованием
-              <a href="https://github.com/cosinekitty/astronomy-engine" target="_blank" rel="noopener noreferrer" class="natal-chart__engine-link">
-                Astronomy Engine
-              </a>
-              — современной астрономической библиотеки для точных вычислений положений небесных тел.
-            </p>
-            <button
-              class="natal-chart__details-link"
-              @click="showCalculationDetails"
-            >
-              Подробнее о системе расчетов
-            </button>
-          </div>
+          <p class="natal-chart__info-text">
+            Расчеты выполняются с использованием
+            <a href="https://github.com/cosinekitty/astronomy-engine" target="_blank" rel="noopener noreferrer" class="natal-chart__engine-link">
+              Astronomy Engine
+            </a>
+            — современной астрономической библиотеки для точных вычислений положений небесных тел.
+          </p>
+
 
           <div class="natal-chart__actions">
             <button
@@ -397,16 +406,28 @@ const showCalculationDetails = () => {
       <div v-if="natalChart" class="natal-chart__results-section">
         <div class="natal-chart__results">
           <h2 class="natal-chart__section-title">Ваша натальная карта</h2>
+
+          <!-- Ссылки на справку -->
+          <div class="natal-chart__help-links">
+            <button
+              class="natal-chart__details-link"
+              @click="showCalculationDetails"
+            >
+              Подробнее о системе расчетов
+            </button>
+            <button
+              class="natal-chart__help-link"
+              @click="showAstrologyHelp"
+            >
+              Помощь по астрологии
+            </button>
+          </div>
+
           <p class="natal-chart__system-info">
             <strong>Система домов:</strong> {{ getHouseSystemName(houseSystem) }}
             <em>(влияет на интерпретацию сфер жизни)</em>
           </p>
-          <p class="natal-chart__data-source">
-            <strong>Источник данных:</strong>
-            <span :class="natalChartService?.usingRealEphemeris ? 'natal-chart__real-data' : 'natal-chart__fallback-data'">
-              {{ natalChartService?.usingRealEphemeris ? '✨ Swiss Ephemeris (реальные астрономические данные)' : '🔧 Fallback (упрощенные расчеты)' }}
-            </span>
-          </p>
+          
 
           <!-- Визуализация натальной карты -->
           <div class="natal-chart__visualization">
@@ -467,7 +488,10 @@ const showCalculationDetails = () => {
                 v-for="aspect in natalChart.aspects"
                 :key="`${aspect.planet1}-${aspect.planet2}`"
                 class="natal-chart__aspect-item"
-                :class="`natal-chart__aspect-item--${aspect.aspectElement || 'нейтральный'}`"
+                :class="[
+                  `natal-chart__aspect-item--${aspect.aspectElement || 'neutral'}`,
+                  `natal-chart__aspect-item--${aspect.strength || 'weak'}`
+                ]"
               >
                 <div class="natal-chart__aspect-main">
                   <span class="natal-chart__aspect-symbols">
@@ -481,7 +505,7 @@ const showCalculationDetails = () => {
                   <span class="natal-chart__aspect-type">{{ aspect.aspect }}</span>
                   <span class="natal-chart__aspect-angle">({{ aspect.angle }}°)</span>
                   <span v-if="aspect.strength" class="natal-chart__aspect-strength" :class="`natal-chart__aspect-strength--${aspect.strength}`">
-                    {{ aspect.strength }}
+                    {{ translateAspectStrength(aspect.strength) }}
                   </span>
                   <span class="natal-chart__aspect-orb">{{ aspect.orb ? aspect.orb.toFixed(1) : '0.0' }}'</span>
                 </div>
@@ -522,21 +546,21 @@ const showCalculationDetails = () => {
     margin: 0 auto;
     display: flex;
     flex-direction: column;
-    gap: $spacing-large;
+    gap: $spacing-small;
   }
 
   &__form-section,
   &__results-section {
     background-color: $color-bg-light;
     border-radius: 12px;
-    padding: $spacing-large;
+    padding: $spacing-middle;
     box-shadow: 0px 15px 35px 0px rgba(10, 10, 12, 0.3215686274509804);
   }
 
   &__form {
     display: flex;
     flex-direction: column;
-    gap: $spacing-large;
+    gap: $spacing-middle;
   }
 
   &__section-title {
@@ -544,7 +568,6 @@ const showCalculationDetails = () => {
     font-size: 28px;
     font-weight: 600;
     color: $color-white;
-    margin: 0 0 $spacing-middle 0;
     text-align: center;
   }
 
@@ -573,8 +596,6 @@ const showCalculationDetails = () => {
     font-family: "Inter", Sans-serif;
     font-size: 14px;
     color: $color-grey;
-    margin: 0 0 $spacing-large 0;
-    padding: $spacing-small $spacing-middle;
     border-radius: 4px;
     text-align: center;
 
@@ -740,7 +761,7 @@ const showCalculationDetails = () => {
   &__results {
     display: flex;
     flex-direction: column;
-    gap: $spacing-large;
+    gap: $spacing-middle;
   }
 
   &__subsection-title {
@@ -866,20 +887,50 @@ const showCalculationDetails = () => {
     border: 1px solid rgba($color-grey, 0.3);
     transition: border-color 0.3s;
 
-    &--гармоничный {
+    &--harmonious {
       border-color: rgba(#4CAF50, 0.5);
     }
 
-    &--напряженный {
+    &--tense {
       border-color: rgba(#F44336, 0.5);
     }
 
-    &--минорный {
+    &--minor {
       border-color: rgba(#FF9800, 0.5);
     }
 
-    &--нейтральный {
+    &--neutral {
       border-color: rgba($color-pastel-gold, 0.5);
+    }
+
+    // Комбинированные стили для согласованности
+    &--harmonious {
+      &.--exact {
+        border-color: #4CAF50;
+        box-shadow: 0 0 0 1px rgba(#4CAF50, 0.3);
+      }
+
+      &.--medium {
+        border-color: rgba(#4CAF50, 0.7);
+      }
+    }
+
+    &--tense {
+      &.--exact {
+        border-color: #F44336;
+        box-shadow: 0 0 0 1px rgba(#F44336, 0.3);
+      }
+
+      &.--medium {
+        border-color: rgba(#F44336, 0.7);
+      }
+    }
+
+    &--minor {
+      &.--medium {
+        border-color: #FF9800;
+        box-shadow: 0 0 0 1px rgba(#FF9800, 0.3);
+      }
     }
   }
 
@@ -927,17 +978,17 @@ const showCalculationDetails = () => {
     text-transform: uppercase;
     font-weight: 500;
 
-    &--точный {
+    &--exact {
       background-color: rgba(#4CAF50, 0.2);
       color: #4CAF50;
     }
 
-    &--средний {
+    &--medium {
       background-color: rgba(#FF9800, 0.2);
       color: #FF9800;
     }
 
-    &--слабый {
+    &--weak {
       background-color: rgba(#F44336, 0.2);
       color: #F44336;
     }
@@ -950,7 +1001,6 @@ const showCalculationDetails = () => {
   }
 
   &__visualization {
-    margin-top: $spacing-large;
     text-align: center;
   }
 
@@ -968,27 +1018,10 @@ const showCalculationDetails = () => {
     }
   }
 
-  &__calculation-info {
-    margin-bottom: $spacing-large;
-    padding: $spacing-large;
-    background: rgba($color-primary, 0.05);
-    border-radius: 8px;
-    border-left: 4px solid $color-primary;
-  }
-
   &__info-text {
     font-size: 14px;
     line-height: 1.5;
-    color: $color-text-secondary;
-    margin-bottom: $spacing-middle;
-
-    &:last-child {
-      margin-bottom: 0;
-    }
-  }
-
-  &__info-icon {
-    margin-right: $spacing-small;
+    color: $color-white;
   }
 
   &__engine-link {
@@ -1003,7 +1036,20 @@ const showCalculationDetails = () => {
     }
   }
 
-  &__details-link {
+  &__help-links {
+    display: flex;
+    justify-content: center;
+    gap: $spacing-middle;
+
+    @media (max-width: 768px) {
+      flex-direction: column;
+      align-items: center;
+      gap: $spacing-small;
+    }
+  }
+
+  &__details-link,
+  &__help-link {
     background: none;
     border: none;
     color: $color-primary;
@@ -1011,11 +1057,13 @@ const showCalculationDetails = () => {
     font-weight: 500;
     cursor: pointer;
     text-decoration: underline;
-    padding: 0;
+    padding: $spacing-x-smal $spacing-small;
     transition: opacity 0.2s ease;
+    border-radius: 4px;
 
     &:hover {
       opacity: 0.8;
+      background-color: rgba($color-primary, 0.05);
     }
   }
 }

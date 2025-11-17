@@ -6,6 +6,7 @@ export const useModalStore = defineStore('modalStore', () => {
     const isAnswerModalOpen = ref(false)
     const isNatalChartInterpretationModalOpen = ref(false)
     const isCalculationDetailsModalOpen = ref(false)
+    const isAstrologyHelpModalOpen = ref(false)
     const isLoading = ref(false)
     const isFullReadingLoading = ref(false)
     const selectedCards = ref([])
@@ -44,6 +45,14 @@ export const useModalStore = defineStore('modalStore', () => {
 
     const closeCalculationDetailsModal = () => {
         isCalculationDetailsModalOpen.value = false
+    }
+
+    const openAstrologyHelpModal = () => {
+        isAstrologyHelpModalOpen.value = true
+    }
+
+    const closeAstrologyHelpModal = () => {
+        isAstrologyHelpModalOpen.value = false
     }
 
     const addSelectedCard = (card) => {
@@ -110,6 +119,7 @@ export const useModalStore = defineStore('modalStore', () => {
         isAnswerModalOpen,
         isNatalChartInterpretationModalOpen,
         isCalculationDetailsModalOpen,
+        isAstrologyHelpModalOpen,
         isLoading,
         isFullReadingLoading,
         selectedCards,
@@ -125,6 +135,8 @@ export const useModalStore = defineStore('modalStore', () => {
         closeNatalChartInterpretationModal,
         openCalculationDetailsModal,
         closeCalculationDetailsModal,
+        openAstrologyHelpModal,
+        closeAstrologyHelpModal,
         addSelectedCard,
         updateLastCard,
         retryCardInterpretation,

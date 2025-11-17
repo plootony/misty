@@ -130,8 +130,11 @@ const closeModal = () => {
     </div>
 </template>
 
-<style scoped>
+<style scoped lang="scss">
+@use '../assets/scss/vars.scss' as *;
+
 .calculation-details {
+    padding: $spacing-middle;
     max-width: 100%;
 }
 

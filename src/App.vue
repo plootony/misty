@@ -9,6 +9,7 @@ import ButtonSpinner from '@/components/ButtonSpinner.vue';
 import { useProfileSetup } from '@/composables/useProfileSetup';
 import NatalChartInterpretationModal from '@/components/NatalChartInterpretationModal.vue';
 import CalculationDetailsModal from '@/components/CalculationDetailsModal.vue';
+import AstrologyHelpModal from '@/components/AstrologyHelpModal.vue';
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -61,6 +62,9 @@ watch(() => userStore.isAuthChecking, (newValue) => {
 
     <!-- Модальное окно с деталями системы расчетов -->
     <CalculationDetailsModal />
+
+    <!-- Модальное окно справки по астрологии -->
+    <AstrologyHelpModal />
   </template>
 </template>
 

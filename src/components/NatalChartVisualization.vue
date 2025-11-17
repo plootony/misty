@@ -199,10 +199,10 @@ const isValidLongitude = (longitude) => {
 // Функция для определения цвета аспекта
 const getAspectColor = (aspectElement) => {
   const colors = {
-    'гармоничный': '#4CAF50',
-    'напряженный': '#F44336',
-    'минорный': '#FF9800',
-    'нейтральный': '#D4AF37'
+    'harmonious': '#4CAF50',
+    'tense': '#F44336',
+    'minor': '#FF9800',
+    'neutral': '#D4AF37'
   };
   return colors[aspectElement] || '#D4AF37';
 };
