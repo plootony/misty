@@ -21,6 +21,12 @@ const userStore = useUserStore();
                     Натальная карта
                 </RouterLink>
                 <RouterLink
+                    to="/"
+                    class="header__link header__link--tarologist"
+                >
+                    Таролог
+                </RouterLink>
+                <RouterLink
                     v-if="userStore.isAuthenticated"
                     to="/profile"
                     class="header__link header__link--profile"
@@ -122,6 +128,41 @@ const userStore = useUserStore();
 
             &.router-link-active {
                 border-color: $color-gold;
+            }
+        }
+
+        &--tarologist {
+            font-weight: 600;
+            color: $color-pastel-gold;
+            position: relative;
+
+            &::after {
+                content: '';
+                position: absolute;
+                bottom: -2px;
+                left: 0;
+                right: 0;
+                height: 2px;
+                background: linear-gradient(90deg, $color-pastel-gold, $color-gold);
+                border-radius: 1px;
+                opacity: 0;
+                transition: opacity 0.3s;
+            }
+
+            &:hover {
+                color: $color-gold;
+
+                &::after {
+                    opacity: 1;
+                }
+            }
+
+            &.router-link-active {
+                color: $color-gold;
+
+                &::after {
+                    opacity: 1;
+                }
             }
         }
     }
