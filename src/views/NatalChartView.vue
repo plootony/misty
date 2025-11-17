@@ -735,12 +735,14 @@ const resetChart = () => {
   // Аспекты
   &__aspects-list {
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
     gap: $spacing-small;
   }
 
   &__aspect-item {
     display: flex;
+    flex-grow: 1;
+    flex-shrink: 0;
     flex-direction: column;
     gap: $spacing-x-smal;
     padding: $spacing-middle;
@@ -838,14 +840,12 @@ const resetChart = () => {
   }
 
   &__interpretation-button {
-    margin-top: $spacing-large;
     text-align: center;
   }
 
   &__interpretation-btn {
-    min-width: 250px;
     font-size: 18px;
-    padding: $spacing-large $spacing-large * 2;
+    padding: $spacing-middle $spacing-large;
 
     @media (max-width: 768px) {
       width: 100%;
