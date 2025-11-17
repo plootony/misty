@@ -113,7 +113,7 @@ const closeModal = () => {
                         <!-- Кнопка повтора при ошибке -->
                         <button
                             v-if="hasError"
-                            class="btn btn--secondary"
+                            class="btn btn--secondary btn--medium btn--full-width"
                             @click="handleRetry"
                             :disabled="modalStore.isLoading"
                         >
@@ -123,7 +123,7 @@ const closeModal = () => {
                         <!-- Основная кнопка -->
                         <button
                             v-else
-                            class="btn btn--primary"
+                            class="btn btn--primary btn--medium btn--full-width"
                             @click="goToNext"
                             :disabled="isButtonDisabled || modalStore.isLoading"
                         >

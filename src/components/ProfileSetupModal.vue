@@ -142,38 +142,38 @@ const formatBirthDate = (event) => {
                             {{ error }}
                         </div>
 
-                        <form class="profile-setup__form" @submit="handleSubmit">
-                            <div class="profile-setup__field">
-                                <label class="profile-setup__label" for="setup-name">
+                        <form class="form" @submit="handleSubmit">
+                            <div class="form__field">
+                                <label class="form__label" for="setup-name">
                                     Ваше настоящее имя *
                                 </label>
                                 <input
                                     v-model="name"
                                     type="text"
                                     id="setup-name"
-                                    class="profile-setup__input"
+                                    class="form__input"
                                     placeholder="Например: Антон"
                                     :disabled="isLoading"
                                     required
                                 >
                             </div>
 
-                            <div class="profile-setup__field">
-                                <label class="profile-setup__label" for="setup-birth">
+                            <div class="form__field">
+                                <label class="form__label" for="setup-birth">
                                     Дата рождения *
                                 </label>
-                                <input 
+                                <input
                                     v-model="birthDate"
                                     @input="formatBirthDate"
-                                    type="text" 
+                                    type="text"
                                     id="setup-birth"
-                                    class="profile-setup__input" 
+                                    class="form__input"
                                     placeholder="ДД.ММ.ГГГГ"
                                     maxlength="10"
                                     :disabled="isLoading"
                                     required
                                 >
-                                <span class="profile-setup__hint">
+                                <span class="form__help">
                                     Формат: 03.06.1991
                                 </span>
                             </div>
@@ -192,12 +192,12 @@ const formatBirthDate = (event) => {
                                 </label>
                             </div>
 
-                            <button 
-                                type="submit" 
-                                class="btn btn--primary profile-setup__submit"
+                            <button
+                                type="submit"
+                                class="btn btn--primary btn--medium btn--full-width"
                                 :disabled="isLoading"
                             >
-                                <ButtonSpinner v-if="isLoading" />
+                                <ButtonSpinner v-if="isLoading" class="btn__icon" />
                                 <span>{{ isLoading ? 'Сохранение...' : 'Продолжить' }}</span>
                             </button>
                         </form>
@@ -259,34 +259,7 @@ const formatBirthDate = (event) => {
         animation: shake 0.3s ease-in-out;
     }
 
-    &__form {
-        display: flex;
-        flex-direction: column;
-        gap: $spacing-middle;
-    }
-
-    &__field {
-        display: flex;
-        flex-direction: column;
-        gap: $spacing-x-smal;
-    }
-
-    &__label {
-        font-family: "Inter", Sans-serif;
-        font-size: 14px;
-        font-weight: 600;
-        color: $color-white;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-
-    &__input {
-        font-family: "Playfair Display", Sans-serif;
-        font-size: 18px;
-        padding: $spacing-middle;
-        background-color: $color-bg-dark;
-        color: $color-white;
-        border: 2px solid transparent;
+    // Form styles removed - using global .form component
         outline: none;
         transition: border-color 0.3s;
 

@@ -212,20 +212,20 @@ const submitQuestion = async () => {
             
             
             <div class="question__actions">
-                <button 
-                    class="btn btn--secondary" 
+                <button
+                    class="btn btn--secondary btn--medium"
                     @click="goBack"
                     :disabled="isLoading"
                 >
                     Назад
                 </button>
-                
+
                 <button
-                    class="btn btn--primary"
+                    class="btn btn--primary btn--medium btn--full-width"
                     @click="submitQuestion"
                     :disabled="isLoading"
                 >
-                    <ButtonSpinner v-if="isLoading" />
+                    <ButtonSpinner v-if="isLoading" class="btn__icon" />
                     <span>{{ isLoading ? 'Проверка вопроса' : 'Задать вопрос' }}</span>
                 </button>
             </div>

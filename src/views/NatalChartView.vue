@@ -330,17 +330,17 @@ const resetChart = () => {
 
           <div class="natal-chart__actions">
             <button
-              class="btn btn--primary natal-chart__calculate-btn"
+              class="btn btn--primary btn--medium btn--full-width"
               @click="calculateNatalChart"
               :disabled="isCalculating"
             >
-              <ButtonSpinner v-if="isCalculating" />
+              <ButtonSpinner v-if="isCalculating" class="btn__icon" />
               <span>{{ isCalculating ? 'Рассчитываем...' : 'Рассчитать натальную карту' }}</span>
             </button>
 
             <button
               v-if="natalChart"
-              class="btn btn--secondary"
+              class="btn btn--secondary btn--medium"
               @click="resetChart"
             >
               Сбросить
@@ -438,11 +438,11 @@ const resetChart = () => {
           <!-- Кнопка получения интерпретации -->
           <div class="natal-chart__interpretation-button">
             <button
-              class="btn btn--primary natal-chart__interpretation-btn"
+              class="btn btn--primary btn--medium btn--full-width"
               @click="getInterpretation"
               :disabled="isInterpreting"
             >
-              <ButtonSpinner v-if="isInterpreting" />
+              <ButtonSpinner v-if="isInterpreting" class="btn__icon" />
               <span>{{ isInterpreting ? 'Получаю интерпретацию...' : 'Получить значение' }}</span>
             </button>
           </div>

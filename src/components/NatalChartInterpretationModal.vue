@@ -37,7 +37,7 @@ const closeModal = () => {
                         <div class="natal-chart-interpretation__text" v-html="modalStore.natalChartInterpretationText"></div>
                     </div>
 
-                    <button class="btn btn--primary" @click="closeModal">
+                    <button class="btn btn--primary btn--medium btn--full-width" @click="closeModal">
                         Закрыть
                     </button>
                 </div>

@@ -49,7 +49,7 @@ const closeModal = () => {
                         <div class="answer__text" v-html="modalStore.fullReadingText"></div>
                     </div>
 
-                    <button class="btn btn--primary" @click="startOver">
+                    <button class="btn btn--primary btn--medium btn--full-width" @click="startOver">
                         Еще раз
                     </button>
                 </div>

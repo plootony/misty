@@ -346,7 +346,7 @@ const formatDate = (dateString) => {
                     >
                     <button
                         v-if="searchQuery"
-                        class="btn btn--secondary admin__clear-btn"
+                        class="btn btn--secondary btn--small admin__clear-btn"
                         @click="clearSearch"
                         title="Очистить поиск"
                     >
@@ -467,15 +467,15 @@ const formatDate = (dateString) => {
                                 </select>
                                 <div class="admin__edit-actions">
                                     <button
-                                        class="btn btn--primary"
+                                        class="btn btn--primary btn--medium"
                                         @click="saveTariff"
                                         :disabled="isUpdatingTariff || !selectedTariff"
                                     >
-                                        <ButtonSpinner v-if="isUpdatingTariff" />
+                                        <ButtonSpinner v-if="isUpdatingTariff" class="btn__icon" />
                                         <span>{{ isUpdatingTariff ? 'Сохранение...' : 'Сохранить' }}</span>
                                     </button>
                                     <button
-                                        class="btn btn--secondary"
+                                        class="btn btn--secondary btn--medium"
                                         @click="cancelEdit"
                                         :disabled="isUpdatingTariff"
                                     >
@@ -488,7 +488,7 @@ const formatDate = (dateString) => {
                         <!-- Действия -->
                         <div v-if="!user.is_admin" class="admin__user-actions">
                             <button
-                                class="btn btn--secondary admin__action-btn"
+                                class="btn btn--secondary btn--small admin__action-btn"
                                 @click="startEdit(user)"
                                 v-if="!editingUser || editingUser.id !== user.id"
                             >
@@ -496,19 +496,22 @@ const formatDate = (dateString) => {
                             </button>
                             <button
                                 class="btn admin__action-btn"
-                                :class="user.is_active ? 'btn--warning' : 'btn--primary'"
+                                :class="[
+                                    user.is_active ? 'btn--warning' : 'btn--success',
+                                    'btn--small'
+                                ]"
                                 @click="toggleActive(user)"
                                 :disabled="isTogglingActive"
                             >
-                                <ButtonSpinner v-if="isTogglingActive" />
+                                <ButtonSpinner v-if="isTogglingActive" class="btn__icon" />
                                 <span>{{ isTogglingActive ? 'Обработка...' : (user.is_active ? 'Заблокировать' : 'Разблокировать') }}</span>
                             </button>
                             <button
-                                class="btn btn--danger admin__action-btn"
+                                class="btn btn--error btn--small admin__action-btn"
                                 @click="handleDelete(user)"
                                 :disabled="isDeletingUser"
                             >
-                                <ButtonSpinner v-if="isDeletingUser" />
+                                <ButtonSpinner v-if="isDeletingUser" class="btn__icon" />
                                 <span>{{ isDeletingUser ? 'Удаление...' : 'Удалить' }}</span>
                             </button>
                         </div>
@@ -518,7 +521,7 @@ const formatDate = (dateString) => {
                 <!-- Загрузить еще -->
                 <div v-if="hasMorePages && !isLoading" class="admin__load-more">
                     <button
-                        class="btn btn--secondary"
+                        class="btn btn--secondary btn--medium"
                         @click="loadMoreUsers"
                     >
                         Загрузить еще пользователей

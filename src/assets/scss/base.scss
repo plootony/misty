@@ -82,7 +82,10 @@ body {
     margin: 0 auto;
 }
 
-// buttons
+// ============================================
+// BUTTON COMPONENT (.btn)
+// ============================================
+
 .btn {
     display: inline-flex;
     align-items: center;
@@ -92,38 +95,486 @@ body {
     outline: none;
     border: none;
     background: none;
+    font-family: "DM Sans", Sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all 0.3s ease;
+    cursor: pointer;
 
-    &--primary {
+    &__icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &__text {
+        flex: 1;
+    }
+
+    // Size modifiers
+    &--small {
+        padding: $spacing-small $spacing-middle;
+        font-size: 16px;
+    }
+
+    &--medium {
         padding: $spacing-middle $spacing-large;
-        font-family: "DM Sans", Sans-serif;
+        font-size: 18px;
+    }
+
+    &--large {
+        padding: $spacing-large ($spacing-large * 1.5);
         font-size: 20px;
-        font-weight: 600;
-        letter-spacing: 0.3px;
+    }
+
+    // Style modifiers
+    &--primary {
         color: $color-white;
         background-color: $color-gold;
         box-shadow: 0px 10px 20px 0px rgba(176, 132, 80, 0.24);
-        transition: opacity .3s;
 
-        &:hover {
-            opacity: .9;
-            cursor: pointer;
+        &:hover:not(:disabled) {
+            opacity: 0.9;
+            transform: translateY(-2px);
         }
     }
 
     &--secondary {
-        padding: $spacing-middle $spacing-large;
-        font-family: "DM Sans", Sans-serif;
-        font-size: 20px;
-        font-weight: 600;
-        letter-spacing: 0.3px;
         color: $color-white;
         background-color: transparent;
         border: 2px solid $color-grey;
-        transition: border-color .3s, color .3s;
 
-        &:hover {
+        &:hover:not(:disabled) {
             border-color: $color-white;
-            cursor: pointer;
+            background-color: rgba(255, 255, 255, 0.05);
         }
     }
+
+    &--success {
+        color: $color-white;
+        background-color: #10b981;
+        box-shadow: 0px 10px 20px 0px rgba(16, 185, 129, 0.24);
+
+        &:hover:not(:disabled) {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+    }
+
+    &--error {
+        color: $color-white;
+        background-color: #ef4444;
+        box-shadow: 0px 10px 20px 0px rgba(239, 68, 68, 0.24);
+
+        &:hover:not(:disabled) {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+    }
+
+    &--warning {
+        color: $color-white;
+        background-color: #f59e0b;
+        box-shadow: 0px 10px 20px 0px rgba(245, 158, 11, 0.24);
+
+        &:hover:not(:disabled) {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+    }
+
+    &--google {
+        color: #757575;
+        background-color: $color-white;
+        border: 2px solid #dadce0;
+        box-shadow: 0px 4px 12px 0px rgba(0, 0, 0, 0.15);
+
+        &:hover:not(:disabled) {
+            background-color: #f8f9fa;
+            border-color: #c7c7c7;
+            box-shadow: 0px 6px 16px 0px rgba(0, 0, 0, 0.2);
+        }
+
+        &:active:not(:disabled) {
+            background-color: #f1f3f4;
+        }
+    }
+
+    &--admin {
+        color: $color-white;
+        background: linear-gradient(135deg, #ffd700 0%, #ffb347 100%);
+        box-shadow: 0px 10px 20px 0px rgba(255, 215, 0, 0.3);
+
+        &:hover:not(:disabled) {
+            background: linear-gradient(135deg, #ffed4e 0%, #ffd700 100%);
+            transform: translateY(-2px);
+        }
+    }
+
+    // State modifiers
+    &--disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    &--loading {
+        pointer-events: none;
+
+        .btn__text {
+            opacity: 0.7;
+        }
+    }
+
+    &--full-width {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+// ============================================
+// FORM COMPONENT (.form)
+// ============================================
+
+.form {
+    width: 100%;
+
+    &__field {
+        margin-bottom: $spacing-middle;
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+    }
+
+    &__label {
+        display: block;
+        font-family: "Inter", Sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        color: $color-white;
+        margin-bottom: $spacing-x-smal;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    &__input,
+    &__select,
+    &__textarea {
+        width: 100%;
+        padding: $spacing-small $spacing-middle;
+        background-color: $color-bg-light;
+        border: 2px solid transparent;
+        border-radius: 4px;
+        color: $color-white;
+        font-family: "Inter", Sans-serif;
+        font-size: 16px;
+        transition: border-color 0.3s ease;
+
+        &::placeholder {
+            color: $color-grey;
+        }
+
+        &:focus {
+            outline: none;
+            border-color: $color-gold;
+        }
+
+        &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+    }
+
+    &__textarea {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    &__error {
+        color: #ef4444;
+        font-size: 14px;
+        margin-top: $spacing-x-smal;
+        font-family: "Inter", Sans-serif;
+    }
+
+    &__help {
+        color: $color-grey;
+        font-size: 14px;
+        margin-top: $spacing-x-smal;
+        font-family: "Inter", Sans-serif;
+    }
+
+    &__actions {
+        display: flex;
+        gap: $spacing-middle;
+        margin-top: $spacing-large;
+        flex-wrap: wrap;
+    }
+
+    // Form layout modifiers
+    &--inline {
+        display: flex;
+        gap: $spacing-middle;
+        align-items: end;
+
+        .form__field {
+            margin-bottom: 0;
+            flex: 1;
+        }
+
+        .form__actions {
+            margin-top: 0;
+        }
+    }
+
+    &--horizontal {
+        .form__field {
+            display: flex;
+            align-items: center;
+            gap: $spacing-middle;
+
+            .form__label {
+                margin-bottom: 0;
+                min-width: 120px;
+            }
+        }
+    }
+}
+
+// ============================================
+// CARD COMPONENT (.card)
+// ============================================
+
+.card {
+    background-color: $color-bg-light;
+    border-radius: 8px;
+    box-shadow: 0px 4px 12px 0px rgba(10, 10, 12, 0.3);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+    &__header {
+        padding: $spacing-middle;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    &__title {
+        font-family: "Playfair Display", Sans-serif;
+        font-size: 20px;
+        font-weight: 600;
+        color: $color-white;
+        margin: 0 0 $spacing-x-smal 0;
+    }
+
+    &__subtitle {
+        font-family: "Inter", Sans-serif;
+        font-size: 14px;
+        color: $color-grey;
+        margin: 0;
+    }
+
+    &__content {
+        padding: $spacing-middle;
+    }
+
+    &__footer {
+        padding: $spacing-middle;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        background-color: rgba(0, 0, 0, 0.1);
+    }
+
+    &__actions {
+        display: flex;
+        gap: $spacing-middle;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    // Card modifiers
+    &--elevated {
+        box-shadow: 0px 20px 40px 0px rgba(10, 10, 12, 0.4);
+    }
+
+    &--outlined {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: none;
+    }
+
+    &--interactive {
+        &:hover {
+            transform: translateY(-4px);
+            box-shadow: 0px 20px 40px 0px rgba(10, 10, 12, 0.4);
+        }
+    }
+
+    &--full-width {
+        width: 100%;
+    }
+}
+
+// ============================================
+// NOTIFICATION COMPONENT (.notification)
+// ============================================
+
+.notification {
+    padding: $spacing-middle;
+    border-radius: 6px;
+    font-family: "Inter", Sans-serif;
+    font-size: 14px;
+    display: flex;
+    align-items: flex-start;
+    gap: $spacing-small;
+
+    &__icon {
+        flex-shrink: 0;
+        font-size: 18px;
+    }
+
+    &__content {
+        flex: 1;
+    }
+
+    &__title {
+        font-weight: 600;
+        margin-bottom: $spacing-x-smal;
+    }
+
+    &__message {
+        margin: 0;
+        line-height: 1.4;
+    }
+
+    // Notification types
+    &--success {
+        background-color: rgba(16, 185, 129, 0.1);
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        color: #10b981;
+
+        .notification__icon {
+            color: #10b981;
+        }
+    }
+
+    &--error {
+        background-color: rgba(239, 68, 68, 0.1);
+        border: 1px solid rgba(239, 68, 68, 0.3);
+        color: #ef4444;
+
+        .notification__icon {
+            color: #ef4444;
+        }
+    }
+
+    &--warning {
+        background-color: rgba(245, 158, 11, 0.1);
+        border: 1px solid rgba(245, 158, 11, 0.3);
+        color: #f59e0b;
+
+        .notification__icon {
+            color: #f59e0b;
+        }
+    }
+
+    &--info {
+        background-color: rgba(176, 132, 80, 0.1);
+        border: 1px solid rgba(176, 132, 80, 0.3);
+        color: $color-gold;
+
+        .notification__icon {
+            color: $color-gold;
+        }
+    }
+}
+
+// ============================================
+// UTILITY CLASSES
+// ============================================
+
+// Spacing utilities
+.spacing {
+    &--top-small { margin-top: $spacing-small; }
+    &--top-medium { margin-top: $spacing-middle; }
+    &--top-large { margin-top: $spacing-large; }
+
+    &--bottom-small { margin-bottom: $spacing-small; }
+    &--bottom-medium { margin-bottom: $spacing-middle; }
+    &--bottom-large { margin-bottom: $spacing-large; }
+
+    &--all-small { margin: $spacing-small; }
+    &--all-medium { margin: $spacing-middle; }
+    &--all-large { margin: $spacing-large; }
+}
+
+// Flex utilities
+.flex {
+    display: flex;
+
+    &--center {
+        align-items: center;
+        justify-content: center;
+    }
+
+    &--start {
+        align-items: flex-start;
+        justify-content: flex-start;
+    }
+
+    &--end {
+        align-items: flex-end;
+        justify-content: flex-end;
+    }
+
+    &--space-between {
+        justify-content: space-between;
+    }
+
+    &--space-around {
+        justify-content: space-around;
+    }
+
+    &--column {
+        flex-direction: column;
+    }
+
+    &--wrap {
+        flex-wrap: wrap;
+    }
+
+    &--no-wrap {
+        flex-wrap: nowrap;
+    }
+}
+
+// Grid utilities
+.grid {
+    display: grid;
+
+    &--cols-1 { grid-template-columns: repeat(1, 1fr); }
+    &--cols-2 { grid-template-columns: repeat(2, 1fr); }
+    &--cols-3 { grid-template-columns: repeat(3, 1fr); }
+    &--cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+    &--gap-small { gap: $spacing-small; }
+    &--gap-medium { gap: $spacing-middle; }
+    &--gap-large { gap: $spacing-large; }
+
+    &--auto-fit {
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+}
+
+// Text utilities
+.text {
+    &--center { text-align: center; }
+    &--left { text-align: left; }
+    &--right { text-align: right; }
+
+    &--uppercase { text-transform: uppercase; }
+    &--lowercase { text-transform: lowercase; }
+    &--capitalize { text-transform: capitalize; }
+
+    &--bold { font-weight: 700; }
+    &--semibold { font-weight: 600; }
+    &--medium { font-weight: 500; }
+    &--regular { font-weight: 400; }
 }

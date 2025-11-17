@@ -419,7 +419,7 @@ const performAccountDeletion = async () => {
                             <button
                                 v-if="userStore.isAdmin"
                                 type="button"
-                                class="btn btn--admin profile__admin-btn"
+                                class="btn btn--admin btn--medium btn--full-width"
                                 @click="router.push('/admin')"
                             >
                                 👑 Админ панель
@@ -427,7 +427,7 @@ const performAccountDeletion = async () => {
 
                             <button
                                 type="button"
-                                class="btn btn--secondary profile__signout-btn"
+                                class="btn btn--secondary btn--medium"
                                 @click="handleSignOut"
                             >
                                 Выйти
@@ -436,17 +436,13 @@ const performAccountDeletion = async () => {
                             <button
                                 v-if="!userStore.isAdmin"
                                 type="button"
-                                class="btn btn--danger profile__delete-btn"
+                                class="btn btn--error btn--medium btn--full-width"
                                 @click="handleDeleteAccount"
                                 :disabled="isDeactivatingAccount"
                             >
-                                <span v-if="isDeactivatingAccount">
-                                    <ButtonSpinner />
-                                    Деактивация...
-                                </span>
-                                <span v-else>
-                                    Деактивировать аккаунт
-                                </span>
+                                <ButtonSpinner v-if="isDeactivatingAccount" class="btn__icon" />
+                                <span v-if="isDeactivatingAccount">Деактивация...</span>
+                                <span v-else>Деактивировать аккаунт</span>
                             </button>
                         </div>
                     </div>
@@ -471,11 +467,11 @@ const performAccountDeletion = async () => {
                             <button
                                 v-if="selectedCount > 0"
                                 type="button"
-                                class="btn btn--danger btn--small"
+                                class="btn btn--error btn--small"
                                 @click="deleteSelectedReadings"
                                 :disabled="isDeleting"
                             >
-                                <ButtonSpinner v-if="isDeleting" />
+                                <ButtonSpinner v-if="isDeleting" class="btn__icon" />
                                 <span v-else>Удалить выбранные ({{ selectedCount }})</span>
                             </button>
                         </div>
@@ -490,7 +486,7 @@ const performAccountDeletion = async () => {
                     <!-- Пустое состояние -->
                     <div v-else-if="historyItems.length === 0" class="profile__history-empty">
                         <p>У вас пока нет сохраненных гаданий</p>
-                        <button class="btn btn--primary" @click="router.push('/')">
+                        <button class="btn btn--primary btn--medium" @click="router.push('/')">
                             Новый расклад
                         </button>
                     </div>
@@ -573,12 +569,12 @@ const performAccountDeletion = async () => {
 
                     <!-- Кнопка "Загрузить еще" -->
                     <div v-if="!isLoadingHistory && historyItems.length > 0 && hasMore" class="profile__load-more">
-                        <button 
-                            class="btn btn--secondary" 
+                        <button
+                            class="btn btn--secondary btn--medium"
                             @click="loadMoreHistory"
                             :disabled="isLoadingMore"
                         >
-                            <ButtonSpinner v-if="isLoadingMore" />
+                            <ButtonSpinner v-if="isLoadingMore" class="btn__icon" />
                             <span>{{ isLoadingMore ? 'Загрузка...' : 'Загрузить еще' }}</span>
                         </button>
                     </div>

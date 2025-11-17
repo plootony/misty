@@ -98,14 +98,14 @@ watchEffect(() => {
 
                         <div class="confirm-modal__footer">
                             <button
-                                class="btn btn--secondary"
+                                class="btn btn--secondary btn--medium"
                                 @click="handleCancel"
                             >
                                 {{ cancelText }}
                             </button>
                             <button
                                 class="btn"
-                                :class="confirmButtonClass"
+                                :class="[confirmButtonClass, 'btn--medium']"
                                 @click="handleConfirm"
                             >
                                 {{ confirmText }}
