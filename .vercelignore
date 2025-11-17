@@ -1,0 +1,15 @@
+# Исключаем файлы разработки
+.env.local
+.env.development
+.env.test
+
+# Исключаем временные файлы
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+
+# Исключаем исходный код (оставляем только dist)
+src/
+!dist/
+
