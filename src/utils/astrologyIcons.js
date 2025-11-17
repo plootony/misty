@@ -4,46 +4,46 @@
  */
 
 export const ASTROLOGY_ICONS = {
-  // Планеты
-  '☉': 'solar:sun-bold',           // Солнце
-  '☽': 'solar:moon-bold',          // Луна
-  '☿': 'solar:planet-bold',        // Меркурий
-  '♀': 'solar:heart-bold',         // Венера
-  '♂': 'solar:shield-bold',        // Марс
-  '♃': 'solar:star-bold',          // Юпитер
-  '♄': 'solar:ring-bold',          // Сатурн
-  '⛢': 'solar:bolt-bold',          // Уран
-  '♆': 'solar:water-wave-bold',    // Нептун
-  '♇': 'solar:triangle-bold',      // Плутон
-  '☊': 'solar:arrow-up-bold',      // Северный узел
-  '⚷': 'solar:cross-bold',         // Хирон
+  // Планеты (используем коллекцию bi - Bootstrap Icons)
+  '☉': 'bi:sun',                   // Солнце
+  '☽': 'bi:moon',                  // Луна
+  '☿': 'bi:gear',                  // Меркурий (шестеренка)
+  '♀': 'bi:heart',                 // Венера (сердце)
+  '♂': 'bi:shield',                // Марс (щит)
+  '♃': 'bi:star',                  // Юпитер (звезда)
+  '♄': 'bi:circle',                // Сатурн (круг)
+  '⛢': 'bi:lightning',             // Уран (молния)
+  '♆': 'bi:water',                 // Нептун (вода)
+  '♇': 'bi:triangle',              // Плутон (треугольник)
+  '☊': 'bi:arrow-up',              // Северный узел (стрелка вверх)
+  '⚷': 'bi:cross',                 // Хирон (крест)
 
-  // Знаки зодиака (используем коллекцию zodiac)
-  '♈': 'zodiac:aries',             // Овен
-  '♉': 'zodiac:taurus',            // Телец
-  '♊': 'zodiac:gemini',            // Близнецы
-  '♋': 'zodiac:cancer',            // Рак
-  '♌': 'zodiac:leo',               // Лев
-  '♍': 'zodiac:virgo',             // Дева
-  '♎': 'zodiac:libra',             // Весы
-  '♏': 'zodiac:scorpio',           // Скорпион
-  '♐': 'zodiac:sagittarius',       // Стрелец
-  '♑': 'zodiac:capricorn',         // Козерог
-  '♒': 'zodiac:aquarius',          // Водолей
-  '♓': 'zodiac:pisces',            // Рыбы
+  // Знаки зодиака (простые геометрические фигуры)
+  '♈': 'bi:fire',                  // Овен (огонь)
+  '♉': 'bi:square',                // Телец (квадрат)
+  '♊': 'bi:people',                // Близнецы (люди)
+  '♋': 'bi:house',                 // Рак (дом)
+  '♌': 'bi:star',                  // Лев (звезда)
+  '♍': 'bi:check-circle',          // Дева (галочка)
+  '♎': 'bi:balance',               // Весы (весы)
+  '♏': 'bi:bug',                   // Скорпион (жук)
+  '♐': 'bi:arrow-right',           // Стрелец (стрела)
+  '♑': 'bi:mountain',              // Козерог (гора)
+  '♒': 'bi:cloud',                 // Водолей (облако)
+  '♓': 'bi:water',                 // Рыбы (вода)
 
-  // Аспекты (используем простые геометрические фигуры)
-  '☌': 'solar:record-circle-bold', // Соединение
-  '⚺': 'solar:record-circle-bold', // Полусекстиль
-  '⚹': 'solar:hexagon-bold',       // Секстиль
-  '□': 'solar:square-bold',        // Квадратура
-  '△': 'solar:triangle-bold',      // Трион
-  '☍': 'solar:arrows-expand-bold', // Оппозиция
-  '∠': 'solar:chevron-right-bold', // Семиквадрат
-  '∟': 'solar:pentagon-bold',      // Квинтиль
-  '∴': 'solar:dots-bold',          // Тридециль
-  '⊕': 'solar:plus-circle-bold',   // Бинонагон
-  '⚻': 'solar:slash-circle-bold',  // Квинкункс
+  // Аспекты (геометрические фигуры)
+  '☌': 'bi:circle',                // Соединение (круг)
+  '⚺': 'bi:record-circle',         // Полусекстиль (круг с точкой)
+  '⚹': 'bi:hexagon',               // Секстиль (шестиугольник)
+  '□': 'bi:square',                // Квадратура (квадрат)
+  '△': 'bi:triangle',              // Трион (треугольник)
+  '☍': 'bi:arrows-expand',         // Оппозиция (расширяющиеся стрелки)
+  '∠': 'bi:chevron-right',         // Семиквадрат (шеврон)
+  '∟': 'bi:pentagon',              // Квинтиль (пятиугольник)
+  '∴': 'bi:three-dots',            // Тридециль (три точки)
+  '⊕': 'bi:plus-circle',           // Бинонагон (плюс в круге)
+  '⚻': 'bi:slash-circle',          // Квинкункс (перечеркнутый круг)
 };
 
 /**

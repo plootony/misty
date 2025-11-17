@@ -9,7 +9,7 @@ import router from './router'
 
 const app = createApp(App)
 
-// Регистрируем глобальный компонент иконки
+// Регистрируем глобальный компонент иконки (@iconify/vue - универсальный)
 app.component('VIcon', Icon)
 
 app.use(createPinia())
