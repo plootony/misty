@@ -908,8 +908,13 @@ const showAstrologyHelp = () => {
   }
 
   &__aspect-symbols {
+    font-family: 'Arial Unicode MS', 'Lucida Grande', sans-serif;
     font-size: 18px;
-    font-weight: bold;
+    font-weight: normal;
+    letter-spacing: 1px;
+    line-height: 1;
+    text-align: center;
+    color: $color-primary;
   }
 
   &__aspect-planets {
