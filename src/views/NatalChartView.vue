@@ -7,6 +7,7 @@ import { interpretNatalChart } from '@/services/mistral.service';
 import { useModalStore } from '@/stores/modal.store';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 import NatalChartVisualization from '@/components/NatalChartVisualization.vue';
+import AstrologyIcon from '@/components/AstrologyIcon.vue';
 
 const userStore = useUserStore();
 const modalStore = useModalStore();
@@ -495,7 +496,9 @@ const showAstrologyHelp = () => {
               >
                 <div class="natal-chart__aspect-main">
                   <span class="natal-chart__aspect-symbols">
-                    {{ aspect.planet1Symbol || '☉' }} {{ aspect.aspectSymbol || '☌' }} {{ aspect.planet2Symbol || '☽' }}
+                    <AstrologyIcon :symbol="aspect.planet1Symbol || '☉'" :size="16" />
+                    <AstrologyIcon :symbol="aspect.aspectSymbol || '☌'" :size="14" class="natal-chart__aspect-symbol" />
+                    <AstrologyIcon :symbol="aspect.planet2Symbol || '☽'" :size="16" />
                   </span>
                   <span class="natal-chart__aspect-planets">
                     {{ aspect.planet1 }} ↔ {{ aspect.planet2 }}
@@ -908,8 +911,15 @@ const showAstrologyHelp = () => {
   }
 
   &__aspect-symbols {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     font-size: 18px;
     font-weight: bold;
+  }
+
+  &__aspect-symbol {
+    margin: 0 2px;
   }
 
   &__aspect-planets {
