@@ -698,13 +698,83 @@ ${cardsDescription}
 
 Дай полное толкование расклада, учитывая личность ${userData.name} как представителя знака ${zodiacSign}.`;
 
-            const content = await callMistralAI('tarot_reading', agentPrompt, {
+            let content = await callMistralAI('tarot_reading', agentPrompt, {
                 temperature: 0.7,
-                maxTokens: 1000
+                maxTokens: 2000 // Увеличиваем лимит токенов для более полных толкований
             });
 
             // Очищаем от markdown оберток
-            return cleanMarkdownFromHtml(content);
+            content = cleanMarkdownFromHtml(content);
+
+            // Проверяем завершенность ответа для полного толкования
+            const isIncompleteReading = (text) => {
+                if (!text || text.trim().length < 300) {
+                    return true; // Слишком короткий ответ
+                }
+
+                const trimmed = text.trim();
+
+                // Проверяем незавершенные HTML теги
+                const openTags = (trimmed.match(/<[^\/][^>]*>/g) || []).length;
+                const closeTags = (trimmed.match(/<\/[^>]+>/g) || []).length;
+
+                if (openTags > closeTags) {
+                    return true; // Есть незакрытые HTML теги
+                }
+
+                // Проверяем наличие основных элементов толкования
+                const hasBasicElements = (
+                    trimmed.includes('<h2>') && // Есть заголовки разделов
+                    trimmed.includes('</p>') &&  // Есть параграфы
+                    (trimmed.includes('заключение') || trimmed.includes('вывод') || trimmed.includes('итог')) && // Есть заключение
+                    trimmed.length > 800          // Минимальная длина
+                );
+
+                if (!hasBasicElements) {
+                    return true; // Недостаточно содержимого
+                }
+
+                // Проверяем правильное окончание
+                if (!trimmed.endsWith('.') && !trimmed.endsWith('!') && !trimmed.endsWith('?') &&
+                    !trimmed.endsWith('</p>') && !trimmed.endsWith('</div>')) {
+                    return true; // Нет правильного окончания
+                }
+
+                return false; // Ответ кажется завершенным
+            };
+
+            // Получаем continuation если ответ неполный
+            if (isIncompleteReading(content)) {
+                console.warn('Ответ полного толкования кажется незавершенным, пытаемся получить continuation...');
+
+                try {
+                    const continuationPrompt = `Заверши толкование таро расклада. Убедись, что интерпретация полная и содержит:
+
+- Введение и общий обзор расклада
+- Детальный анализ каждой позиции и карты
+- Взаимосвязи между картами
+- Практические советы и рекомендации
+- Заключение с выводами
+
+Предыдущий текст (последние 200 символов): ${content.slice(-200)}
+
+Заверши толкование полностью с правильным закрытием всех HTML тегов.`;
+
+                    const continuation = await callMistralAI('tarot_reading', continuationPrompt, {
+                        temperature: 0.6,
+                        maxTokens: 800
+                    });
+
+                    if (continuation && continuation.trim()) {
+                        content += ' ' + cleanMarkdownFromHtml(continuation);
+                        console.log('Успешно получено continuation для полного толкования');
+                    }
+                } catch (continuationError) {
+                    console.warn('Не удалось получить continuation для толкования:', continuationError);
+                }
+            }
+
+            return content;
 
         } catch (error) {
             console.error('Ошибка генерации финального толкования:', error);
@@ -782,7 +852,7 @@ ${chartSummary}
 
             let response = await callMistralAI('natal_chart', agentPrompt, {
                 temperature: 0.6,
-                maxTokens: 4000
+                maxTokens: 5000 // Увеличиваем лимит для более полных ответов
             });
 
             // Логируем сырой ответ для отладки
@@ -792,42 +862,99 @@ ${chartSummary}
 
             console.log('Очищенный ответ:', response?.substring(0, 500) + '...');
 
-            // Проверяем, завершен ли ответ (не обрывается ли на половине предложения)
-            const isIncomplete = response && (
-                !response.trim().endsWith('.') &&
-                !response.trim().endsWith('!') &&
-                !response.trim().endsWith('?') &&
-                !response.trim().endsWith('</p>') &&
-                !response.includes('</p></p>') // двойное закрытие параграфов
-            );
+            // Улучшенная проверка завершенности ответа
+            const isIncomplete = (response) => {
+                if (!response || response.trim().length < 500) {
+                    return true; // Слишком короткий ответ
+                }
 
-            if (isIncomplete) {
-                console.warn('Ответ ИИ кажется незавершенным, пытаемся получить продолжение...');
+                const trimmed = response.trim();
 
-                // Пытаемся получить продолжение, если ответ кажется незавершенным
+                // Проверяем незавершенные HTML теги
+                const openTags = (trimmed.match(/<[^\/][^>]*>/g) || []).length;
+                const closeTags = (trimmed.match(/<\/[^>]+>/g) || []).length;
+
+                if (openTags > closeTags) {
+                    return true; // Есть незакрытые HTML теги
+                }
+
+                // Проверяем незавершенные предложения (нет пунктуации в конце)
+                if (!trimmed.endsWith('.') && !trimmed.endsWith('!') && !trimmed.endsWith('?') &&
+                    !trimmed.endsWith('</p>') && !trimmed.endsWith('</h2>') &&
+                    !trimmed.endsWith('</h3>') && !trimmed.endsWith('</ul>') &&
+                    !trimmed.endsWith('</ol>') && !trimmed.endsWith('</div>')) {
+                    return true; // Нет правильного окончания
+                }
+
+                // Проверяем наличие основных разделов интерпретации
+                const hasBasicSections = (
+                    trimmed.includes('<h2>') && // Есть заголовки
+                    trimmed.includes('</p>') &&  // Есть параграфы
+                    trimmed.length > 1000       // Минимальная длина
+                );
+
+                if (!hasBasicSections) {
+                    return true; // Недостаточно содержимого
+                }
+
+                return false; // Ответ кажется завершенным
+            };
+
+            // Проверяем и получаем продолжение при необходимости
+            let continuationAttempts = 0;
+            const maxContinuations = 2; // Максимум 2 попытки продолжения
+
+            while (isIncomplete(response) && continuationAttempts < maxContinuations) {
+                continuationAttempts++;
+                console.warn(`Ответ ИИ кажется незавершенным (попытка ${continuationAttempts}/${maxContinuations}), пытаемся получить продолжение...`);
+
                 try {
-                    const continuationPrompt = `Продолжи незавершенную астрологическую интерпретацию. Заверши все начатые мысли и предложения.
+                    const continuationPrompt = `Продолжи незавершенную астрологическую интерпретацию. Заверши все начатые мысли, предложения и HTML теги.
 
-Предыдущий текст: ${response.slice(-200)}
+ВАЖНО: Убедись, что ответ содержит полную интерпретацию со всеми разделами:
+- Личность и характер
+- Предназначение и жизненные уроки
+- Карьера и таланты
+- Отношения и любовь
+- Здоровье и энергия
+- Финансы и материальное благополучие
+- Заключительное резюме
 
-Продолжи и заверши интерпретацию полностью.`;
+Предыдущий текст (последние 300 символов): ${response.slice(-300)}
+
+Продолжи и заверши интерпретацию полностью с правильным закрытием всех HTML тегов.`;
 
                     const continuation = await callMistralAI('natal_chart', continuationPrompt, {
-                        temperature: 0.7,
-                        maxTokens: 1000
+                        temperature: 0.6, // Меньше креативности для завершения
+                        maxTokens: 1500 // Больше токенов для завершения
                     });
 
-                    if (continuation) {
-                        response += ' ' + cleanMarkdownFromHtml(continuation);
-                        console.log('Успешно получено продолжение интерпретации');
+                    if (continuation && continuation.trim()) {
+                        const cleanContinuation = cleanMarkdownFromHtml(continuation);
+                        response += ' ' + cleanContinuation;
+                        console.log(`Успешно получено продолжение интерпретации (попытка ${continuationAttempts}), длина ответа: ${response.length}`);
+                    } else {
+                        console.warn(`Получено пустое продолжение (попытка ${continuationAttempts})`);
+                        break; // Выходим из цикла если continuation пустой
                     }
+
+                    // Небольшая пауза между continuation'ами
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
                 } catch (continuationError) {
-                    console.warn('Не удалось получить продолжение:', continuationError);
-                    // Добавляем завершающий текст, если не удалось получить продолжение
-                    if (!response.includes('</p>') || !response.trim().endsWith('.')) {
-                        response += '</p><p><em>Интерпретация была завершена на основе доступных данных.</em></p>';
-                    }
+                    console.error(`Не удалось получить продолжение (попытка ${continuationAttempts}):`, continuationError);
+                    break; // Выходим из цикла при ошибке
                 }
+            }
+
+            // Финальная проверка и добавление завершающего текста при необходимости
+            if (isIncomplete(response)) {
+                console.warn('После всех попыток ответ все еще кажется незавершенным, добавляем завершающий текст');
+                if (!response.includes('</p>') || !response.trim().endsWith('.')) {
+                    response += '</p><p><em>Интерпретация была завершена на основе доступных данных.</em></p>';
+                }
+            } else {
+                console.log('Ответ интерпретации успешно завершен');
             }
 
             return response;
