@@ -10,6 +10,10 @@ const AGENTS = {
   natal_chart: import.meta.env.VITE_MISTRAL_AGENT_NATAL_CHART // Новый агент для натальной карты
 };
 
+// Лог версии приложения с Mistral Agents
+console.log('🔮 Misty App v1.0 - Использует Mistral AI Agents для таро и астрологии');
+console.log('📋 Загруженные агенты:', Object.entries(AGENTS).map(([key, value]) => `${key}: ${value ? '✅' : '❌'}`).join(', '));
+
 /**
  * Выполняет запрос через Mistral Agents API или обычный chat completion
  * @param {string} task - Тип задачи ('tarot_validation', 'tarot_reading', etc.)
