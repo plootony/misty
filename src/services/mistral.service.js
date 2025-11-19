@@ -2,13 +2,12 @@ import { Mistral } from '@mistralai/mistralai';
 import { mistralRateLimiter } from '@/utils/rateLimiter';
 import { parseAIResponse, normalizeValidationResponse, isValidValidationResponse } from '@/utils/jsonParser';
 
-// Agent IDs для разных задач (используем один агент для всех задач)
+// Agent IDs для разных задач
 const AGENTS = {
-  tarot_validation: "ag_019a97b4db7273ce8644b5df920394ba", // Agent для валидации вопросов
-  tarot_reading: "ag_019a97b4db7273ce8644b5df920394ba", // Тот же агент для толкования карт
-  name_validation: "ag_019a97b4db7273ce8644b5df920394ba", // Тот же агент для валидации имен
-  age_validation: "ag_019a97b4db7273ce8644b5df920394ba", // Тот же агент для валидации возраста
-  natal_chart: "ag_019a97b4db7273ce8644b5df920394ba" // Тот же агент для натальной карты
+  tarot_validation: "ag_019a9cae25df70a6aaf7aec082b24ebd", // Агент для валидации вопросов
+  tarot_reading: "ag_019a9cba2f3e75e5a878991f074af475", // Агент для толкования одной карты
+  full_spread: "ag_019a9cbe739473e3b78f3fa667c97164", // Агент для полного толкования расклада
+  natal_chart: "ag_019a9cc39c5871c8b5c42bd2c2de5f68" // Новый агент для натальной карты
 };
 
 /**
@@ -193,34 +192,8 @@ export async function validateTarotQuestion(question) {
     // Используем rate limiter для соблюдения ограничения 1 запрос/3 секунды
     return mistralRateLimiter.execute(async () => {
         try {
-            // Пробуем использовать agent, если он доступен
-            const agentPrompt = `Проанализируй вопрос для гадания на картах Таро: "${question}"
-
-Ты эксперт по Таро и эзотерике. Определи, подходит ли этот вопрос для гадания.
-
-ПОДХОДЯЩИЕ ТЕМЫ:
-- Личная жизнь, отношения, любовь
-- Карьера, работа, финансы
-- Личный рост, духовное развитие
-- Будущее, прошлое, настоящее
-- Принятие решений
-- Внутреннее состояние, эмоции
-- Жизненный путь, предназначение
-- Здоровье (общий смысл, не диагнозы)
-
-НЕ ПОДХОДЯЩИЕ:
-- Технические вопросы (программирование, математика)
-- Фактологические вопросы (столицы, даты, факты)
-- Медицинские диагнозы
-- Юридические консультации
-- Не по теме (рецепты, спорт, погода)
-- Оскорбительные вопросы
-- Вопросы о вреде
-
-Ответь ТОЛЬКО JSON:
-{"isValid": true/false, "reason": "причина если невалиден", "suggestion": "предложение если невалиден"}`;
-
-            const response = await callMistralAI('tarot_validation', agentPrompt, {
+            // Агент уже знает инструкции, отправляем только вопрос
+            const response = await callMistralAI('tarot_validation', question, {
                 temperature: 0.3,
                 response_format: { type: 'json_object' },
                 maxTokens: 300
@@ -229,8 +202,25 @@ export async function validateTarotQuestion(question) {
             // Логируем сырой ответ для отладки
             console.log('Raw response from Mistral AI:', response);
 
+            // Очищаем специальные символы, которые ломают JSON парсинг
+            let cleanResponse = response
+                .replace(/『/g, '"')  // Заменяем специальные кавычки на обычные
+                .replace(/』/g, '"')
+                .replace(/「/g, '"')
+                .replace(/」/g, '"')
+                .replace(/【/g, '[')
+                .replace(/】/g, ']')
+                .replace(/（/g, '(')
+                .replace(/）/g, ')')
+                .replace(/～/g, '~')
+                .replace(/\u00A0/g, ' ')  // Заменяем неразрывные пробелы
+                .replace(/\u200B/g, '')   // Удаляем нулевые ширины пробелы
+                .replace(/\uFEFF/g, '');  // Удаляем BOM символы
+
+            console.log('Cleaned response:', cleanResponse);
+
             // Парсинг JSON с использованием утилиты
-            const validation = parseAIResponse(response);
+            const validation = parseAIResponse(cleanResponse);
             console.log('Parsed validation result:', validation);
 
             // Валидация структуры ответа
@@ -365,20 +355,13 @@ export async function interpretSingleCard(question, card, position) {
             const cardPosition = card.isReversed ? 'перевёрнутом' : 'прямом';
             const cardMeaning = card.isReversed ? card.reversed : card.upright;
 
-            const agentPrompt = `Ты опытный таролог. Дай краткое, но глубокое толкование карты Таро в контексте вопроса и позиции в раскладе.
-Используй мистический, но понятный язык. Будь конкретным и практичным.
-Ответ должен быть 2-3 абзаца, не более 200 слов.
-
-Вопрос: "${question}"
-
+            // Агент уже знает инструкции, отправляем только данные
+            const cardData = `Вопрос: "${question}"
 Позиция: ${position.name} - ${position.meaning}
-
 Карта: ${card.name} (${card.arcana}) в ${cardPosition} положении
-Значение: ${cardMeaning}
+Значение: ${cardMeaning}`;
 
-Дай толкование этой карты в контексте вопроса и позиции.`;
-
-            const response = await callMistralAI('tarot_reading', agentPrompt, {
+            const response = await callMistralAI('tarot_reading', cardData, {
                 temperature: 0.7,
                 maxTokens: 300
             });
@@ -392,261 +375,7 @@ export async function interpretSingleCard(question, card, position) {
     });
 }
 
-/**
- * Клиентская валидация имени на очевидные никнеймы
- * @param {string} name - Имя для проверки
- * @returns {{isValid: boolean, reason?: string}}
- */
-function validateNameClientSide(name) {
-    const trimmedName = name.trim();
 
-    // Проверка на пустое имя
-    if (!trimmedName) {
-        return { isValid: false, reason: 'Имя не может быть пустым' };
-    }
-
-    // Проверка на слишком короткое имя
-    if (trimmedName.length < 2) {
-        return { isValid: false, reason: 'Имя слишком короткое' };
-    }
-
-    // Проверка на слишком длинное имя
-    if (trimmedName.length > 50) {
-        return { isValid: false, reason: 'Имя слишком длинное' };
-    }
-
-    // Проверка на цифры в имени
-    if (/\d/.test(trimmedName)) {
-        return { isValid: false, reason: 'Имя не может содержать цифры' };
-    }
-
-    // Проверка на специальные символы (кроме дефиса, апострофа и пробела)
-    if (/[^a-zA-Zа-яА-ЯёЁ\s\-']/.test(trimmedName)) {
-        return { isValid: false, reason: 'Имя может содержать только буквы, пробелы, дефисы и апострофы' };
-    }
-
-    // Проверка на последовательности одинаковых символов (aaa, bbb и т.д.)
-    if (/(.)\1{2,}/.test(trimmedName)) {
-        return { isValid: false, reason: 'Имя не может содержать повторяющиеся символы' };
-    }
-
-    // Проверка на слишком много заглавных букв (признак никнейма)
-    const uppercaseCount = (trimmedName.match(/[A-ZА-ЯЁ]/g) || []).length;
-    const totalLetters = (trimmedName.match(/[a-zA-Zа-яА-ЯёЁ]/g) || []).length;
-
-    if (totalLetters > 0 && uppercaseCount / totalLetters > 0.7) {
-        return { isValid: false, reason: 'Имя не может состоять преимущественно из заглавных букв' };
-    }
-
-    // Проверка на распространенные паттерны никнеймов
-    const nicknamePatterns = [
-        /^admin/i,
-        /^user/i,
-        /^test/i,
-        /^guest/i,
-        /^bot/i,
-        /^system/i,
-        /^root/i,
-        /^anonymous/i,
-        /^unknown/i
-    ];
-
-    for (const pattern of nicknamePatterns) {
-        if (pattern.test(trimmedName)) {
-            return { isValid: false, reason: 'Это служебное имя, укажите ваше реальное имя' };
-        }
-    }
-
-    return { isValid: true };
-}
-
-/**
- * Валидация имени пользователя через AI
- * @param {string} name - Имя для проверки
- * @returns {Promise<{isValid: boolean, reason?: string}>}
- */
-export async function validateUserName(name) {
-    // Строгая клиентская проверка - имена с цифрами всегда блокируются
-    if (/\d/.test(name.trim())) {
-        return { isValid: false, reason: 'Имя не может содержать цифры' };
-    }
-
-    // Предварительная клиентская проверка на очевидные никнеймы
-    const clientValidation = validateNameClientSide(name);
-    if (!clientValidation.isValid) {
-        return clientValidation;
-    }
-
-    return mistralRateLimiter.execute(async () => {
-        try {
-            const agentPrompt = `Ты эксперт по именам и антропонимике. Твоя задача - определить, является ли предоставленное имя реальным человеческим именем.
-
-СТРОГИЕ ПРАВИЛА ПРОВЕРКИ:
-- Реальные имена: Александр, Мария, Иван, Анна, Сергей, Ольга, John, Anna, Muhammad, Li, Garcia и т.д.
-- НЕДОПУСТИМЫЕ имена:
-  * Никнеймы с цифрами: Gamer123, DarkLord99, Ninja2024
-  * Случайные сочетания букв и цифр: yerofa5379, yovaf90477, abc123, xyz999
-  * Бессмысленные комбинации: asdf, qwerty, zxcvbn
-  * Системные имена: admin, user, test, guest, bot, system
-  * Повторяющиеся буквы: AAAAA, BBBBB, IIIII
-  * Только заглавные буквы: ADMIN, USER, TEST
-
-ВАЖНО: Любое имя, содержащее цифры - НЕ ЯВЛЯЕТСЯ реальным человеческим именем!
-Имя должно звучать как имя реального человека, а не как случайно сгенерированная строка.
-
-Проверь имя: "${name}"
-
-ОТВЕТЬ ТОЛЬКО JSON:
-{"isValid": true/false, "reason": "причина если невалиден"}`;
-
-            const response = await callMistralAI('name_validation', agentPrompt, {
-                temperature: 0.1,
-                response_format: { type: 'json_object' },
-                maxTokens: 150
-            });
-
-            // Парсинг JSON с использованием утилиты
-            const validation = parseAIResponse(response);
-
-            // Валидация структуры ответа
-            if (!validation || typeof validation.isValid !== 'boolean') {
-                console.warn('Некорректная структура ответа от agent:', validation);
-                return { isValid: true, reason: null }; // В случае ошибки - пропускаем
-            }
-
-            return {
-                isValid: validation.isValid,
-                reason: validation.reason || null
-            };
-
-        } catch (error) {
-            console.error('Ошибка валидации имени:', error);
-            // В случае ошибки API - пропускаем валидацию, чтобы не блокировать пользователя
-            return { isValid: true, reason: null };
-        }
-    });
-}
-
-/**
- * Клиентская валидация возраста на очевидные проблемы
- * @param {string} birthDate - Дата рождения в формате DD.MM.YYYY
- * @returns {{isValid: boolean, reason?: string}}
- */
-function validateAgeClientSide(birthDate) {
-    const dateRegex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
-    if (!dateRegex.test(birthDate)) {
-        return { isValid: false, reason: 'Неверный формат даты' };
-    }
-
-    const [, day, month, year] = birthDate.match(dateRegex);
-    const birthDateObj = new Date(year, month - 1, day);
-    const now = new Date();
-
-    // Проверка на корректность даты
-    if (birthDateObj.getDate() != day || birthDateObj.getMonth() != month - 1 || birthDateObj.getFullYear() != year) {
-        return { isValid: false, reason: 'Указана некорректная дата' };
-    }
-
-    // Проверка на будущее
-    if (birthDateObj > now) {
-        return { isValid: false, reason: 'Дата рождения не может быть в будущем' };
-    }
-
-    const age = now.getFullYear() - birthDateObj.getFullYear() -
-                (now.getMonth() < birthDateObj.getMonth() ||
-                 (now.getMonth() === birthDateObj.getMonth() && now.getDate() < birthDateObj.getDate()) ? 1 : 0);
-
-    // Проверка на минимальный возраст
-    if (age < 13) {
-        return { isValid: false, reason: 'Вам должно быть не менее 13 лет' };
-    }
-
-    // Проверка на максимальный возраст
-    if (age > 120) {
-        return { isValid: false, reason: 'Возраст не может превышать 120 лет' };
-    }
-
-    // Проверка на подозрительные даты (ровно круглые числа лет назад)
-    const suspiciousAges = [100, 99, 98, 97, 96, 95, 13, 14, 15, 16, 17, 69, 88, 420];
-    if (suspiciousAges.includes(age)) {
-        return { isValid: false, reason: 'Указанная дата рождения выглядит нереалистичной' };
-    }
-
-    // Проверка на даты, которые слишком близки к сегодняшнему дню (менее 2 лет назад)
-    const twoYearsAgo = new Date();
-    twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
-    if (birthDateObj > twoYearsAgo) {
-        return { isValid: false, reason: 'Дата рождения не может быть менее 2 лет назад' };
-    }
-
-    return { isValid: true };
-}
-
-/**
- * Валидация возраста на реалистичность через AI
- * @param {string} birthDate - Дата рождения в формате DD.MM.YYYY
- * @returns {Promise<{isValid: boolean, reason?: string}>}
- */
-export async function validateUserAge(birthDate) {
-    // Предварительная клиентская проверка
-    const clientValidation = validateAgeClientSide(birthDate);
-    if (!clientValidation.isValid) {
-        return clientValidation;
-    }
-
-    return mistralRateLimiter.execute(async () => {
-        try {
-            const currentDate = new Date();
-            const currentYear = currentDate.getFullYear();
-
-            const agentPrompt = `Ты эксперт по демографии и возрастной психологии. Твоя задача - определить, является ли указанный возраст правдоподобным для человека, использующего приложение гадания на Таро.
-
-СТРОГИЕ ПРАВИЛА ПРОВЕРКИ ВОЗРАСТА:
-- Минимальный возраст: 13 лет (законодательные ограничения)
-- Максимальный возраст: 120 лет (биологическая возможность)
-- НЕДОПУСТИМЫЕ возраста:
-  * Слишком круглые числа: ровно 100, 99, 98, 95 лет и т.д.
-  * Слишком молодые: ровно 13, 14, 15 лет
-  * Недавние даты: менее 2 лет назад
-  * Подозрительные комбинации: 69, 88, 420 лет (мем-числа)
-
-- РЕАЛИСТИЧНЫЕ возраста: 18-80 лет для большинства пользователей
-- Отклоняй любые даты, которые выглядят как случайно выбранные или тестовые
-
-Текущий год: ${currentYear}
-
-Проверь дату рождения: "${birthDate}"
-
-ОТВЕТЬ ТОЛЬКО JSON:
-{"isValid": true/false, "reason": "причина если невалиден"}`;
-
-            const response = await callMistralAI('age_validation', agentPrompt, {
-                temperature: 0.1,
-                response_format: { type: 'json_object' },
-                maxTokens: 150
-            });
-
-            // Парсинг JSON с использованием утилиты
-            const validation = parseAIResponse(response);
-
-            // Валидация структуры ответа
-            if (!validation || typeof validation.isValid !== 'boolean') {
-                console.warn('Некорректная структура ответа от agent:', validation);
-                return { isValid: true, reason: null }; // В случае ошибки - пропускаем
-            }
-
-            return {
-                isValid: validation.isValid,
-                reason: validation.reason || null
-            };
-
-        } catch (error) {
-            console.error('Ошибка валидации возраста:', error);
-            // В случае ошибки API - пропускаем валидацию, чтобы не блокировать пользователя
-            return { isValid: true, reason: null };
-        }
-    });
-}
 
 /**
  * Финальное толкование всего расклада
@@ -666,27 +395,8 @@ export async function generateFullReading(userData, zodiacSign, question, spread
                 return `${position.name}: ${card.name} (${cardPosition} положение) - ${card.meaning}`;
             }).join('\n');
 
-            const agentPrompt = `Ты мудрый таролог с глубокими знаниями эзотерики и астрологии.
-Дай полное, развёрнутое толкование расклада Таро в формате HTML, учитывая:
-- Личность человека и его знак зодиака
-- Тип расклада и значение позиций
-- Взаимосвязь между картами
-- Практические советы и рекомендации
-
-Используй мистический, образный язык. Обращайся к человеку по имени.
-
-СТРУКТУРИРУЙ ОТВЕТ С ПОМОЩЬЮ HTML-ТЕГОВ:
-
-- <h2> для разделов (вступление, анализ карт, общий вывод, совет)
-- <h3> для подразделов
-- <p> для параграфов
-- <strong> или <b> для выделения важных моментов
-- <em> или <i> для курсива
-- <ul>/<ol> с <li> для списков при необходимости
-
-Объём: 400 слов. Возвращай только чистый HTML без markdown обёрток типа \`\`\`html.
-
-Имя: ${userData.name}
+            // Агент уже знает инструкции, отправляем только данные расклада
+            const spreadData = `Имя: ${userData.name}
 Знак зодиака: ${zodiacSign}
 Вопрос: "${question}"
 
@@ -694,11 +404,9 @@ export async function generateFullReading(userData, zodiacSign, question, spread
 Описание: ${spread.description}
 
 Выпавшие карты:
-${cardsDescription}
+${cardsDescription}`;
 
-Дай полное толкование расклада, учитывая личность ${userData.name} как представителя знака ${zodiacSign}.`;
-
-            let content = await callMistralAI('tarot_reading', agentPrompt, {
+            let content = await callMistralAI('full_spread', spreadData, {
                 temperature: 0.7,
                 maxTokens: 2000 // Увеличиваем лимит токенов для более полных толкований
             });
@@ -811,46 +519,15 @@ export async function interpretNatalChart(natalChartData, userData) {
 Ключевые аспекты: ${aspectsInfo}
             `.trim();
 
-            const agentPrompt = `Ты опытный астролог с глубокими знаниями традиционной и современной астрологии.
-Дай подробную интерпретацию натальной карты в формате HTML, учитывая:
-
-- Личность человека и его основные черты характера
-- Жизненные уроки и предназначение
-- Сильные и слабые стороны
-- Карьерные склонности и таланты
-- Отношения и любовь
-- Здоровье и жизненная энергия
-- Финансовое благополучие
-
-Анализируй планеты в знаках, аспекты между ними, положение домов и их управителей.
-Будь позитивным, поддерживающим и вдохновляющим. Обращайся к человеку по имени.
-
-СТРУКТУРИРУЙ ОТВЕТ С ПОМОЩЬЮ HTML-ТЕГОВ:
-
-- <h2> для основных разделов (личность, предназначение, отношения и т.д.)
-- <h3> для подразделов
-- <p> для параграфов
-- <strong> или <b> для выделения важных моментов
-- <em> или <i> для курсива
-- <ul>/<ol> с <li> для списков при необходимости
-
-Объём: 800-1000 слов. КРИТИЧНО ВАЖНО:
-- Всегда завершай интерпретацию полностью
-- Не обрывай на половине предложения или мысли
-- Закончи все разделы и параграфы
-- Добавь заключительное резюме в конце
-- Возвращай только чистый HTML без markdown обёрток.
-
-Имя: ${userData?.name || 'Дорогой друг'}
+            // Агент уже знает инструкции, отправляем только данные натальной карты
+            const natalData = `Имя: ${userData?.name || 'Дорогой друг'}
 Дата рождения: ${natalChartData.birthData?.date || 'не указана'}
 Время рождения: ${natalChartData.birthData?.time || 'не указано'}
 Место рождения: ${natalChartData.birthData?.place || 'не указано'}
 
-${chartSummary}
+${chartSummary}`;
 
-Пожалуйста, дай подробную астрологическую интерпретацию этой натальной карты.`;
-
-            let response = await callMistralAI('natal_chart', agentPrompt, {
+            let response = await callMistralAI('natal_chart', natalData, {
                 temperature: 0.6,
                 maxTokens: 5000 // Увеличиваем лимит для более полных ответов
             });
