@@ -2,12 +2,12 @@ import { Mistral } from '@mistralai/mistralai';
 import { mistralRateLimiter } from '@/utils/rateLimiter';
 import { parseAIResponse, normalizeValidationResponse, isValidValidationResponse } from '@/utils/jsonParser';
 
-// Agent IDs для разных задач
+// Agent IDs для разных задач (загружаются из переменных окружения)
 const AGENTS = {
-  tarot_validation: "ag_019a9cae25df70a6aaf7aec082b24ebd", // Агент для валидации вопросов
-  tarot_reading: "ag_019a9cba2f3e75e5a878991f074af475", // Агент для толкования одной карты
-  full_spread: "ag_019a9cbe739473e3b78f3fa667c97164", // Агент для полного толкования расклада
-  natal_chart: "ag_019a9cc39c5871c8b5c42bd2c2de5f68" // Новый агент для натальной карты
+  tarot_validation: import.meta.env.VITE_MISTRAL_AGENT_TAROT_VALIDATION, // Агент для валидации вопросов
+  tarot_reading: import.meta.env.VITE_MISTRAL_AGENT_TAROT_READING, // Агент для толкования одной карты
+  full_spread: import.meta.env.VITE_MISTRAL_AGENT_FULL_SPREAD, // Агент для полного толкования расклада
+  natal_chart: import.meta.env.VITE_MISTRAL_AGENT_NATAL_CHART // Новый агент для натальной карты
 };
 
 /**
