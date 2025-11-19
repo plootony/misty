@@ -10,9 +10,6 @@ const AGENTS = {
   natal_chart: import.meta.env.VITE_MISTRAL_AGENT_NATAL_CHART // Новый агент для натальной карты
 };
 
-// Лог версии приложения с Mistral Agents
-console.log('🔮 Misty App v1.0 - Использует Mistral AI Agents для таро и астрологии');
-console.log('📋 Загруженные агенты:', Object.entries(AGENTS).map(([key, value]) => `${key}: ${value ? '✅' : '❌'}`).join(', '));
 
 /**
  * Выполняет запрос через Mistral Agents API или обычный chat completion
@@ -27,27 +24,20 @@ async function callMistralAI(task, message, options = {}) {
     if (agentId) {
         // Используем Agents API
         try {
-            console.log(`Using Mistral Agent for ${task} with agentId: ${agentId}`);
             const client = initMistralClient();
             const response = await client.beta.conversations.start({
                 agentId: agentId,
                 inputs: message,
             });
 
-            console.log('Raw agent response:', response);
-
             // Извлекаем контент из outputs массива Mistral Agents API
             let content;
             if (response.outputs && Array.isArray(response.outputs) && response.outputs.length > 0) {
                 const output = response.outputs[0];
                 content = output.content || output.message || output.text || output;
-                console.log('Found content in outputs[0]:', content);
             } else {
                 content = response.content || response.message || response;
-                console.log('Fallback content extraction:', content);
             }
-
-            console.log('Final extracted content from agent:', content);
 
             return content;
         } catch (error) {
@@ -57,7 +47,6 @@ async function callMistralAI(task, message, options = {}) {
     }
 
     // Используем обычный chat completion
-    console.log(`Falling back to chat completion for ${task}`);
     const client = initMistralClient();
     const result = await client.chat.complete({
         model: 'mistral-small-latest',
@@ -73,7 +62,6 @@ async function callMistralAI(task, message, options = {}) {
     });
 
     const content = result.choices[0].message.content;
-    console.log('Chat completion response:', content);
     return content;
 }
 
@@ -204,7 +192,6 @@ export async function validateTarotQuestion(question) {
             });
 
             // Логируем сырой ответ для отладки
-            console.log('Raw response from Mistral AI:', response);
 
             // Очищаем специальные символы, которые ломают JSON парсинг
             let cleanResponse = response
@@ -221,11 +208,9 @@ export async function validateTarotQuestion(question) {
                 .replace(/\u200B/g, '')   // Удаляем нулевые ширины пробелы
                 .replace(/\uFEFF/g, '');  // Удаляем BOM символы
 
-            console.log('Cleaned response:', cleanResponse);
 
             // Парсинг JSON с использованием утилиты
             const validation = parseAIResponse(cleanResponse);
-            console.log('Parsed validation result:', validation);
 
             // Валидация структуры ответа
             if (!isValidValidationResponse(validation)) {
@@ -479,7 +464,6 @@ ${cardsDescription}`;
 
                     if (continuation && continuation.trim()) {
                         content += ' ' + cleanMarkdownFromHtml(continuation);
-                        console.log('Успешно получено continuation для полного толкования');
                     }
                 } catch (continuationError) {
                     console.warn('Не удалось получить continuation для толкования:', continuationError);
@@ -537,11 +521,9 @@ ${chartSummary}`;
             });
 
             // Логируем сырой ответ для отладки
-            console.log('Сырой ответ от Mistral AI:', response?.substring(0, 500) + '...');
 
             response = cleanMarkdownFromHtml(response);
 
-            console.log('Очищенный ответ:', response?.substring(0, 500) + '...');
 
             // Улучшенная проверка завершенности ответа
             const isIncomplete = (response) => {
@@ -613,7 +595,6 @@ ${chartSummary}`;
                     if (continuation && continuation.trim()) {
                         const cleanContinuation = cleanMarkdownFromHtml(continuation);
                         response += ' ' + cleanContinuation;
-                        console.log(`Успешно получено продолжение интерпретации (попытка ${continuationAttempts}), длина ответа: ${response.length}`);
                     } else {
                         console.warn(`Получено пустое продолжение (попытка ${continuationAttempts})`);
                         break; // Выходим из цикла если continuation пустой
@@ -635,7 +616,6 @@ ${chartSummary}`;
                     response += '</p><p><em>Интерпретация была завершена на основе доступных данных.</em></p>';
                 }
             } else {
-                console.log('Ответ интерпретации успешно завершен');
             }
 
             return response;

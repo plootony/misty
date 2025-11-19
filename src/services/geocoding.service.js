@@ -51,40 +51,6 @@ export async function geocodePlace(placeName) {
   }
 }
 
-/**
- * Обратный геокодинг - определение названия места по координатам
- * @param {number} lat - Широта
- * @param {number} lng - Долгота
- * @returns {Promise<{display_name: string, address: Object}>}
- */
-export async function reverseGeocode(lat, lng) {
-  try {
-    const url = `${NOMINATIM_BASE_URL}/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1`;
-
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(`Ошибка HTTP: ${response.status}`);
-    }
-
-    const data = await response.json();
-
-    if (data.error) {
-      throw new Error('Не удалось определить место по координатам');
-    }
-
-    return {
-      display_name: data.display_name,
-      address: data.address,
-      lat: parseFloat(data.lat),
-      lng: parseFloat(data.lon)
-    };
-
-  } catch (error) {
-    console.error('Ошибка обратного геокодинга:', error);
-    throw error;
-  }
-}
 
 /**
  * Валидация координат
@@ -122,23 +88,3 @@ export function formatCoordinates(lat, lng) {
   return `${formatCoord(lat, 'N', 'S')}, ${formatCoord(lng, 'E', 'W')}`;
 }
 
-/**
- * Расчет расстояния между двумя точками (формула гаверсинуса)
- * @param {number} lat1 - Широта первой точки
- * @param {number} lng1 - Долгота первой точки
- * @param {number} lat2 - Широта второй точки
- * @param {number} lng2 - Долгота второй точки
- * @returns {number} Расстояние в километрах
- */
-export function calculateDistance(lat1, lng1, lat2, lng2) {
-  const R = 6371; // Радиус Земли в километрах
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-            Math.sin(dLng / 2) * Math.sin(dLng / 2);
-
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}

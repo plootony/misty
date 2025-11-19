@@ -80,16 +80,12 @@ class NatalChartService {
     if (this.initialized) return;
 
     try {
-      console.log('🔭 Инициализация Astronomy Engine...');
 
       // Тестируем работу astronomy-engine
-      console.log('🧪 Тестируем astronomy-engine...');
       const testTime = MakeTime(new Date('2000-01-01T12:00:00Z'));
       const testVector = GeoVector(Body.Sun, testTime, false);
-      console.log('✅ Astronomy Engine работает, тестовый вектор:', testVector.x.toFixed(4), testVector.y.toFixed(4), testVector.z.toFixed(4));
 
       this.usingRealEphemeris = true;
-      console.log('✅ Astronomy Engine успешно инициализирована - используем реальные астрономические данные');
       this.initialized = true;
 
     } catch (error) {
@@ -101,7 +97,6 @@ class NatalChartService {
 
       this.usingRealEphemeris = false;
       this.createFallbackImplementation();
-      console.log('⚠️ Используем упрощенные расчеты (fallback)');
     }
   }
 
@@ -289,31 +284,19 @@ class NatalChartService {
       await this.init();
     }
 
-    console.log(`🌟 Начинаем расчет натальной карты для: ${birthData.date} ${birthData.time || '00:00'}`);
-    console.log(`📍 Место: ${birthData.place || 'не указано'} (${birthData.latitude || 0}°, ${birthData.longitude || 0}°)`);
-    console.log(`🏠 Система домов: ${birthData.houseSystem || 'P'}`);
-    console.log(`🔭 Источник данных: ${this.usingRealEphemeris ? 'Astronomy Engine (реальные астрономические данные)' : 'Fallback (упрощенные расчеты)'}`);
 
     try {
       // Парсинг даты и времени
-      console.log('📅 Парсинг даты и времени...');
       const { julianDay, utcTime } = this.parseDateTime(birthData.date, birthData.time);
-      console.log(`📅 Julian day: ${julianDay}, UTC: ${utcTime}`);
 
       // Расчет положений планет
-      console.log('🪐 Расчет планет...');
       const planets = await this.calculatePlanets(julianDay);
-      console.log(`✅ Рассчитано ${planets.length} планет`);
 
       // Расчет домов
-      console.log('🏠 Расчет домов...');
       const houses = await this.calculateHouses(julianDay, birthData.latitude, birthData.longitude, birthData.houseSystem);
-      console.log(`✅ Рассчитано ${houses.length} домов`);
 
       // Расчет аспектов
-      console.log('⭐ Расчет аспектов...');
       const aspects = this.calculateAspects(planets);
-      console.log(`⭐ Рассчитано аспектов: ${aspects.length}`);
       if (aspects.length > 0) {
 
         // Группировка аспектов по типам
@@ -327,9 +310,6 @@ class NatalChartService {
           return acc;
         }, {});
 
-        console.log('📊 Статистика аспектов:');
-        console.log(`   По типам: ${Object.entries(aspectStats).map(([type, count]) => `${type}: ${count}`).join(', ')}`);
-        console.log(`   По силе: ${Object.entries(strengthStats).map(([strength, count]) => `${strength}: ${count}`).join(', ')}`);
       }
 
       const result = {
@@ -343,9 +323,6 @@ class NatalChartService {
         }
       };
 
-      console.log(`🎉 Натальная карта успешно рассчитана!`);
-      console.log(`📊 Статистика: ${planets.length} планет, ${houses.length} домов, ${aspects.length} аспектов`);
-      console.log(`${this.usingRealEphemeris ? '✨ Использованы РЕАЛЬНЫЕ астрономические данные Astronomy Engine' : '🔧 Использованы УПРОЩЕННЫЕ расчеты (fallback)'}`);
 
       return result;
 
@@ -437,7 +414,6 @@ class NatalChartService {
         // julianDay - это юлианский день, astronomy-engine работает с Date или AstroTime
         // JD 2440587.5 = 1970-01-01 00:00:00 UTC
         const date = new Date((julianDay - 2440587.5) * 86400000); // Конвертация из JD в milliseconds
-        console.log(`Конвертация JD ${julianDay} в дату:`, date.toISOString());
         const time = MakeTime(date);
 
         // Получаем геоцентрический вектор планеты и эклиптические координаты
@@ -547,7 +523,6 @@ class NatalChartService {
    */
   async calculateHouses(julianDay, latitude, longitude, houseSystem = 'P') {
     try {
-      console.log(`Расчет домов с системой: ${houseSystem} (широта: ${latitude}, долгота: ${longitude})`);
 
       // Расчет домов по упрощенной системе
       const ramc = (longitude / 15 + julianDay * 24) % 24; // Прямое восхождение MC
@@ -655,7 +630,6 @@ class NatalChartService {
           break;
       }
 
-      console.log(`🏠 Результат домов [${houseSystem}]: ASC=${houses[0].toFixed(4)}°, MC=${houses[1].toFixed(4)}°`);
 
       const resultHouses = [];
       // Создаем дома на основе куспидов (cusp2 до cusp13 - это дома 1-12)

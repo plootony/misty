@@ -132,28 +132,6 @@ export async function getSession() {
     return session
 }
 
-/**
- * Получение текущего пользователя
- */
-export async function getCurrentUser() {
-    const { data: { user }, error } = await supabase.auth.getUser()
-    
-    if (error) {
-        console.error('Ошибка получения пользователя:', error)
-        return null
-    }
-    
-    return user
-}
-
-/**
- * Подписка на изменения состояния авторизации
- */
-export function onAuthStateChange(callback) {
-    return supabase.auth.onAuthStateChange((event, session) => {
-        callback(event, session)
-    })
-}
 
 // ============================================
 // DATABASE FUNCTIONS

@@ -213,7 +213,6 @@ const saveTariff = async () => {
     isUpdatingTariff.value = true;
     try {
         // Логируем действие
-        console.log(`Admin ${userStore.userData?.name} изменяет тариф пользователя ${editingUser.value.name} с ${editingUser.value.tariff} на ${selectedTariff.value}`);
 
         await updateUserTariff(editingUser.value.id, selectedTariff.value);
 
@@ -252,7 +251,6 @@ const toggleActive = async (user) => {
     isTogglingActive.value = true;
     try {
         // Логируем действие
-        console.log(`Admin ${userStore.userData?.name} ${newStatus ? 'разблокирует' : 'блокирует'} пользователя ${user.name}`);
 
         await toggleUserActive(user.id, newStatus);
 
