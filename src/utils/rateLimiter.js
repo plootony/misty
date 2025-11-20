@@ -42,35 +42,16 @@ class RateLimiter {
             const { fn, resolve, reject } = this.queue.shift();
             this.lastRequestTime = Date.now();
 
-            const maxRetries = 5;
-            let retryCount = 0;
-
-            const executeWithRetry = async () => {
-                try {
-                    const result = await fn();
-                    resolve(result);
-                } catch (error) {
-                    retryCount++;
-
-                    if (retryCount < maxRetries) {
-                        console.warn(`Retrying request (${retryCount}/${maxRetries}) after error:`, error.message);
-
-                        // Ждем перед retry с увеличенным тайм-аутом
-                        const delay = this.minInterval * Math.pow(2, retryCount);
-                        await this.sleep(delay);
-                        return executeWithRetry();
-                    }
-
-                    reject(error);
-                }
-            };
-
-            await executeWithRetry();
+            try {
+                const result = await fn();
+                resolve(result);
+            } catch (error) {
+                reject(error);
+            }
         }
 
         this.processing = false;
     }
-
 
     sleep(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));

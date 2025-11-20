@@ -157,7 +157,10 @@ const getHouseSystemName = (system) => {
 
 // Получение интерпретации натальной карты от ИИ
 const getInterpretation = async () => {
-  if (!natalChart.value) return;
+  if (!natalChart.value) {
+    showNotification('error', 'Сначала рассчитайте натальную карту');
+    return;
+  }
 
   isInterpreting.value = true;
 
@@ -554,7 +557,7 @@ const showAstrologyHelp = () => {
             <button
               class="btn btn--primary btn--medium btn--full-width"
               @click="getInterpretation"
-              :disabled="isInterpreting"
+              :disabled="isInterpreting || !natalChart"
             >
               <ButtonSpinner v-if="isInterpreting" class="btn__icon" />
               <span>{{ isInterpreting ? 'Получаю интерпретацию...' : 'Получить значение' }}</span>

@@ -13,56 +13,95 @@ const AGENTS = {
 
 /**
  * Выполняет запрос через Mistral Agents API или обычный chat completion
+ * Всего 3 попытки: сначала агент (если доступен), потом обычный API
  * @param {string} task - Тип задачи ('tarot_validation', 'tarot_reading', etc.)
  * @param {string} message - Сообщение для отправки
  * @param {Object} options - Дополнительные опции для chat completion
  * @returns {Promise<string>} - Ответ от AI
  */
+// Вспомогательные функции для оптимизации
+const calculateRetryDelay = (attemptNumber) => 3000 * Math.pow(2, attemptNumber - 1);
+
+const extractAgentContent = (response) => {
+    if (response.outputs && Array.isArray(response.outputs) && response.outputs.length > 0) {
+        const output = response.outputs[0];
+        return output.content || output.message || output.text || output;
+    }
+    return response.content || response.message || response;
+};
+
+const createChatCompletionOptions = (message, options) => ({
+    model: 'mistral-small-latest',
+    messages: [{ role: 'user', content: message }],
+    temperature: options.temperature || 0.7,
+    max_tokens: options.maxTokens || 1000,
+    ...options
+});
+
+const isNetworkError = (error) => {
+    const errorMessage = error.message?.toLowerCase() || '';
+    const errorCode = error.code || error.status || error.statusCode;
+
+    return errorMessage.includes('network') ||
+           errorMessage.includes('fetch') ||
+           errorMessage.includes('connection') ||
+           errorMessage.includes('internet') ||
+           errorCode === 'NETWORK_ERROR' ||
+           errorCode === 'ENOTFOUND' ||
+           errorCode === 'ECONNREFUSED' ||
+           errorCode === 'ETIMEDOUT' ||
+           !navigator.onLine;
+};
+
 async function callMistralAI(task, message, options = {}) {
     const agentId = AGENTS[task];
+    let attemptsMade = 0;
+    const maxAttempts = 3;
 
+    // Сначала пытаемся через агента (максимум 2 попытки)
     if (agentId) {
-        // Используем Agents API
-        try {
-            const client = initMistralClient();
-            const response = await client.beta.conversations.start({
-                agentId: agentId,
-                inputs: message,
-            });
+        const agentAttempts = Math.min(2, maxAttempts);
+        for (let i = 0; i < agentAttempts; i++) {
+            try {
+                const client = initMistralClient();
+                const response = await client.beta.conversations.start({
+                    agentId: agentId,
+                    inputs: message,
+                });
 
-            // Извлекаем контент из outputs массива Mistral Agents API
-            let content;
-            if (response.outputs && Array.isArray(response.outputs) && response.outputs.length > 0) {
-                const output = response.outputs[0];
-                content = output.content || output.message || output.text || output;
-            } else {
-                content = response.content || response.message || response;
+                return extractAgentContent(response);
+            } catch (error) {
+                attemptsMade++;
+                console.warn(`Agents API failed for ${task} (attempt ${attemptsMade}/${maxAttempts}):`, error.message);
+
+                if (attemptsMade < maxAttempts) {
+                    const delay = calculateRetryDelay(attemptsMade);
+                    console.warn(`Retrying in ${delay}ms...`);
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                }
             }
-
-            return content;
-        } catch (error) {
-            console.warn(`Agents API failed for ${task}, falling back to chat completion:`, error);
-            // Fallback к обычному chat completion
         }
     }
 
-    // Используем обычный chat completion
-    const client = initMistralClient();
-    const result = await client.chat.complete({
-        model: 'mistral-small-latest',
-        messages: [
-            {
-                role: 'user',
-                content: message
-            }
-        ],
-        temperature: options.temperature || 0.7,
-        max_tokens: options.maxTokens || 1000,
-        ...options
-    });
+    // Остальные попытки через обычный API
+    while (attemptsMade < maxAttempts) {
+        try {
+            const client = initMistralClient();
+            const result = await client.chat.complete(createChatCompletionOptions(message, options));
+            return result.choices[0].message.content;
+        } catch (error) {
+            attemptsMade++;
+            console.warn(`Chat completion failed for ${task} (attempt ${attemptsMade}/${maxAttempts}):`, error.message);
 
-    const content = result.choices[0].message.content;
-    return content;
+            if (attemptsMade < maxAttempts) {
+                const delay = calculateRetryDelay(attemptsMade);
+                console.warn(`Retrying in ${delay}ms...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
+    }
+
+    throw new Error(`All ${maxAttempts} attempts failed for ${task}`);
 }
 
 /**
@@ -73,30 +112,35 @@ async function callMistralAI(task, message, options = {}) {
 function cleanMarkdownFromHtml(content) {
     if (!content) return '';
 
-    // Удаляем markdown блоки кода
-    content = content.replace(/```html\s*/gi, '').replace(/```\s*$/gi, '');
-
-    // Удаляем любые другие markdown блоки
-    content = content.replace(/```\w*\s*/gi, '').replace(/```\s*$/gi, '');
-
-    // Удаляем лишние пробелы и переносы строк в начале и конце
-    content = content.trim();
+    // Удаляем markdown блоки кода и специальные символы за один проход
+    content = content
+        .replace(/```\w*\s*/gi, '')  // Удаляем открывающие блоки кода
+        .replace(/```\s*$/gi, '')    // Удаляем закрывающие блоки кода
+        .replace(/『/g, '"')         // Заменяем специальные кавычки
+        .replace(/』/g, '"')
+        .replace(/「/g, '"')
+        .replace(/」/g, '"')
+        .replace(/【/g, '[')
+        .replace(/】/g, ']')
+        .replace(/（/g, '(')
+        .replace(/）/g, ')')
+        .replace(/～/g, '~')
+        .replace(/\u00A0/g, ' ')    // Заменяем неразрывные пробелы
+        .replace(/\u200B/g, '')     // Удаляем нулевые ширины пробелы
+        .replace(/\uFEFF/g, '')     // Удаляем BOM символы
+        .trim();
 
     // Если контент не содержит HTML тегов, оборачиваем в параграф
     if (!content.includes('<') || !content.includes('>')) {
         return `<p>${content}</p>`;
     }
 
-    // Удаляем любой текст перед первым HTML тегом
+    // Находим границы HTML контента
     const firstTagIndex = content.indexOf('<');
-    if (firstTagIndex > 0) {
-        content = content.substring(firstTagIndex);
-    }
-
-    // Удаляем любой текст после последнего закрывающего HTML тега
     const lastTagEndIndex = content.lastIndexOf('>');
-    if (lastTagEndIndex < content.length - 1) {
-        content = content.substring(0, lastTagEndIndex + 1);
+
+    if (firstTagIndex > 0 || lastTagEndIndex < content.length - 1) {
+        content = content.substring(firstTagIndex, lastTagEndIndex + 1);
     }
 
     return content;
@@ -124,48 +168,22 @@ const initMistralClient = () => {
 export async function validateTarotQuestion(question) {
     // Предварительная проверка на попытки манипуляции системой
     const manipulationPatterns = [
-        // Попытки заставить AI вести себя как таролога
-        /веди себя как таролог/i,
-        /ты таролог/i,
-        /действуй как таролог/i,
-        /будь тарологом/i,
-        /роль таролога/i,
+        // Попытки изменить роль AI
+        /(веди себя|ты|действуй|будь).*(таролог|таролога|роль)/i,
+        /(измени|смени|новая|другая).*(роль)/i,
 
-        // Просьбы сделать расклад напрямую
-        /сделай расклад/i,
-        /сделайте расклад/i,
-        /дай расклад/i,
-        /дайте расклад/i,
-        /проведи расклад/i,
-        /составь расклад/i,
+        // Просьбы сделать расклад
+        /(сделай|дай|проведи|составь).*(расклад)/i,
 
         // Запросы на длинные ответы
-        /в \d+ слов/i,
-        /на \d+ слов/i,
-        /длинный ответ/i,
-        /подробный ответ/i,
-        /развернутый ответ/i,
-        /полный расклад/i,
+        /(в|на)\s+\d+\s+слов/i,
+        /(длинный|подробный|развернутый|полный).*ответ/i,
 
         // Попытки обойти ограничения
-        /игнорируй/i,
-        /забудь/i,
-        /не обращай внимания/i,
-        /обойди/i,
-        /обходи/i,
-        /нарушь/i,
+        /(игнорируй|забудь|не\s+обращай\s+внимания|обойди|нарушь)/i,
 
-        // Прямые команды к AI
-        /расскажи о картах/i,
-        /опиши карты/i,
-        /толкуй карты/i,
-        /интерпретируй карты/i,
-
-        // Попытки изменить поведение
-        /измени роль/i,
-        /смени роль/i,
-        /новая роль/i,
-        /другая роль/i
+        // Прямые команды к картам
+        /(расскажи|опиши|толкуй|интерпретируй).*карт/i
     ];
 
     const lowerQuestion = question.toLowerCase();
@@ -183,94 +201,53 @@ export async function validateTarotQuestion(question) {
 
     // Используем rate limiter для соблюдения ограничения 1 запрос/3 секунды
     return mistralRateLimiter.execute(async () => {
-        // Выполняем до 5 попыток для любых ошибок
-        let lastError;
-        for (let attempt = 0; attempt < 5; attempt++) {
-            try {
-                // Агент уже знает инструкции, отправляем только вопрос
-                const response = await callMistralAI('tarot_validation', question, {
-                    temperature: 0.3,
-                    response_format: { type: 'json_object' },
-                    maxTokens: 300
-                });
+        try {
+            // callMistralAI делает всего 3 попытки (агент + API)
+            const response = await callMistralAI('tarot_validation', question, {
+                temperature: 0.3,
+                response_format: { type: 'json_object' },
+                maxTokens: 300
+            });
 
-                // Логируем сырой ответ для отладки
+            // Очищаем специальные символы, которые ломают JSON парсинг
+            let cleanResponse = response;
 
-                // Очищаем специальные символы, которые ломают JSON парсинг
-                let cleanResponse = response
-                    .replace(/『/g, '"')  // Заменяем специальные кавычки на обычные
-                    .replace(/』/g, '"')
-                    .replace(/「/g, '"')
-                    .replace(/」/g, '"')
-                    .replace(/【/g, '[')
-                    .replace(/】/g, ']')
-                    .replace(/（/g, '(')
-                    .replace(/）/g, ')')
-                    .replace(/～/g, '~')
-                    .replace(/\u00A0/g, ' ')  // Заменяем неразрывные пробелы
-                    .replace(/\u200B/g, '')   // Удаляем нулевые ширины пробелы
-                    .replace(/\uFEFF/g, '');  // Удаляем BOM символы
+            // Парсинг JSON с использованием утилиты
+            const validation = parseAIResponse(cleanResponse);
 
-
-                // Парсинг JSON с использованием утилиты
-                const validation = parseAIResponse(cleanResponse);
-
-                // Валидация структуры ответа
-                if (!isValidValidationResponse(validation)) {
-                    console.warn('Некорректная структура ответа от agent:', validation);
-                    throw new Error('Некорректная структура ответа от AI');
-                }
-
-                // Нормализация и возврат результата
-                return normalizeValidationResponse(validation);
-
-            } catch (error) {
-                lastError = error;
-                console.warn(`Ошибка валидации вопроса (попытка ${attempt + 1}/5):`, error.message);
-
-                if (attempt < 4) { // Если не последняя попытка
-                    // Ждем перед следующей попыткой с экспоненциальной задержкой
-                    const delay = 3000 * Math.pow(2, attempt); // 3с, 6с, 12с, 24с
-                    console.warn(`Повторная попытка через ${delay}мс...`);
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
+            // Валидация структуры ответа
+            if (!isValidValidationResponse(validation)) {
+                console.warn('Некорректная структура ответа от AI:', validation);
+                throw new Error('Некорректная структура ответа от AI');
             }
-        }
 
-        // После всех попыток обрабатываем ошибку
-        console.error('Ошибка валидации вопроса после 5 попыток:', lastError);
+            // Нормализация и возврат результата
+            return normalizeValidationResponse(validation);
 
-        // Определяем тип ошибки
-        const errorMessage = lastError.message?.toLowerCase() || '';
-        const isNetworkError = errorMessage.includes('network') ||
-                             errorMessage.includes('fetch') ||
-                             errorMessage.includes('connection') ||
-                             errorMessage.includes('internet') ||
-                             lastError.code === 'NETWORK_ERROR' ||
-                             lastError.code === 'ENOTFOUND' ||
-                             lastError.code === 'ECONNREFUSED' ||
-                             lastError.code === 'ETIMEDOUT' ||
-                             !navigator.onLine;
+        } catch (error) {
+            console.error('Ошибка валидации вопроса:', error);
 
-        // Для сетевых ошибок возвращаем isValid: false, чтобы показать уведомление пользователю
-        if (isNetworkError) {
+            // Определяем тип ошибки
+            const isNetwork = isNetworkError(error);
+
+            // Для сетевых ошибок возвращаем объект с ошибкой
+            if (isNetwork) {
+                return {
+                    isValid: false,
+                    reason: 'network_error',
+                    suggestion: 'Проверьте подключение к интернету и попробуйте еще раз.',
+                    error: createErrorMessage(error)
+                };
+            }
+
+            // Для других ошибок возвращаем объект с ошибкой
             return {
                 isValid: false,
-                reason: 'network_error',
-                suggestion: 'Проверьте подключение к интернету и попробуйте еще раз.',
-                error: createErrorMessage(lastError)
+                reason: 'validation_error',
+                suggestion: 'Произошла ошибка при проверке вопроса. Попробуйте еще раз.',
+                error: createErrorMessage(error)
             };
         }
-
-        // Для других ошибок возвращаем fallback валидацию
-        const fallbackMessage = createErrorMessage(lastError).replace('Попробуйте', 'Валидация пропущена. Попробуйте');
-
-        return {
-            isValid: true, // Разрешаем по умолчанию, чтобы не блокировать пользователя
-            reason: null,
-            suggestion: null,
-            error: fallbackMessage
-        };
     });
 }
 
@@ -303,48 +280,6 @@ function createErrorMessage(error) {
     return 'Не удалось выполнить запрос. Проверьте подключение к интернету и попробуйте еще раз.';
 }
 
-/**
- * Выполняет запрос с retry логикой для rate limit ошибок
- * @param {Function} apiCall - Функция выполняющая API вызов
- * @param {number} maxRetries - Максимальное количество попыток
- * @param {number} baseDelay - Базовая задержка в мс
- * @returns {Promise}
- */
-async function executeWithRetry(apiCall, maxRetries = 2, baseDelay = 10000) {
-    let lastError;
-
-    for (let attempt = 0; attempt <= maxRetries; attempt++) {
-        try {
-            return await apiCall();
-        } catch (error) {
-            lastError = error;
-            const errorMessage = error.message?.toLowerCase() || '';
-            const errorCode = error.code || error.status;
-            const isRetryableError = errorMessage.includes('rate limit') ||
-                                   errorMessage.includes('too many requests') ||
-                                   errorCode === 429 ||
-                                   errorMessage.includes('service tier capacity exceeded') ||
-                                   errorMessage.includes('capacity exceeded');
-
-            // Для rate limit и capacity ошибок делаем retry с более консервативной задержкой
-            if (isRetryableError && attempt < maxRetries) {
-                // Более консервативная задержка: базовая + экспоненциальная компонента + jitter
-                const exponentialDelay = baseDelay * Math.pow(1.5, attempt); // Более плавное увеличение
-                const jitter = Math.random() * 2000; // Уменьшенный jitter
-                const delay = exponentialDelay + jitter;
-
-                console.warn(`API error (${errorCode || 'unknown'}), retrying in ${Math.round(delay)}ms (attempt ${attempt + 1}/${maxRetries + 1})`);
-                await new Promise(resolve => setTimeout(resolve, delay));
-                continue;
-            }
-
-            // Для других ошибок или если превышено количество попыток - выбрасываем ошибку
-            throw error;
-        }
-    }
-
-    throw lastError;
-}
 
 /**
  * Толкование отдельной карты в контексте вопроса и позиции
@@ -355,42 +290,28 @@ async function executeWithRetry(apiCall, maxRetries = 2, baseDelay = 10000) {
  */
 export async function interpretSingleCard(question, card, position) {
     return mistralRateLimiter.execute(async () => {
-        // Выполняем до 5 попыток для любых ошибок
-        let lastError;
-        for (let attempt = 0; attempt < 5; attempt++) {
-            try {
-                const cardPosition = card.isReversed ? 'перевёрнутом' : 'прямом';
-                const cardMeaning = card.isReversed ? card.reversed : card.upright;
+        try {
+            const cardPosition = card.isReversed ? 'перевёрнутом' : 'прямом';
+            const cardMeaning = card.isReversed ? card.reversed : card.upright;
 
-                // Агент уже знает инструкции, отправляем только данные
-                const cardData = `Вопрос: "${question}"
+            // Агент уже знает инструкции, отправляем только данные
+            const cardData = `Вопрос: "${question}"
 Позиция: ${position.name} - ${position.meaning}
 Карта: ${card.name} (${card.arcana}) в ${cardPosition} положении
 Значение: ${cardMeaning}`;
 
-                const response = await callMistralAI('tarot_reading', cardData, {
-                    temperature: 0.7,
-                    maxTokens: 300
-                });
+            // callMistralAI делает всего 3 попытки (агент + API)
+            const response = await callMistralAI('tarot_reading', cardData, {
+                temperature: 0.7,
+                maxTokens: 300
+            });
 
-                return response;
+            return response;
 
-            } catch (error) {
-                lastError = error;
-                console.warn(`Ошибка толкования карты (попытка ${attempt + 1}/5):`, error.message);
-
-                if (attempt < 4) { // Если не последняя попытка
-                    // Ждем перед следующей попыткой с экспоненциальной задержкой
-                    const delay = 3000 * Math.pow(2, attempt); // 3с, 6с, 12с, 24с
-                    console.warn(`Повторная попытка через ${delay}мс...`);
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
-            }
+        } catch (error) {
+            console.error('Ошибка толкования карты:', error);
+            throw new Error(createErrorMessage(error));
         }
-
-        // После всех попыток выбрасываем ошибку
-        console.error('Ошибка толкования карты после 5 попыток:', lastError);
-        throw new Error(createErrorMessage(lastError));
     });
 }
 
@@ -407,10 +328,7 @@ export async function interpretSingleCard(question, card, position) {
  */
 export async function generateFullReading(userData, zodiacSign, question, spread, selectedCards) {
     return mistralRateLimiter.execute(async () => {
-        // Выполняем до 5 попыток для любых ошибок
-        let lastError;
-        for (let attempt = 0; attempt < 5; attempt++) {
-            try {
+        try {
             const cardsDescription = selectedCards.map((card, index) => {
                 const position = spread.positions[index];
                 const cardPosition = card.isReversed ? 'перевёрнутое' : 'прямое';
@@ -428,6 +346,7 @@ export async function generateFullReading(userData, zodiacSign, question, spread
 Выпавшие карты:
 ${cardsDescription}`;
 
+            // callMistralAI делает всего 3 попытки (агент + API)
             let content = await callMistralAI('full_spread', spreadData, {
                 temperature: 0.7,
                 maxTokens: 2000 // Увеличиваем лимит токенов для более полных толкований
@@ -505,22 +424,10 @@ ${cardsDescription}`;
 
             return content;
 
-            } catch (error) {
-                lastError = error;
-                console.warn(`Ошибка генерации финального толкования (попытка ${attempt + 1}/5):`, error.message);
-
-                if (attempt < 4) { // Если не последняя попытка
-                    // Ждем перед следующей попыткой с экспоненциальной задержкой
-                    const delay = 3000 * Math.pow(2, attempt); // 3с, 6с, 12с, 24с
-                    console.warn(`Повторная попытка через ${delay}мс...`);
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
-            }
+        } catch (error) {
+            console.error('Ошибка генерации финального толкования:', error);
+            throw new Error(createErrorMessage(error));
         }
-
-        // После всех попыток выбрасываем ошибку
-        console.error('Ошибка генерации финального толкования после 5 попыток:', lastError);
-        throw new Error(createErrorMessage(lastError));
     });
 }
 
@@ -532,10 +439,7 @@ ${cardsDescription}`;
  */
 export async function interpretNatalChart(natalChartData, userData) {
     return mistralRateLimiter.execute(async () => {
-        // Выполняем до 5 попыток для любых ошибок
-        let lastError;
-        for (let attempt = 0; attempt < 5; attempt++) {
-            try {
+        try {
             // Форматируем данные натальной карты для ИИ
             const planetsInfo = natalChartData.planets?.map(planet =>
                 `${planet.name} в ${planet.sign.name} (${planet.degree.toFixed(1)}°) ${planet.retrograde ? '(R)' : ''}`
@@ -563,15 +467,13 @@ export async function interpretNatalChart(natalChartData, userData) {
 
 ${chartSummary}`;
 
+            // callMistralAI делает всего 3 попытки (агент + API)
             let response = await callMistralAI('natal_chart', natalData, {
                 temperature: 0.6,
                 maxTokens: 5000 // Увеличиваем лимит для более полных ответов
             });
 
-            // Логируем сырой ответ для отладки
-
             response = cleanMarkdownFromHtml(response);
-
 
             // Улучшенная проверка завершенности ответа
             const isIncomplete = (response) => {
@@ -663,26 +565,13 @@ ${chartSummary}`;
                 if (!response.includes('</p>') || !response.trim().endsWith('.')) {
                     response += '</p><p><em>Интерпретация была завершена на основе доступных данных.</em></p>';
                 }
-            } else {
             }
 
             return response;
 
-            } catch (error) {
-                lastError = error;
-                console.warn(`Ошибка интерпретации натальной карты (попытка ${attempt + 1}/5):`, error.message);
-
-                if (attempt < 4) { // Если не последняя попытка
-                    // Ждем перед следующей попыткой с экспоненциальной задержкой
-                    const delay = 3000 * Math.pow(2, attempt); // 3с, 6с, 12с, 24с
-                    console.warn(`Повторная попытка через ${delay}мс...`);
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
-            }
+        } catch (error) {
+            console.error('Ошибка интерпретации натальной карты:', error);
+            throw new Error('Не удалось получить интерпретацию натальной карты. Попробуйте позже.');
         }
-
-        // После всех попыток выбрасываем ошибку
-        console.error('Ошибка интерпретации натальной карты после 5 попыток:', lastError);
-        throw new Error('Не удалось получить интерпретацию натальной карты. Попробуйте позже.');
     });
 }

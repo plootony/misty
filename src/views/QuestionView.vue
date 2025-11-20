@@ -143,26 +143,16 @@ const submitQuestion = async () => {
         if (!aiValidation.isValid) {
             isLoading.value = false;
 
-            // Специальная обработка сетевых ошибок
-            if (aiValidation.reason === 'network_error') {
-                const errorMessage = aiValidation.suggestion || 'Отсутствует подключение к интернету. Проверьте соединение и попробуйте еще раз.';
-                showNotification('warning', errorMessage);
-                return;
-            }
-
-            // Обработка других ошибок валидации
+            // Любая ошибка валидации блокирует переход к следующему шагу
             let errorMessage = aiValidation.reason || 'Вопрос не подходит для гадания на Таро';
             if (aiValidation.suggestion) {
-                errorMessage += `\n\nПопробуйте переформулировать: ${aiValidation.suggestion}`;
+                errorMessage += ` ${aiValidation.suggestion}`;
             }
 
-            showNotification('warning', errorMessage);
+            // Для сетевых ошибок используем warning тип
+            const notificationType = aiValidation.reason === 'network_error' ? 'warning' : 'error';
+            showNotification(notificationType, errorMessage);
             return;
-        }
-
-        // Если есть ошибка API, но валидация прошла (fallback)
-        if (aiValidation.error) {
-            console.warn('AI валидация недоступна, используем fallback');
         }
 
         // Вопрос валиден, переходим к выбору карт
