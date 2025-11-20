@@ -14,16 +14,15 @@ import { createClient } from '@supabase/supabase-js'
 /**
  * Простая хэш-функция для генерации детерминированных номеров
  * @param {string} str - Строка для хэширования
- * @returns {number} - Хэш-значение
+ * @returns {number} - Хэш-значение (32-битное беззнаковое)
  */
 function simpleHash(str) {
-    let hash = 0
+    let hash = 0;
     for (let i = 0; i < str.length; i++) {
-        const char = str.charCodeAt(i)
-        hash = ((hash << 5) - hash) + char
-        hash = hash & hash // Преобразуем в 32-битное число
+        const char = str.charCodeAt(i);
+        hash = ((hash << 5) - hash + char) >>> 0; // djb2-like hash, 32-bit unsigned
     }
-    return Math.abs(hash)
+    return hash;
 }
 
 // Инициализация Supabase клиента
@@ -204,9 +203,10 @@ export async function upsertProfile(userId, profileData) {
         } catch (error) {
             console.error('Не удалось сгенерировать номер пользователя:', error)
             // Fallback: генерируем на клиенте детерминированным способом
-            const timestamp = Date.now()
-            const hash = simpleHash(userId + timestamp.toString())
-            profileData.user_number = (hash % 1000000).toString().padStart(6, '0')
+            const timestamp = Date.now();
+            const hash = simpleHash(userId + timestamp.toString());
+            // Используем последние 6 цифр хэша для номера (более уникально)
+            profileData.user_number = (hash % 1000000).toString().padStart(6, '0');
         }
     }
 
@@ -340,6 +340,53 @@ export async function deleteReadingsByUserId(userId) {
 // ============================================
 // ADMIN FUNCTIONS
 // ============================================
+
+/**
+ * Получить статистику по тарифам (только для админа)
+ */
+export async function getTariffStats() {
+    try {
+        // Проверяем права администратора
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError || !user) {
+            throw new Error('Пользователь не авторизован')
+        }
+
+        const profile = await getProfile(user.id)
+        if (!profile?.is_admin) {
+            throw new Error('У вас нет прав администратора')
+        }
+
+        // Получаем статистику по тарифам через отдельные count запросы
+        // RPC функция get_tariff_statistics не существует, поэтому используем count запросы
+        const tariffs = ['neophyte', 'initiated', 'adept', 'oracle', 'supreme-arcana'];
+        const stats = {};
+
+        for (const tariff of tariffs) {
+            try {
+                const { count, error } = await supabase
+                    .from('profiles')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('tariff', tariff);
+
+                if (error) {
+                    console.warn(`Ошибка получения статистики для тарифа ${tariff}:`, error);
+                    stats[tariff] = 0;
+                } else {
+                    stats[tariff] = count || 0;
+                }
+            } catch (error) {
+                console.warn(`Ошибка получения статистики для тарифа ${tariff}:`, error);
+                stats[tariff] = 0;
+            }
+        }
+
+        return stats;
+    } catch (error) {
+        console.error('Ошибка получения статистики тарифов:', error);
+        throw error;
+    }
+}
 
 /**
  * Поиск пользователей (только для админа)

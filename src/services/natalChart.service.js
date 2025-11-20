@@ -414,11 +414,21 @@ class NatalChartService {
         // Создаем время из julian day
         // julianDay - это юлианский день, astronomy-engine работает с Date или AstroTime
         // JD 2440587.5 ≈ 1970-01-01 00:00:00 UTC
-        // Более точная конвертация для избежания переполнения
         const jdOffset = julianDay - 2440587.5;
+
+        // Проверяем на переполнение (максимальная безопасная дата ~285616 лет от эпохи Unix)
+        if (Math.abs(jdOffset) > 1e7) { // ~27,000 лет
+            throw new Error(`Julian day ${julianDay} слишком далеко от эпохи Unix`);
+        }
+
         const milliseconds = Math.round(jdOffset * 86400000);
-        const date = new Date(0); // Создаем дату от эпохи Unix
-        date.setTime(milliseconds);
+
+        // Проверяем, что результат в допустимом диапазоне для JavaScript Date
+        if (milliseconds < -8640000000000000 || milliseconds > 8640000000000000) {
+            throw new Error(`Дата вне допустимого диапазона: ${milliseconds}ms от эпохи Unix`);
+        }
+
+        const date = new Date(milliseconds);
         const time = MakeTime(date);
 
         // Получаем геоцентрический вектор планеты и эклиптические координаты

@@ -67,12 +67,33 @@ const validateForm = () => {
         return false;
     }
 
-    // Проверка минимального возраста (13 лет)
+    // Проверка минимального возраста (13 лет) - точная проверка без учета времени
     const today = new Date();
-    const minDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
-    if (date > minDate) {
+    const birthYear = date.getFullYear();
+    const birthMonth = date.getMonth();
+    const birthDay = date.getDate();
+
+    const age = today.getFullYear() - birthYear;
+
+    // Проверяем, достиг ли пользователь 13 лет
+    if (age > 13) {
+        // Уже старше 13 лет
+        return true;
+    } else if (age < 13) {
+        // Младше 13 лет
         error.value = 'Вам должно быть не менее 13 лет для использования сервиса';
         return false;
+    } else {
+        // Ровно 13 лет - проверяем месяц и день
+        if (today.getMonth() > birthMonth ||
+            (today.getMonth() === birthMonth && today.getDate() >= birthDay)) {
+            // День рождения уже прошел в этом году
+            return true;
+        } else {
+            // День рождения еще не прошел в этом году
+            error.value = 'Вам должно быть не менее 13 лет для использования сервиса';
+            return false;
+        }
     }
 
     // Проверка принятия условий

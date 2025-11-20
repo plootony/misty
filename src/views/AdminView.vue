@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user.store';
-import { searchUsers, updateUserTariff, toggleUserActive, deleteUser } from '@/services/supabase.service';
+import { searchUsers, updateUserTariff, toggleUserActive, deleteUser, getTariffStats } from '@/services/supabase.service';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 
 const router = useRouter();
@@ -11,7 +11,6 @@ const userStore = useUserStore();
 // Состояния компонента
 const searchQuery = ref('');
 const users = ref([]);
-const allUsers = ref([]); // Хранит всех пользователей для правильной статистики
 const tariffFilter = ref(''); // Безопасный фильтр по тарифу
 const isLoading = ref(false);
 const editingUser = ref(null);
@@ -26,28 +25,29 @@ const pageSize = 20;
 const totalUsers = ref(0);
 const hasMorePages = computed(() => (currentPage.value * pageSize) < totalUsers.value);
 
-// Статистика по тарифам
-const tariffStats = computed(() => {
-    const stats = {
-        'neophyte': { name: 'Неофит', count: 0 },
-        'initiated': { name: 'Посвящённый', count: 0 },
-        'adept': { name: 'Адепт', count: 0 },
-        'oracle': { name: 'Оракул', count: 0 },
-        'supreme-arcana': { name: 'Верховный Аркан', count: 0 }
-    };
-
-    // Подсчитываем пользователей по тарифам
-    // Всегда используем allUsers, если она заполнена (для корректной статистики)
-    const usersToCount = allUsers.value.length > 0 ? allUsers.value : users.value;
-
-    usersToCount.forEach(user => {
-        if (stats[user.tariff]) {
-            stats[user.tariff].count++;
-        }
-    });
-
-    return stats;
+// Статистика по тарифам - получаем отдельно для избежания утечек памяти
+const tariffStats = ref({
+    'neophyte': { name: 'Неофит', count: 0 },
+    'initiated': { name: 'Посвящённый', count: 0 },
+    'adept': { name: 'Адепт', count: 0 },
+    'oracle': { name: 'Оракул', count: 0 },
+    'supreme-arcana': { name: 'Верховный Аркан', count: 0 }
 });
+
+// Функция для загрузки статистики тарифов отдельно
+const loadTariffStats = async () => {
+    try {
+        const stats = await getTariffStats();
+
+        // Обновляем статистику
+        Object.keys(tariffStats.value).forEach(tariff => {
+            tariffStats.value[tariff].count = stats[tariff] || 0;
+        });
+    } catch (error) {
+        console.error('Ошибка загрузки статистики тарифов:', error);
+        // В случае ошибки оставляем текущие значения
+    }
+};
 
 // Debounced поиск
 let searchTimeout = null;
@@ -79,11 +79,12 @@ const checkAdminAccess = async () => {
     return true;
 };
 
-// Загружаем пользователей при монтировании
+// Загружаем пользователей и статистику при монтировании
 onMounted(async () => {
     const hasAccess = await checkAdminAccess();
     if (hasAccess) {
         await loadUsers();
+        await loadTariffStats();
     }
 });
 
@@ -95,12 +96,8 @@ const loadUsers = async (page = 1, append = false) => {
 
         if (append) {
             users.value = [...users.value, ...result.users];
-            // Обновляем allUsers при пагинации
-            allUsers.value = [...allUsers.value, ...result.users];
         } else {
             users.value = result.users;
-            // Сохраняем полную выборку для статистики
-            allUsers.value = result.users;
         }
 
         totalUsers.value = result.total;
@@ -123,12 +120,13 @@ const handleSearch = async () => {
         );
 
         users.value = result.users;
-        // Сохраняем результаты поиска для статистики (если это обычный поиск без фильтра по тарифу)
-        if (searchQuery.value.trim() && !tariffFilter.value) {
-            allUsers.value = result.users;
-        }
         totalUsers.value = result.total;
         currentPage.value = 1;
+
+        // Обновляем статистику после поиска (если это не фильтр по тарифу)
+        if (!tariffFilter.value) {
+            await loadTariffStats();
+        }
     } catch (error) {
         console.error('Ошибка поиска:', error);
         showError('Ошибка поиска пользователей', error);
@@ -144,6 +142,7 @@ const clearSearch = async () => {
     searchQuery.value = '';
     tariffFilter.value = ''; // Также сбрасываем фильтр по тарифу
     await loadUsers(1, false);
+    await loadTariffStats();
 };
 
 // Сбросить фильтр по тарифу
@@ -151,6 +150,7 @@ const clearTariffFilter = async () => {
     tariffFilter.value = '';
     searchQuery.value = '';
     await loadUsers(1, false);
+    await loadTariffStats();
 };
 
 // Применить фильтр по тарифу
@@ -228,6 +228,10 @@ const saveTariff = async () => {
 
         editingUser.value = null;
         selectedTariff.value = '';
+
+        // Обновляем статистику тарифов
+        await loadTariffStats();
+
         alert('Тариф успешно обновлен');
 
     } catch (error) {
@@ -266,6 +270,7 @@ const toggleActive = async (user) => {
 
         // Обновляем локально только после успешного сохранения на сервере
         user.is_active = newStatus;
+
         alert(newStatus ? 'Пользователь успешно разблокирован' : 'Пользователь успешно заблокирован');
 
     } catch (error) {
@@ -303,6 +308,9 @@ const handleDelete = async (user) => {
         // Удаляем из локального массива только после успешного удаления на сервере
         users.value = users.value.filter(u => u.id !== user.id);
         totalUsers.value = Math.max(0, totalUsers.value - 1);
+
+        // Обновляем статистику тарифов
+        await loadTariffStats();
 
         alert('Пользователь успешно удален');
 
