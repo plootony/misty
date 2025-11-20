@@ -61,7 +61,13 @@ router.beforeEach(async (to, from, next) => {
 
   // Ждем завершения проверки авторизации при первой загрузке
   if (userStore.isAuthChecking) {
-    await userStore.initAuth()
+    try {
+      await userStore.initAuth()
+    } catch (error) {
+      console.error('Ошибка инициализации авторизации в роутере:', error)
+      // При ошибке инициализации продолжаем без авторизации
+      // Пользователь будет перенаправлен на страницу входа ниже
+    }
   }
 
   // Проверка: требуется аутентификация

@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, computed, nextTick } from 'vue';
+import { onMounted, computed, nextTick, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/user.store';
 import { useCardSelector } from '@/stores/cardSelector.store';
@@ -9,6 +9,7 @@ import { saveReading } from '@/services/supabase.service';
 import { getZodiacSign } from '@/utils/zodiac';
 import CardResultModal from '@/components/CardResultModal.vue';
 import AnswerModal from '@/components/AnswerModal.vue';
+import NotificationToast from '@/components/NotificationToast.vue';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -16,6 +17,30 @@ const cardStore = useCardSelector();
 const modalStore = useModalStore();
 
 const zodiacSign = getZodiacSign(userStore.userData?.birth || '01.01.2000');
+
+// Система уведомлений
+const notification = ref({
+    show: false,
+    type: 'info',
+    message: ''
+});
+
+const showNotification = (type, message) => {
+    notification.value = {
+        show: true,
+        type,
+        message
+    };
+
+    // Автоматически скрыть через 5 секунд
+    setTimeout(() => {
+        notification.value.show = false;
+    }, 5000);
+};
+
+const closeNotification = () => {
+    notification.value.show = false;
+};
 
 // Computed для создания массива индексов
 const selectedCardSlots = computed(() => {
@@ -191,7 +216,19 @@ const loadFullReading = async () => {
     } catch (error) {
         console.error('Ошибка получения финального толкования:', error);
         modalStore.stopFullReadingLoading();
-        // TODO: показать ошибку пользователю
+
+        // Определяем тип ошибки и показываем соответствующее сообщение
+        const errorMessage = error.message || '';
+        let userMessage = 'Произошла ошибка при получении толкования. Попробуйте еще раз.';
+
+        if (errorMessage.includes('capacity exceeded') || errorMessage.includes('service_tier')) {
+            userMessage = '🚨 Сервис AI временно перегружен. Попробуйте через 10-15 минут или обратитесь в поддержку если проблема продолжается.';
+        } else if (errorMessage.includes('rate limit') || errorMessage.includes('too many requests')) {
+            userMessage = '⏱️ Слишком много запросов. Подождите немного и попробуйте снова.';
+        }
+
+        // Показываем уведомление пользователю
+        showNotification('error', userMessage);
     }
 };
 </script>
@@ -272,6 +309,14 @@ const loadFullReading = async () => {
 
         <CardResultModal v-if="modalStore.isCardResultModalOpen" @loadFullReading="loadFullReading" :onRetry="retryCardInterpretation" />
         <AnswerModal v-if="modalStore.isAnswerModalOpen" />
+
+        <!-- Система уведомлений -->
+        <NotificationToast
+            v-if="notification.show"
+            :type="notification.type"
+            :message="notification.message"
+            @close="closeNotification"
+        />
     </div>
 </template>
 

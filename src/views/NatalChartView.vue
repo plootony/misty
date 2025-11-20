@@ -7,6 +7,7 @@ import { interpretNatalChart } from '@/services/mistral.service';
 import { useModalStore } from '@/stores/modal.store';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 import NatalChartVisualization from '@/components/NatalChartVisualization.vue';
+import NotificationToast from '@/components/NotificationToast.vue';
 
 const userStore = useUserStore();
 const modalStore = useModalStore();
@@ -34,6 +35,30 @@ const houseSystem = ref('P');
 const isSearchingPlaces = ref(false);
 const placeSuggestions = ref([]);
 const showPlaceSuggestions = ref(false);
+
+// Система уведомлений
+const notification = ref({
+    show: false,
+    type: 'info',
+    message: ''
+});
+
+const showNotification = (type, message) => {
+    notification.value = {
+        show: true,
+        type,
+        message
+    };
+
+    // Автоматически скрыть через 5 секунд
+    setTimeout(() => {
+        notification.value.show = false;
+    }, 5000);
+};
+
+const closeNotification = () => {
+    notification.value.show = false;
+};
 
 // Константы используются в шаблоне напрямую из сервиса
 
@@ -142,7 +167,18 @@ const getInterpretation = async () => {
     modalStore.openNatalChartInterpretationModal();
   } catch (error) {
     console.error('Ошибка получения интерпретации:', error);
-    // Можно добавить показ toast или другого уведомления об ошибке
+
+    // Определяем тип ошибки и показываем соответствующее сообщение
+    const errorMessage = error.message || '';
+    let userMessage = 'Произошла ошибка при получении интерпретации натальной карты. Попробуйте еще раз.';
+
+    if (errorMessage.includes('capacity exceeded') || errorMessage.includes('service_tier')) {
+        userMessage = '🚨 Сервис AI временно перегружен. Попробуйте через 10-15 минут.';
+    } else if (errorMessage.includes('rate limit') || errorMessage.includes('too many requests')) {
+        userMessage = '⏱️ Слишком много запросов. Подождите немного и попробуйте снова.';
+    }
+
+    showNotification('error', userMessage);
   } finally {
     isInterpreting.value = false;
   }
@@ -527,6 +563,14 @@ const showAstrologyHelp = () => {
         </div>
       </div>
     </div>
+
+    <!-- Система уведомлений -->
+    <NotificationToast
+        v-if="notification.show"
+        :type="notification.type"
+        :message="notification.message"
+        @close="closeNotification"
+    />
   </div>
 </template>
 
