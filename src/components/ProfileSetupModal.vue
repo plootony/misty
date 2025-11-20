@@ -68,10 +68,10 @@ const validateForm = () => {
     }
 
     // Проверка минимального возраста (13 лет)
-    const minDate = new Date();
-    minDate.setFullYear(minDate.getFullYear() - 13);
+    const today = new Date();
+    const minDate = new Date(today.getFullYear() - 13, today.getMonth(), today.getDate());
     if (date > minDate) {
-        error.value = 'Вам должно быть не менее 13 лет';
+        error.value = 'Вам должно быть не менее 13 лет для использования сервиса';
         return false;
     }
 

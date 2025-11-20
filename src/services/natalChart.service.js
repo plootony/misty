@@ -155,7 +155,8 @@ class NatalChartService {
         const longitude = (basePos + daysSince2000 * motion) % 360;
 
         // Определение ретроградности (для внешних планет)
-        const retrograde = [5, 6, 7, 8, 9].includes(planetId) && Math.random() > 0.7;
+        // Используем детерминированный расчет на основе позиции планеты
+        const retrograde = [5, 6, 7, 8, 9].includes(planetId) && Math.sin(longitude * Math.PI / 180) < -0.5;
 
         return [
           longitude, // долгота
@@ -412,8 +413,12 @@ class NatalChartService {
 
         // Создаем время из julian day
         // julianDay - это юлианский день, astronomy-engine работает с Date или AstroTime
-        // JD 2440587.5 = 1970-01-01 00:00:00 UTC
-        const date = new Date((julianDay - 2440587.5) * 86400000); // Конвертация из JD в milliseconds
+        // JD 2440587.5 ≈ 1970-01-01 00:00:00 UTC
+        // Более точная конвертация для избежания переполнения
+        const jdOffset = julianDay - 2440587.5;
+        const milliseconds = Math.round(jdOffset * 86400000);
+        const date = new Date(0); // Создаем дату от эпохи Unix
+        date.setTime(milliseconds);
         const time = MakeTime(date);
 
         // Получаем геоцентрический вектор планеты и эклиптические координаты

@@ -95,7 +95,7 @@ export const useUserStore = defineStore('userStore', () => {
 
             // Проверяем, активен ли аккаунт
             if (profile.is_active === false) {
-                throw new Error('Неверный email или пароль');
+                throw new Error('Аккаунт деактивирован. Обратитесь в поддержку для восстановления доступа.');
             }
 
             // Устанавливаем данные пользователя

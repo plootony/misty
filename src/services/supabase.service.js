@@ -2,14 +2,29 @@ import { createClient } from '@supabase/supabase-js'
 
 /**
  * SUPABASE SERVICE
- * 
+ *
  * ВАЖНО: Все административные функции защищены через:
  * 1. Row Level Security (RLS) политики на уровне БД
  * 2. Серверные функции (PostgreSQL functions) с проверкой прав
- * 
+ *
  * Перед использованием необходимо применить миграцию:
  * supabase/migrations/20250105_security_policies.sql
  */
+
+/**
+ * Простая хэш-функция для генерации детерминированных номеров
+ * @param {string} str - Строка для хэширования
+ * @returns {number} - Хэш-значение
+ */
+function simpleHash(str) {
+    let hash = 0
+    for (let i = 0; i < str.length; i++) {
+        const char = str.charCodeAt(i)
+        hash = ((hash << 5) - hash) + char
+        hash = hash & hash // Преобразуем в 32-битное число
+    }
+    return Math.abs(hash)
+}
 
 // Инициализация Supabase клиента
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
@@ -188,8 +203,10 @@ export async function upsertProfile(userId, profileData) {
             profileData.user_number = await generateUserNumber()
         } catch (error) {
             console.error('Не удалось сгенерировать номер пользователя:', error)
-            // Fallback: генерируем на клиенте
-            profileData.user_number = Math.floor(Math.random() * 1000000).toString().padStart(6, '0')
+            // Fallback: генерируем на клиенте детерминированным способом
+            const timestamp = Date.now()
+            const hash = simpleHash(userId + timestamp.toString())
+            profileData.user_number = (hash % 1000000).toString().padStart(6, '0')
         }
     }
 
@@ -327,8 +344,18 @@ export async function deleteReadingsByUserId(userId) {
 /**
  * Поиск пользователей (только для админа)
  */
-export async function searchUsers(query, limit = 20, offset = 0) {
+export async function searchUsers(query, limit = 20, offset = 0, tariffFilter = null) {
     try {
+        // Проверяем права администратора
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError || !user) {
+            throw new Error('Пользователь не авторизован')
+        }
+
+        const profile = await getProfile(user.id)
+        if (!profile?.is_admin) {
+            throw new Error('У вас нет прав администратора')
+        }
         // Получаем пользователей напрямую из таблицы profiles
         let usersQuery = supabase
             .from('profiles')
@@ -339,6 +366,11 @@ export async function searchUsers(query, limit = 20, offset = 0) {
         if (query && query.trim()) {
             const searchTerm = query.trim()
             usersQuery = usersQuery.or(`name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,user_number.ilike.%${searchTerm}%`)
+        }
+
+        // Добавляем фильтр по тарифу, если указан
+        if (tariffFilter) {
+            usersQuery = usersQuery.eq('tariff', tariffFilter)
         }
 
         // Применяем пагинацию
@@ -367,6 +399,16 @@ export async function searchUsers(query, limit = 20, offset = 0) {
  */
 export async function updateUserTariff(userId, tariff) {
     try {
+        // Проверяем права администратора
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError || !user) {
+            throw new Error('Пользователь не авторизован')
+        }
+
+        const profile = await getProfile(user.id)
+        if (!profile?.is_admin) {
+            throw new Error('У вас нет прав администратора')
+        }
         // Обновляем тариф пользователя напрямую в таблице profiles
         const { data, error } = await supabase
             .from('profiles')
@@ -402,6 +444,16 @@ export async function updateUserTariff(userId, tariff) {
  */
 export async function toggleUserActive(userId, isActive) {
     try {
+        // Проверяем права администратора
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError || !user) {
+            throw new Error('Пользователь не авторизован')
+        }
+
+        const profile = await getProfile(user.id)
+        if (!profile?.is_admin) {
+            throw new Error('У вас нет прав администратора')
+        }
         // Обновляем статус активности пользователя напрямую в таблице profiles
         const { data, error } = await supabase
             .from('profiles')
@@ -484,6 +536,22 @@ export async function selfDeactivateAccount(userId) {
  */
 export async function deleteUser(userId) {
     try {
+        // Проверяем права администратора
+        const { data: { user }, error: userError } = await supabase.auth.getUser()
+        if (userError || !user) {
+            throw new Error('Пользователь не авторизован')
+        }
+
+        const profile = await getProfile(user.id)
+        if (!profile?.is_admin) {
+            throw new Error('У вас нет прав администратора')
+        }
+
+        // Защита от самоудаления
+        if (user.id === userId) {
+            throw new Error('Администратор не может удалить свой собственный аккаунт')
+        }
+
         // Удаляем пользователя из таблицы profiles
         const { data, error } = await supabase
             .from('profiles')

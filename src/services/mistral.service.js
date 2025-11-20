@@ -50,7 +50,7 @@ const isNetworkError = (error) => {
            errorCode === 'ENOTFOUND' ||
            errorCode === 'ECONNREFUSED' ||
            errorCode === 'ETIMEDOUT' ||
-           !navigator.onLine;
+           (typeof navigator !== 'undefined' && navigator.onLine === false);
 };
 
 async function callMistralAI(task, message, options = {}) {

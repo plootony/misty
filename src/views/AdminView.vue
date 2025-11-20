@@ -11,6 +11,8 @@ const userStore = useUserStore();
 // Состояния компонента
 const searchQuery = ref('');
 const users = ref([]);
+const allUsers = ref([]); // Хранит всех пользователей для правильной статистики
+const tariffFilter = ref(''); // Безопасный фильтр по тарифу
 const isLoading = ref(false);
 const editingUser = ref(null);
 const selectedTariff = ref('');
@@ -31,13 +33,14 @@ const tariffStats = computed(() => {
         'initiated': { name: 'Посвящённый', count: 0 },
         'adept': { name: 'Адепт', count: 0 },
         'oracle': { name: 'Оракул', count: 0 },
-        'master': { name: 'Мастер', count: 0 },
-        'archmage': { name: 'Архимаг', count: 0 },
         'supreme-arcana': { name: 'Верховный Аркан', count: 0 }
     };
 
     // Подсчитываем пользователей по тарифам
-    users.value.forEach(user => {
+    // Всегда используем allUsers, если она заполнена (для корректной статистики)
+    const usersToCount = allUsers.value.length > 0 ? allUsers.value : users.value;
+
+    usersToCount.forEach(user => {
         if (stats[user.tariff]) {
             stats[user.tariff].count++;
         }
@@ -92,8 +95,12 @@ const loadUsers = async (page = 1, append = false) => {
 
         if (append) {
             users.value = [...users.value, ...result.users];
+            // Обновляем allUsers при пагинации
+            allUsers.value = [...allUsers.value, ...result.users];
         } else {
             users.value = result.users;
+            // Сохраняем полную выборку для статистики
+            allUsers.value = result.users;
         }
 
         totalUsers.value = result.total;
@@ -107,33 +114,19 @@ const loadUsers = async (page = 1, append = false) => {
 };
 
 const handleSearch = async () => {
-    if (!searchQuery.value.trim()) {
-        await loadUsers(1, false);
-        return;
-    }
-
-    // Обрабатываем специальные фильтры по тарифу
-    if (searchQuery.value.startsWith('__tariff:')) {
-        const tariffKey = searchQuery.value.replace('__tariff:', '');
-        try {
-            // Получаем всех пользователей и фильтруем на клиенте по тарифу
-            const result = await searchUsers('', 1000, 0); // Получаем много пользователей для фильтрации
-            const filteredUsers = result.users.filter(user => user.tariff === tariffKey);
-
-            users.value = filteredUsers.slice(0, pageSize);
-            totalUsers.value = filteredUsers.length;
-            currentPage.value = 1;
-        } catch (error) {
-            console.error('Ошибка фильтрации по тарифу:', error);
-            showError('Ошибка фильтрации пользователей', error);
-        }
-        return;
-    }
-
-    // Обычный поиск
     try {
-        const result = await searchUsers(searchQuery.value.trim(), pageSize, 0);
+        const result = await searchUsers(
+            searchQuery.value.trim(),
+            pageSize,
+            0,
+            tariffFilter.value || null
+        );
+
         users.value = result.users;
+        // Сохраняем результаты поиска для статистики (если это обычный поиск без фильтра по тарифу)
+        if (searchQuery.value.trim() && !tariffFilter.value) {
+            allUsers.value = result.users;
+        }
         totalUsers.value = result.total;
         currentPage.value = 1;
     } catch (error) {
@@ -149,28 +142,27 @@ const loadMoreUsers = async () => {
 
 const clearSearch = async () => {
     searchQuery.value = '';
+    tariffFilter.value = ''; // Также сбрасываем фильтр по тарифу
     await loadUsers(1, false);
 };
 
 // Сбросить фильтр по тарифу
 const clearTariffFilter = async () => {
+    tariffFilter.value = '';
     searchQuery.value = '';
     await loadUsers(1, false);
 };
 
 // Применить фильтр по тарифу
 const applyTariffFilter = (tariffKey) => {
-    // Устанавливаем специальный поисковый запрос для фильтрации по тарифу
-    searchQuery.value = `__tariff:${tariffKey}`;
+    tariffFilter.value = tariffKey;
+    searchQuery.value = ''; // Очищаем поисковый запрос при фильтрации по тарифу
     handleSearch();
 };
 
-// Получить активный тариф из поискового запроса
+// Получить активный тариф из фильтра
 const activeTariffFilter = computed(() => {
-    if (searchQuery.value?.startsWith('__tariff:')) {
-        return searchQuery.value.replace('__tariff:', '');
-    }
-    return null;
+    return tariffFilter.value || null;
 });
 
 // Улучшенная обработка ошибок
@@ -198,6 +190,12 @@ const startEdit = (user) => {
         return;
     }
 
+    // Защита от редактирования других администраторов
+    if (user.is_admin) {
+        alert('Вы не можете редактировать профили других администраторов');
+        return;
+    }
+
     editingUser.value = user;
     selectedTariff.value = user.tariff;
 };
@@ -209,6 +207,12 @@ const cancelEdit = () => {
 
 const saveTariff = async () => {
     if (!editingUser.value || !selectedTariff.value) return;
+
+    // Дополнительная проверка на администратора (на случай если состояние изменилось)
+    if (editingUser.value.is_admin) {
+        alert('Вы не можете изменять тарифы других администраторов');
+        return;
+    }
 
     isUpdatingTariff.value = true;
     try {
@@ -238,6 +242,12 @@ const toggleActive = async (user) => {
     // Защита от блокировки самого себя
     if (user.id === userStore.userData?.id) {
         alert('Вы не можете заблокировать свой собственный аккаунт');
+        return;
+    }
+
+    // Защита от блокировки других администраторов
+    if (user.is_admin) {
+        alert('Вы не можете изменять статус других администраторов');
         return;
     }
 
@@ -273,11 +283,10 @@ const handleDelete = async (user) => {
         return;
     }
 
-    // Дополнительная проверка для администраторов
+    // Защита от удаления других администраторов
     if (user.is_admin) {
-        if (!confirm(`ВНИМАНИЕ! Вы собираетесь удалить администратора ${user.name}!\n\nЭто может нарушить работу системы. Убедитесь, что есть другие администраторы.\n\nДействительно удалить?`)) {
-            return;
-        }
+        alert('Вы не можете удалять аккаунты других администраторов');
+        return;
     }
 
     const confirmMessage = `Удалить пользователя ${user.name}?\n\nЭто действие необратимо! Будут удалены все данные пользователя, включая историю гаданий.`;
