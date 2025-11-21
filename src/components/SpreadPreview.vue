@@ -135,6 +135,7 @@ onUnmounted(() => {
                 class="spread-preview__card-image"
                 :src="showCardImages ? `/images/${cardImages[index]}` : '/images/back-min.jpg'"
                 alt="Карта Таро"
+                loading="lazy"
             >
         </div>
     </div>

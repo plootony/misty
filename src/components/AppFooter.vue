@@ -60,7 +60,7 @@ onUnmounted(() => {
             <div class="footer__content">
                 <!-- Логотип -->
                 <div class="footer__logo">
-                    <img src="@/assets/images/stars-icon.png" alt="Misty" class="footer__logo-icon">
+                    <img src="@/assets/images/stars-icon.png" alt="Misty" class="footer__logo-icon" loading="lazy">
                     <span class="footer__logo-text">MiSTY</span>
                 </div>
 

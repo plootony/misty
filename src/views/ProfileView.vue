@@ -546,6 +546,7 @@ const performAccountDeletion = async () => {
                                                     class="card-detail__card-image"
                                                     :src="card.image"
                                                     alt="Карта Таро"
+                                                    loading="lazy"
                                                 >
                                             </div>
                                             <div class="card-detail__summary">

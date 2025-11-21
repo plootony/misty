@@ -268,6 +268,7 @@ const loadFullReading = async () => {
                     :class="{ 'card-selector__selected-card-image--reversed': safeSelectedCards[slotIndex].isReversed }"
                     :src="safeSelectedCards[slotIndex].image"
                     alt="Выбранная карта"
+                    loading="lazy"
                 >
             </div>
         </div>
@@ -283,6 +284,7 @@ const loadFullReading = async () => {
                     class="card-selector__deck-card-image" 
                     src="/images/card-back.png" 
                     alt="Карта Таро"
+                    loading="lazy"
                 >
             </div>
         </div>
@@ -298,6 +300,7 @@ const loadFullReading = async () => {
                             alt="Выбранная карта"
                             class="card-selector__selected-card-image"
                             :class="{ 'card-selector__selected-card-image--reversed': safeSelectedCards[safeSelectedCards.length - 1]?.isReversed }"
+                            loading="lazy"
                         >
                     </div>
                     <div class="card-selector__loader-info">

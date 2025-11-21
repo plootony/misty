@@ -8,7 +8,7 @@ const userStore = useUserStore();
     <header class="header">
         <div class="header__container">
             <RouterLink to="/" class="header__logo">
-                <img src="@/assets/images/stars-icon.png" alt="Misty" class="header__logo-icon">
+                <img src="@/assets/images/stars-icon.png" alt="Misty" class="header__logo-icon" loading="lazy">
                 <span class="header__logo-text">MISTY</span>
             </RouterLink>
 
