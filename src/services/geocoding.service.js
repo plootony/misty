@@ -2,6 +2,8 @@
  * Сервис геокодинга для определения координат по названию места
  */
 
+import { sendError } from '@/services/hawk.service';
+
 const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org';
 
 /**
@@ -42,6 +44,15 @@ export async function geocodePlace(placeName) {
 
   } catch (error) {
     console.error('Ошибка геокодинга:', error);
+
+    // Отправляем ошибку в Hawk
+    sendError(error, {
+      service: 'geocoding',
+      method: 'geocodePlace',
+      placeName: placeName?.substring(0, 100),
+      url: `${NOMINATIM_BASE_URL}/search`,
+      errorType: 'geocoding_error'
+    });
 
     if (error.message.includes('HTTP')) {
       throw new Error('Ошибка подключения к сервису геокодинга');

@@ -5,6 +5,7 @@ import natalChartService, { ZODIAC_SIGNS, PLANET_INFO } from '@/services/natalCh
 import { geocodePlace, validateCoordinates, formatCoordinates } from '@/services/geocoding.service';
 import { interpretNatalChart } from '@/services/mistral.service';
 import { useModalStore } from '@/stores/modal.store';
+import { sendError, sendLog } from '@/services/hawk.service';
 import ButtonSpinner from '@/components/ButtonSpinner.vue';
 import NatalChartVisualization from '@/components/NatalChartVisualization.vue';
 import NotificationToast from '@/components/NotificationToast.vue';
@@ -197,6 +198,19 @@ const calculateNatalChart = async () => {
   error.value = '';
 
   try {
+    // Логируем начало расчета
+    sendLog('Начало расчета натальной карты', {
+      userId: userStore.userData?.id,
+      birthData: {
+        date: birthData.value.date,
+        time: birthData.value.time,
+        place: birthData.value.place,
+        latitude: birthData.value.latitude,
+        longitude: birthData.value.longitude,
+        houseSystem: houseSystem.value
+      }
+    });
+
     // Используем Swiss Ephemeris для расчета натальной карты
     const result = await natalChartService.calculateNatalChart({
       date: birthData.value.date,
@@ -209,8 +223,33 @@ const calculateNatalChart = async () => {
 
     natalChart.value = result;
 
+    // Логируем успешный расчет
+    sendLog('Натальная карта успешно рассчитана', {
+      userId: userStore.userData?.id,
+      planetsCount: result.planets?.length,
+      housesCount: result.houses?.length,
+      aspectsCount: result.aspects?.length
+    });
+
   } catch (err) {
     console.error('Ошибка расчета натальной карты:', err);
+
+    // Отправляем ошибку в Hawk для анализа
+    sendError(err, {
+      component: 'NatalChartView',
+      method: 'calculateNatalChart',
+      userId: userStore.userData?.id,
+      birthData: {
+        date: birthData.value.date,
+        time: birthData.value.time,
+        place: birthData.value.place,
+        latitude: birthData.value.latitude,
+        longitude: birthData.value.longitude,
+        houseSystem: houseSystem.value
+      },
+      errorType: 'natal_chart_calculation'
+    });
+
     error.value = err.message || 'Не удалось рассчитать натальную карту. Проверьте введенные данные.';
   } finally {
     isCalculating.value = false;

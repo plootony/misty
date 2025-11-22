@@ -1,6 +1,7 @@
 import { Mistral } from '@mistralai/mistralai';
 import { mistralRateLimiter } from '@/utils/rateLimiter';
 import { parseAIResponse, normalizeValidationResponse, isValidValidationResponse } from '@/utils/jsonParser';
+import { sendError } from '@/services/hawk.service';
 
 // Agent IDs для разных задач (загружаются из переменных окружения)
 const AGENTS = {
@@ -74,6 +75,17 @@ async function callMistralAI(task, message, options = {}) {
                 attemptsMade++;
                 console.warn(`Agents API failed for ${task} (attempt ${attemptsMade}/${maxAttempts}):`, error.message);
 
+                // Отправляем ошибку в Hawk сразу при возникновении
+                sendError(error, {
+                    service: 'mistral',
+                    method: 'callMistralAI',
+                    task: task,
+                    attempt: attemptsMade,
+                    maxAttempts: maxAttempts,
+                    apiType: 'agents',
+                    errorType: 'agent_api_error'
+                });
+
                 if (attemptsMade < maxAttempts) {
                     const delay = calculateRetryDelay(attemptsMade);
                     console.warn(`Retrying in ${delay}ms...`);
@@ -93,6 +105,17 @@ async function callMistralAI(task, message, options = {}) {
             attemptsMade++;
             console.warn(`Chat completion failed for ${task} (attempt ${attemptsMade}/${maxAttempts}):`, error.message);
 
+            // Отправляем ошибку в Hawk сразу при возникновении
+            sendError(error, {
+                service: 'mistral',
+                method: 'callMistralAI',
+                task: task,
+                attempt: attemptsMade,
+                maxAttempts: maxAttempts,
+                apiType: 'chat_completion',
+                errorType: 'chat_completion_error'
+            });
+
             if (attemptsMade < maxAttempts) {
                 const delay = calculateRetryDelay(attemptsMade);
                 console.warn(`Retrying in ${delay}ms...`);
@@ -101,7 +124,19 @@ async function callMistralAI(task, message, options = {}) {
         }
     }
 
-    throw new Error(`All ${maxAttempts} attempts failed for ${task}`);
+    // Отправляем финальную ошибку в Hawk
+    const finalError = new Error(`All ${maxAttempts} attempts failed for ${task}`);
+    sendError(finalError, {
+        service: 'mistral',
+        method: 'callMistralAI',
+        task: task,
+        attemptsMade: attemptsMade,
+        maxAttempts: maxAttempts,
+        errorType: 'api_failure',
+        messageLength: message?.length
+    });
+
+    throw finalError;
 }
 
 /**
@@ -227,6 +262,15 @@ export async function validateTarotQuestion(question) {
         } catch (error) {
             console.error('Ошибка валидации вопроса:', error);
 
+            // Отправляем ошибку в Hawk для мониторинга
+            sendError(error, {
+                service: 'mistral',
+                method: 'validateTarotQuestion',
+                task: 'tarot_validation',
+                question: question?.substring(0, 100), // Ограничиваем длину для безопасности
+                errorType: 'api_error'
+            });
+
             // Определяем тип ошибки
             const isNetwork = isNetworkError(error);
 
@@ -310,6 +354,18 @@ export async function interpretSingleCard(question, card, position) {
 
         } catch (error) {
             console.error('Ошибка толкования карты:', error);
+
+            // Отправляем ошибку в Hawk
+            sendError(error, {
+                service: 'mistral',
+                method: 'interpretSingleCard',
+                question: question?.substring(0, 100),
+                cardName: card?.name,
+                cardPosition: card?.isReversed ? 'reversed' : 'upright',
+                position: position?.name,
+                errorType: 'interpretation_error'
+            });
+
             throw new Error(createErrorMessage(error));
         }
     });
@@ -426,6 +482,19 @@ ${cardsDescription}`;
 
         } catch (error) {
             console.error('Ошибка генерации финального толкования:', error);
+
+            // Отправляем ошибку в Hawk
+            sendError(error, {
+                service: 'mistral',
+                method: 'generateFullReading',
+                userName: userData?.name,
+                zodiacSign: zodiacSign,
+                question: question?.substring(0, 100),
+                spreadName: spread?.name,
+                cardsCount: selectedCards?.length,
+                errorType: 'full_reading_error'
+            });
+
             throw new Error(createErrorMessage(error));
         }
     });
@@ -571,6 +640,22 @@ ${chartSummary}`;
 
         } catch (error) {
             console.error('Ошибка интерпретации натальной карты:', error);
+
+            // Отправляем ошибку в Hawk
+            sendError(error, {
+                service: 'mistral',
+                method: 'interpretNatalChart',
+                userName: userData?.name,
+                hasBirthData: !!natalChartData?.birthData,
+                hasPlanets: !!natalChartData?.planets,
+                planetsCount: natalChartData?.planets?.length,
+                hasHouses: !!natalChartData?.houses,
+                housesCount: natalChartData?.houses?.length,
+                hasAspects: !!natalChartData?.aspects,
+                aspectsCount: natalChartData?.aspects?.length,
+                errorType: 'natal_chart_error'
+            });
+
             throw new Error('Не удалось получить интерпретацию натальной карты. Попробуйте позже.');
         }
     });
